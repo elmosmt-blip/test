@@ -75,7 +75,7 @@
 - id: mirtec-inspection
   name: Mirtec
   source_type: vendor
-  url: https://www.mirtec.com/news
+  url: https://www.mirtec.com/news.php
   category: inspection
   trust_level: official_vendor
   priority: 3

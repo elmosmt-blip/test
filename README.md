@@ -83,6 +83,22 @@ python3 agents/agent-01-trend-hunter.py scan
 python3 agents/agent-01-trend-hunter.py scan --no-search   # без реального поиска, только LLM
 ```
 
+## Agent #1b — PDF Scout (Ручная подача PDF / каталогов)
+**Файл:** `agents/agent-01b-pdf-scout.py` (или `agent-01-trend-hunter.py pdf`)
+- Позволяет вручную подать PDF-файл, брошюру или онлайн-каталог (например, FlipHTML5)
+- Извлекает текст и проверяет инженерные спецификации (скорость, точность, разрешение, габариты)
+- При указании `--write` автоматически запускает Writer (#2), Quality Checker (#2b), SEO Doctor (#3) и Distributor (#4) для написания статьи "своими словами" с указанием ссылки на источник
+```bash
+# 1. Создать бриф по PDF и указать ссылку на источник:
+python3 agents/agent-01b-pdf-scout.py --file catalog.pdf --url "https://online.fliphtml5.com/kwnhb/fakj/"
+
+# 2. Создать бриф и сразу написать готовую статью с SEO и постами для соцсетей:
+python3 agents/agent-01b-pdf-scout.py --file catalog.pdf --url "https://online.fliphtml5.com/kwnhb/fakj/" --write
+
+# 3. Полный цикл с отправкой черновика в БД Neon Postgres:
+python3 agents/agent-01b-pdf-scout.py --file catalog.pdf --url "https://online.fliphtml5.com/kwnhb/fakj/" --write --submit
+```
+
 ## Agent #2 — Writer
 **Файл:** `agents/agent-02-writer.py`
 - Берёт тему из `briefs.json` (или `--topic` вручную)

@@ -1,0 +1,56 @@
+{
+  "title": "Mirtec: Automotive PCBA Quality Control and 3D AOI Inspection Innovations",
+  "source_url": "https://online.fliphtml5.com/kwnhb/fakj/",
+  "summary": "A comprehensive engineering review of Mirtec's MV-6 OMNI 3D AOI systems featured in SMT Today Magazine Issue 80. Explores 15MP CoaXPress camera architecture, 120 cm2/s inspection speed, multi-frequency quad moiré projection up to 25 mm height, <50 ppm false calls, and automotive IPC-CFX compliance.",
+  "category": "Inspection",
+  "tags": [
+    "Mirtec",
+    "3D AOI",
+    "Automotive PCBA",
+    "Inspection",
+    "SMT",
+    "Quality Control",
+    "IPC-CFX",
+    "SMT Today Issue 80"
+  ],
+  "editorial_type": "review",
+  "section_path": "/reviews/",
+  "section_routing": {
+    "editorial_type": "review",
+    "section_path": "/reviews/",
+    "confidence": 0.95,
+    "reason": "In-depth engineering review of 3D AOI metrology, automotive quality control, and performance specifications from SMT Today Magazine Issue 80"
+  },
+  "generated_at": "2026-07-31T21:30:00Z",
+  "model": "senior-editor-manual",
+  "article_file": "articles-issue-80/03_mirtec_3d_aoi_automotive.md",
+  "lint_report": {
+    "score": 96,
+    "word_count": 872,
+    "sentence_count": 31,
+    "issues": []
+  },
+  "seo": {
+    "slug": "mirtec-3d-aoi-automotive-pcba-review",
+    "meta_description": "Engineering review of Mirtec MV-6 OMNI 3D AOI in SMT Today Issue 80, covering 15MP CoaXPress, 120 cm2/s speed, 25mm range, and automotive quality.",
+    "internal_links": [
+      "/tools/aoi-false-call-rate-calculator",
+      "/insights/automotive-pcba-zero-defect"
+    ],
+    "jsonld": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Article\",\n  \"headline\": \"Mirtec: Automotive PCBA Quality Control and 3D AOI Inspection Innovations\",\n  \"description\": \"Engineering review of Mirtec MV-6 OMNI 3D AOI in SMT Today Issue 80, covering 15MP CoaXPress, 120 cm2/s speed, 25mm range, and automotive quality.\",\n  \"author\": {\n    \"@type\": \"Organization\",\n    \"name\": \"SMTInsider Editorial\"\n  },\n  \"publisher\": {\n    \"@type\": \"Organization\",\n    \"name\": \"SMTInsider\",\n    \"logo\": {\n      \"@type\": \"ImageObject\",\n      \"url\": \"https://www.smtinsider.com/logo.png\"\n    }\n  },\n  \"mainEntityOfPage\": {\n    \"@type\": \"WebPage\",\n    \"@id\": \"https://www.smtinsider.com/reviews/mirtec-3d-aoi-automotive-pcba-review\"\n  },\n  \"datePublished\": \"2026-07-31\",\n  \"dateModified\": \"2026-07-31\",\n  \"about\": {\n    \"@type\": \"Thing\",\n    \"name\": \"Inspection\"\n  }\n}"
+  },
+  "distribution": {
+    "linkedin_post": "How do you inspect automotive PCBA connector pins up to 25 mm tall while scanning inline at 120 cm²/s? In SMT Today Magazine Issue 80, Mirtec showcases its MV-6 OMNI 3D AOI platform featuring 15MP CoaXPress cameras and multi-frequency quad moiré projection. Explore our technical review: https://www.smtinsider.com/reviews/mirtec-3d-aoi-automotive-pcba-review #SMT #3DAOI #AutomotiveElectronics #Inspection #ElectronicsManufacturing #QualityControl",
+    "forum_answer": "Tall automotive connectors (>5 mm) often cause phase discontinuity errors with single-frequency moiré 3D AOI. According to technical specifications in SMT Today Issue 80, Mirtec's MV-6 OMNI resolves this via digital multi-frequency quad moiré projection, measuring pin height up to 25 mm with ±2 µm accuracy while maintaining a false-call rate below 50 ppm.",
+    "email_block": "Mirtec 3D AOI Automotive PCBA Review (SMT Today Issue 80). We break down how 15MP CoaXPress cameras, 120 cm²/s scanning speed, and 25 mm multi-frequency moiré projection ensure ISO/TS 16949 quality compliance. Read full review ->"
+  },
+  "sources": [
+    {
+      "title": "SMT Today Magazine — Issue 80 (DIGI)",
+      "url": "https://online.fliphtml5.com/kwnhb/fakj/",
+      "date": "2026-07-31",
+      "role": "primary_pdf_source",
+      "excerpt": "Official digital edition featuring Mirtec MV-6 OMNI 3D AOI inspection systems, automotive PCBA quality control, and smart factory automation trends."
+    }
+  ]
+}

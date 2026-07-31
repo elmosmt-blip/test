@@ -22,6 +22,18 @@ import json
 import os
 import re
 import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
 import time
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -38,16 +50,21 @@ except Exception:  # pragma: no cover
     ZoneInfo = None
 
 sys.path.insert(0, os.path.dirname(__file__))
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 import llm_client
 import section_router
 import source_expander
 import dedupe
 
-# Repo root (parent of agents/) needs to be importable so `src.config.loader`
-# resolves regardless of the working directory the agent is invoked from.
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+try:
+    from src.collectors import pdf_collector
+    _PDF_COLLECTOR_AVAILABLE = True
+except Exception as _pdf_err:  # pragma: no cover
+    _PDF_COLLECTOR_AVAILABLE = False
+    print(f"  ⚠ PDF collector unavailable: {_pdf_err}")
 
 try:
     from src.config.loader import SourceConfigError, load_source_registry
@@ -76,17 +93,23 @@ DEFAULT_LOOKBACK_DAYS = int(os.environ.get("NEWS_LOOKBACK_DAYS", "30"))
 # (scripts/migrate_sources.py --verify-parity confirms these fallback lists
 # and the registry currently contain the identical set of sources).
 # ─────────────────────────────────────────────────────────────────────────
+DEFAULT_HTTP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 _FALLBACK_RSS_FEEDS = [
     # Industry media — core SMT/EMS trade press
     ("SMT Today", "https://smttoday.com/feed/"),
     ("EMSNow", "https://www.emsnow.com/feed/"),
     ("Circuits Assembly", "https://www.circuitsassembly.com/ca/editorial/menu-news.feed"),
     ("Electronics Sourcing", "https://electronics-sourcing.com/feed/"),
-    ("I-Connect007 SMT", "https://smt007.iconnect007.com/feeds/rss/news.xml"),
-    ("I-Connect007 PCB", "https://pcb007.com/feeds/rss/news.xml"),
-    ("I-Connect007 PCBA", "https://pcbaa007.iconnect007.com/feeds/rss/news.xml"),
+    ("I-Connect007 SMT", "https://www.iconnect007.com/feed/smt007/"),
+    ("I-Connect007 PCB", "https://www.iconnect007.com/feed/pcb007/"),
+    ("I-Connect007 PCBA", "https://www.iconnect007.com/feed/pcbaa007/"),
     ("Global SMT & Packaging", "https://www.globalsmt.net/feed/"),
-    ("Production Engineering (PES)", "https://www.pes.eu.com/feed/"),
+    ("Production Engineering (PES)", "https://www.pes.eu.com/news/feed/"),
     ("EPP Europe", "https://www.epp-europe-news.com/feed/"),
     ("New Electronics", "https://www.newelectronics.co.uk/feed/"),
     ("Electronics Weekly", "https://www.electronicsweekly.com/feed/"),
@@ -137,7 +160,7 @@ _FALLBACK_VENDOR_SOURCES = [
     ("Saki", "https://www.sakicorp.com/en/news/", "inspection"),
     ("ViTrox", "https://www.vitrox.com/news-and-events/news.php", "inspection"),
     ("Creative Electron", "https://creativeelectron.com/newsroom/", "inspection"),
-    ("Mirtec", "https://www.mirtec.com/news", "inspection"),
+    ("Mirtec", "https://www.mirtec.com/news.php", "inspection"),
     ("CyberOptics", "https://www.cyberoptics.com/news/", "inspection"),
     # Placement / SMT equipment
     ("Yamaha SMT", "https://global.yamaha-motor.com/business/smt/news/", "placement"),
@@ -449,7 +472,11 @@ def resolve_ddg_url(href: str, fallback_text: str = "") -> str:
 def _http_get(url: str, *, headers: dict | None = None, timeout: int = 20,
                retries: int = 2, backoff: float = 1.5, **kwargs) -> Optional[requests.Response]:
     """GET with small retry/backoff — many trade-press sites are flaky under bot UA."""
-    hdrs = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0; +https://smtinsider.com/bot)"}
+    hdrs = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
     hdrs.update(headers or {})
     last_exc = None
     for attempt in range(retries + 1):
@@ -507,10 +534,10 @@ def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int 
     return results
 
 
-
+def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30) -> list[dict[str, Any]]:
     """Search DuckDuckGo HTML with a date filter (df=m for 30 days)."""
     url = "https://html.duckduckgo.com/html/"
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     data = {"q": query}
     df = ddg_df(lookback_days)
     if df:
@@ -577,7 +604,7 @@ def extract_page_date(url: str) -> tuple[Optional[datetime], str]:
     """Fetch a page and try to find publication date in metadata/JSON-LD/time tags."""
     if not url:
         return None, "no_url"
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     try:
         resp = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
         resp.raise_for_status()
@@ -693,7 +720,7 @@ def gather_html_signals(lookback_days: int = 30, max_items: int = 50, strict_fre
     now = now_local()
     signals: list[dict[str, Any]] = []
     seen: set[str] = set()
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     html_sources = configured_html_sources()
     print(f"\n  🌐 HTML/news pages: {len(html_sources)} источников")
     try:
@@ -847,6 +874,8 @@ GENERIC_LINK_TITLES = {
 VENDOR_LINK_PATH_HINTS = [
     "news", "press", "release", "article", "blog", "media", "event",
     "solution", "smt", "aoi", "spi", "axi", "x-ray", "xray",
+    "datasheet", "brochure", "spec", "specification", "catalog", "manual",
+    "pdf", "download",
 ]
 
 
@@ -880,7 +909,7 @@ def _vendor_link_candidate(page_url: str, href: str, title: str) -> bool:
 
 
 def _extract_page_title_and_date(url: str) -> tuple[str, Optional[datetime]]:
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     try:
         resp = requests.get(url, headers=headers, timeout=12, allow_redirects=True)
         resp.raise_for_status()
@@ -907,7 +936,7 @@ def gather_vendor_signals(lookback_days: int = 30, max_links_per_vendor: int = 2
     sources = configured_vendor_sources()
     signals: list[dict[str, Any]] = []
     seen: set[str] = set()
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     print(f"\n  🏭 Vendor/manufacturer pages: {len(sources)} источников")
     try:
         from bs4 import BeautifulSoup
@@ -968,6 +997,26 @@ def gather_vendor_signals(lookback_days: int = 30, max_links_per_vendor: int = 2
             if href in seen:
                 continue
             checked += 1
+            if href.lower().endswith(".pdf") and _PDF_COLLECTOR_AVAILABLE:
+                doc = pdf_collector.fetch_and_parse_pdf(href, timeout=15)
+                if doc and doc.text:
+                    sig = doc.to_signal(vendor_name=vendor_name, vendor_group=vendor_group)
+                    pub_dt = None
+                    if sig.get("published_at") and sig["published_at"] != "unknown":
+                        try:
+                            pub_dt = datetime.fromisoformat(sig["published_at"])
+                        except Exception:
+                            pass
+                    if pub_dt and not within_lookback(pub_dt, lookback_days, now):
+                        continue
+                    if strict_fresh and not pub_dt:
+                        continue
+                    seen.add(href)
+                    signals.append(sig)
+                    kept += 1
+                    if kept >= max_items_per_vendor:
+                        break
+                    continue
             page_title = ""
             if (not dt or len(title) < 18) and verify_child_pages:
                 page_title, page_dt = _extract_page_title_and_date(href)
@@ -1003,6 +1052,54 @@ def gather_vendor_signals(lookback_days: int = 30, max_links_per_vendor: int = 2
     return signals
 
 
+def gather_pdf_signals(
+    lookback_days: int = 30,
+    max_items_per_vendor: int = 2,
+    strict_fresh: bool = True,
+) -> list[dict[str, Any]]:
+    """Collect technical facts and specifications directly from vendor PDF documents."""
+    if not _PDF_COLLECTOR_AVAILABLE or not _env_bool("NEWS_PDF_COLLECTOR_ENABLED", "1"):
+        return []
+    now = now_local()
+    sources = configured_vendor_sources()
+    signals: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    print(f"\n  📑 PDF technical documents: scan across {len(sources)} vendor pages")
+
+    for vendor_name, page_url, vendor_group in sources:
+        kept = 0
+        try:
+            links = pdf_collector.discover_pdf_links_on_page(page_url, timeout=12, max_links=8)
+        except Exception:
+            continue
+        for l in links[:max_items_per_vendor]:
+            pdf_url = l.get("url", "")
+            if not pdf_url or pdf_url in seen:
+                continue
+            doc = pdf_collector.fetch_and_parse_pdf(pdf_url, timeout=15)
+            if not doc or not doc.text:
+                continue
+            sig = doc.to_signal(vendor_name=vendor_name, vendor_group=vendor_group)
+            pub_dt = None
+            if sig.get("published_at") and sig["published_at"] != "unknown":
+                try:
+                    pub_dt = datetime.fromisoformat(sig["published_at"])
+                except Exception:
+                    pass
+            if pub_dt and not within_lookback(pub_dt, lookback_days, now):
+                continue
+            if strict_fresh and not pub_dt:
+                continue
+            seen.add(pdf_url)
+            signals.append(sig)
+            kept += 1
+            if kept >= max_items_per_vendor:
+                break
+        if kept:
+            print(f"     → {vendor_name}: свежих PDF-документов принято {kept}")
+    return signals
+
+
 def gather_rss_signals(lookback_days: int = 30, max_items_per_feed: int = 20, strict_fresh: bool = True) -> list[dict[str, Any]]:
     """Collect fresh items from configured RSS/Atom feeds.
 
@@ -1014,14 +1111,18 @@ def gather_rss_signals(lookback_days: int = 30, max_items_per_feed: int = 20, st
     feeds = configured_rss_feeds()
     signals: list[dict[str, Any]] = []
     seen: set[str] = set()
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
 
     print(f"\n  📰 RSS/news feeds: {len(feeds)} источников")
     for feed_name, feed_url in feeds:
         try:
             resp = requests.get(feed_url, headers=headers, timeout=20, allow_redirects=True)
             resp.raise_for_status()
-            root = ET.fromstring(resp.content)
+            try:
+                root = ET.fromstring(resp.content)
+            except ET.ParseError:
+                cleaned = re.sub(r"&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)", "&amp;", resp.text)
+                root = ET.fromstring(cleaned.encode("utf-8", errors="ignore"))
         except Exception as e:
             print(f"     ⚠ {feed_name}: RSS недоступен — {e}")
             continue
@@ -1220,6 +1321,17 @@ def gather_signals(
             seen.add(url)
             signals.append(item)
 
+    pdf_signals = gather_pdf_signals(
+        lookback_days=lookback_days,
+        max_items_per_vendor=int(os.environ.get("NEWS_PDF_MAX_ITEMS", "2")),
+        strict_fresh=strict_fresh,
+    ) if do_search and _env_bool("NEWS_PDF_COLLECTOR_ENABLED", "1") else []
+    for item in pdf_signals:
+        url = item.get("source", "")
+        if url and url not in seen and not _is_near_duplicate_title(item.get("title", "")):
+            seen.add(url)
+            signals.append(item)
+
     return signals
 
 
@@ -1385,6 +1497,25 @@ def enrich_top_signals_with_fulltext(ranked_signals: list[dict[str, Any]], top_n
         u = s.get("source", "")
         if u in results and results[u]:
             s["full_text"] = results[u]
+        if _PDF_COLLECTOR_AVAILABLE and _env_bool("NEWS_PDF_ENRICH_ENABLED", "1") and not s.get("key_facts"):
+            try:
+                pdf_links = pdf_collector.discover_pdf_links_on_page(u, timeout=10, max_links=2)
+                for pl in pdf_links:
+                    pdoc = pdf_collector.fetch_and_parse_pdf(pl["url"], timeout=10)
+                    if pdoc and pdoc.key_facts:
+                        s["key_facts"] = [
+                            f"{f['parameter']}: {f['value']}"
+                            for f in pdoc.key_facts if isinstance(f, dict) and "value" in f
+                        ]
+                        s["technical_specs"] = pdoc.key_facts
+                        specs_block = "\n".join(
+                            f"- {f['parameter'].upper()}: {f['value']} ({f['provenance']})"
+                            for f in pdoc.key_facts if isinstance(f, dict)
+                        )
+                        s["full_text"] = (s.get("full_text", "") + f"\n\nVERIFIED TECHNICAL SPECIFICATIONS:\n{specs_block}").strip()
+                        break
+            except Exception:
+                pass
 
 
 def find_corroborating_sources(
@@ -1576,6 +1707,15 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         if expanded:
             # Keep `sources` backward-compatible but richer for Writer.
             topic["sources"] = expanded
+        if not topic.get("key_facts"):
+            aggregated_facts = []
+            for src in expanded:
+                for kf in (src.get("key_facts") or []):
+                    kf_str = str(kf)
+                    if kf_str not in aggregated_facts:
+                        aggregated_facts.append(kf_str)
+            if aggregated_facts:
+                topic["key_facts"] = aggregated_facts
     return data
 
 
@@ -1692,8 +1832,18 @@ def scan_topics(
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "pdf":
+        import importlib.util
+        _scout_path = os.path.join(os.path.dirname(__file__), "agent-01b-pdf-scout.py")
+        _spec = importlib.util.spec_from_file_location("agent01b_pdf_scout", _scout_path)
+        _mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        _mod.main()
+        sys.exit(0)
+
     p = argparse.ArgumentParser()
-    p.add_argument("action", choices=["scan"])
+    p.add_argument("action", choices=["scan", "pdf"])
     p.add_argument("--output", default="/tmp/smtinsider_briefs.json")
     p.add_argument("--max-topics", type=int, default=5,
                     help="макс. тем за один scan (default: 5, было 3 — поднято вместе с расширением реестра источников)")

@@ -1,0 +1,56 @@
+{
+  "title": "Koh Young Technology: True 3D SPI and AOI Metrology for Advanced Packaging",
+  "source_url": "https://online.fliphtml5.com/kwnhb/fakj/",
+  "summary": "An engineering review of Koh Young Technology's True 3D SPI and AOI metrology platforms featured in SMT Today Magazine Issue 80. Covers phase-shift moiré profilometry, 0.5 micron Z-resolution, <10% Gage R&R, AI warpage compensation, and IPC-CFX closed-loop process control.",
+  "category": "Inspection",
+  "tags": [
+    "Koh Young Technology",
+    "3D SPI",
+    "3D AOI",
+    "Inspection",
+    "SMT",
+    "Gage R&R",
+    "IPC-CFX",
+    "SMT Today Issue 80"
+  ],
+  "editorial_type": "review",
+  "section_path": "/reviews/",
+  "section_routing": {
+    "editorial_type": "review",
+    "section_path": "/reviews/",
+    "confidence": 0.96,
+    "reason": "Comprehensive engineering review of 3D optical inspection metrology and performance specifications from SMT Today Magazine Issue 80"
+  },
+  "generated_at": "2026-07-31T21:30:00Z",
+  "model": "senior-editor-manual",
+  "article_file": "articles-issue-80/02_koh_young_3d_inspection.md",
+  "lint_report": {
+    "score": 95,
+    "word_count": 878,
+    "sentence_count": 33,
+    "issues": []
+  },
+  "seo": {
+    "slug": "koh-young-3d-spi-aoi-metrology-review",
+    "meta_description": "Engineering review of Koh Young True 3D SPI and AOI in SMT Today Issue 80, covering 0.5 micron resolution, AI warpage control, and IPC-CFX.",
+    "internal_links": [
+      "/tools/aoi-false-call-rate-calculator",
+      "/insights/closed-loop-spi-printer-control"
+    ],
+    "jsonld": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Article\",\n  \"headline\": \"Koh Young Technology: True 3D SPI and AOI Metrology for Advanced Packaging\",\n  \"description\": \"Engineering review of Koh Young True 3D SPI and AOI in SMT Today Issue 80, covering 0.5 micron resolution, AI warpage control, and IPC-CFX.\",\n  \"author\": {\n    \"@type\": \"Organization\",\n    \"name\": \"SMTInsider Editorial\"\n  },\n  \"publisher\": {\n    \"@type\": \"Organization\",\n    \"name\": \"SMTInsider\",\n    \"logo\": {\n      \"@type\": \"ImageObject\",\n      \"url\": \"https://www.smtinsider.com/logo.png\"\n    }\n  },\n  \"mainEntityOfPage\": {\n    \"@type\": \"WebPage\",\n    \"@id\": \"https://www.smtinsider.com/reviews/koh-young-3d-spi-aoi-metrology-review\"\n  },\n  \"datePublished\": \"2026-07-31\",\n  \"dateModified\": \"2026-07-31\",\n  \"about\": {\n    \"@type\": \"Thing\",\n    \"name\": \"Inspection\"\n  }\n}"
+  },
+  "distribution": {
+    "linkedin_post": "How do you achieve <10% Gage R&R and 0.5 µm Z-axis resolution on shiny solder micro-bumps? In SMT Today Magazine Issue 80, Koh Young Technology details its True 3D phase-shift moiré profilometry and AI warpage compensation for advanced packaging and SMT lines. Check out our full technical review: https://www.smtinsider.com/reviews/koh-young-3d-spi-aoi-metrology-review #SMT #Inspection #3DAOI #3DSPI #ElectronicsManufacturing #QualityControl",
+    "forum_answer": "Specular reflections on shiny solder joints and WLP micro-bumps often blind conventional 2D AOI cameras. According to engineering data in SMT Today Issue 80, Koh Young's True 3D architecture avoids this via multi-angle phase-shift moiré profilometry, maintaining 0.5 µm height resolution and <10% Gage R&R while filtering false calls caused by PCB warpage using local Z-zero datums.",
+    "email_block": "Koh Young True 3D SPI and AOI Review (SMT Today Issue 80). We examine how 0.5 µm moiré profilometry, AI warpage compensation, and IPC-CFX closed-loop feedback prevent defects on high-density SMT and semiconductor packaging lines. Read full engineering review ->"
+  },
+  "sources": [
+    {
+      "title": "SMT Today Magazine — Issue 80 (DIGI)",
+      "url": "https://online.fliphtml5.com/kwnhb/fakj/",
+      "date": "2026-07-31",
+      "role": "primary_pdf_source",
+      "excerpt": "Official digital edition featuring Koh Young Technology 3D SPI and AOI metrology, advanced packaging inspection, and KSMART process integration."
+    }
+  ]
+}

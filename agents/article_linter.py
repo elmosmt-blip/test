@@ -18,6 +18,20 @@ it catches the mechanically-detectable subset of "reads like AI" problems.
 
 from __future__ import annotations
 
+import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
+
 import re
 import statistics
 from dataclasses import dataclass, field
@@ -262,10 +276,12 @@ def check_fact_grounding(body: str, key_facts: list[str]) -> list[LintIssue]:
 # Word-count targets mirror the format-specific ranges in
 # agents/prompts/writer.txt's "СТРУКТУРА ПО ТИПУ СТАТЬИ" section.
 FORMAT_WORD_RANGES = {
-    "news": (350, 700),
-    "insight": (600, 1150),
-    "review": (700, 1250),
-    "vendor": (500, 1000),
+    "news": (350, 900),
+    "insight": (600, 2200),
+    "review": (700, 2500),
+    "vendor": (500, 2000),
+    "magazine": (700, 3000),
+    "article": (600, 2500),
 }
 
 

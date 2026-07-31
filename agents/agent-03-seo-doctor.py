@@ -7,6 +7,18 @@ Usage:
   python3 agents/agent-03-seo-doctor.py --title "..." --file article.txt
 """
 
+import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
 import sys, re, json
 from datetime import datetime
 
@@ -124,6 +136,6 @@ if __name__ == "__main__":
             print("❌ Укажи --title (или --meta с файлом от Writer'а)"); sys.exit(1)
         body = ""
         if args.file:
-            with open(args.file) as f:
+            with open(args.file, encoding="utf-8") as f:
                 body = f.read()
         optimize(args.title, body, args.category)

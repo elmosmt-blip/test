@@ -13,6 +13,20 @@ Usage:
   python3 agent-youtube-scout.py approve --id 42
 """
 
+import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
+
 import os, sys
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
