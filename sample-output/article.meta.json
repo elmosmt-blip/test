@@ -1,0 +1,30 @@
+{
+  "title": "AOI False-Call Reduction: Using Defect Taxonomy Before Tuning Thresholds",
+  "summary": "A practical sequence for reducing AOI false calls without increasing escape risk.",
+  "category": "Quality Control",
+  "tags": [
+    "AOI",
+    "false calls",
+    "defect taxonomy",
+    "SMT quality"
+  ],
+  "editorial_type": "insight",
+  "source_topic_brief": {
+    "topic": "AOI False-Call Reduction: Using Defect Taxonomy Before Tuning Thresholds",
+    "angle": "Engineers often tune AOI sensitivity before cleaning up defect classes; the article explains a safer sequence that reduces escapes and review load.",
+    "format": "insight",
+    "keywords": [
+      "AOI",
+      "false calls",
+      "defect taxonomy",
+      "SMT quality"
+    ],
+    "category": "Quality Control",
+    "urgency": "HIGH",
+    "source_count": 3,
+    "source_notes": "Sandbox mock topic generated without external search; replace with real LLM/search in production."
+  },
+  "generated_at": "2026-06-22T21:30:47.895121+00:00",
+  "model": "local-mock-llm",
+  "article_file": "/tmp/smtinsider_article.txt"
+}

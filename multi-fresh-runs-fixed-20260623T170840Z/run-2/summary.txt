@@ -1,0 +1,12 @@
+signal_count=83
+source_count=9
+vendor_sources=AIM Solder, Europlacer Vendor, Fuji Europe Vendor, Saki Vendor
+topic_1=New High Throughput X-ray Inspection System
+section_1=review /reviews/
+source_1=2026-06-22 | https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/
+topic_2=Altus Group Expands Soldering Portfolio with SEHO Partnership
+section_2=news /news/
+source_2=2026-06-22 | https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=50610&news_id=31884
+topic_3=Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2
+section_3=insight /insights/
+source_3=2026-06-08 | https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=50610&news_id=31868

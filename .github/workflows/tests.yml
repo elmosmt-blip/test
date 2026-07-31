@@ -1,0 +1,35 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        run: python3 -m pytest tests/ -v
+        env:
+          # Tests mock/monkeypatch all LLM and DB calls directly (see
+          # docs/PROJECT_ANALYSIS_AND_RECOMMENDATIONS.md §6) — no real
+          # LLM_API_KEY or NEON_DATABASE_URL is needed to run them. This
+          # dummy DB URL only exists because a couple of agent modules
+          # (e.g. agent-06-publisher.py) sys.exit(1) at import time if
+          # NEON_DATABASE_URL is unset, before any test code runs.
+          NEON_DATABASE_URL: "postgresql://ci:ci@localhost/ci"
+          LLM_MOCK: "1"
+
+      - name: Validate source registry
+        run: python3 scripts/migrate_sources.py --verify-parity

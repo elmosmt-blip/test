@@ -1,0 +1,30 @@
+# Secrets — never commit real credentials
+.env
+.env.local
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+
+# Generated caches / runtime artifacts
+cache/
+*.log
+
+# Editor/OS noise
+.DS_Store
+.idea/
+.vscode/
+
+# Ad-hoc run outputs (briefs/articles/meta produced by agents at runtime —
+# these are working files, not source; see fresh-run-*/ and similar
+# timestamped directories checked into this snapshot for historical
+# examples, which are intentionally kept, but NEW runs should not be
+# committed by default)
+/tmp/smtinsider_*

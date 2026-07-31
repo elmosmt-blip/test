@@ -1,0 +1,43 @@
+# Esprit’s Koh Young Zenith 2 Upgrade: What 3D AOI Changes in High-Reliability SMT Inspection
+
+Altus Group’s June 2026 update about Esprit Electronics selecting two Koh Young Zenith 2 AOI systems is more useful as an engineering case study than as a simple purchasing announcement. The fresh signal is the investment decision. The production lesson is why a high-reliability EMS would move toward measurement-based 3D AOI after evaluating multiple inspection approaches on the same representative PCB assembly.
+
+Esprit operates two production facilities and four SMT lines, building complex PCB assemblies for medical, military, and industrial customers. That context matters. In these sectors, AOI is not only a defect screen; it is part of the evidence chain that supports process control, customer confidence, and repeatable inspection decisions.
+
+## Why the evaluation process matters
+
+The important detail is that Esprit did not select the system only from a brochure. The engineering team compared camera-based, laser-based, and Moiré fringe-based inspection systems, with demonstrations and trials using the same representative PCB assembly. That is the right evaluation method for AOI selection because different inspection technologies can perform very differently on the same real board.
+
+A demo board with actual production complexity will expose problems that generic sample boards do not: package-body variation, reflective solder, shadows, tall components, board warpage, mixed component heights, dense layouts, and borderline solder-joint geometries.
+
+## What Zenith 2 changes technically
+
+The Koh Young Zenith 2 uses True 3D measurement based on Moiré interferometry. Instead of relying only on two-dimensional contrast images, the system captures height and volume information across the PCB surface. That reduces the assumptions that conventional AOI systems often make when lighting, component color, solder reflection, or package geometry changes.
+
+For complex PCB assemblies, this matters because many false calls are not random. They come from the gap between what the inspection algorithm expects to see and how real production variation appears on the board. Measurement-based 3D AOI can help separate true process drift from harmless visual variation.
+
+## Why two systems and offline programming matter
+
+Esprit confirmed investment in two Zenith 2 systems with eight-megapixel imaging, Offline Programming capability, and KSMART Pro. The two-machine decision suggests that the upgrade is not just a lab or single-line experiment. It is intended to support production capacity and inspection consistency across the operation.
+
+Offline Programming is important in high-mix EMS environments. If inspection programs have to be built or heavily debugged on the production machine, AOI becomes part of the changeover burden. Moving more programming work offline can reduce machine downtime and make NPI release more predictable.
+
+KSMART Pro matters because inspection value does not end at pass/fail. The useful output is trend data: which components are driving calls, which locations show drift, whether specific packages create review load, and how inspection results correlate with process changes.
+
+## What engineers should measure after installation
+
+The success of a 3D AOI upgrade should not be judged only by whether operators like the images. It should be measured by production metrics.
+
+The first metric is confirmed-defect capture. A lower false-call rate is useful only if real defect detection remains stable or improves. The second metric is review time per lot. If the system produces better data but still creates long operator queues, the review process needs work. The third metric is NPI programming time. For a high-mix EMS, faster program preparation can be as valuable as faster inspection speed.
+
+The fourth metric is process feedback. If KSMART Pro and SPC tools are used properly, the engineering team should be able to identify repeated call patterns by package, board area, shift, product family, or line condition. That turns AOI from a final judgement station into a process-control sensor.
+
+## Common mistake
+
+The common mistake is to treat 3D AOI as a replacement for operator review only. The larger benefit is process visibility. If Zenith 2 data is not connected to review codes, SPI results, placement history, reflow conditions, and corrective-action records, the factory gets better images but only partial process learning.
+
+Another mistake is to assume that a 3D AOI platform automatically eliminates false calls. It does not. The inspection library, defect taxonomy, operator disposition rules, and SPC workflow still determine whether the data becomes useful engineering evidence.
+
+## Summary
+
+Esprit’s Zenith 2 investment shows the direction of high-reliability SMT inspection: fewer assumptions, more measurement data, and stronger connection between review decisions and process control. The buying lesson is clear. Evaluate AOI systems on a real representative board, compare technologies against the same defects, measure review burden and confirmed-defect capture together, and make sure the inspection data can support continuous process improvement rather than only board disposition.

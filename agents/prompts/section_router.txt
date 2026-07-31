@@ -1,0 +1,16 @@
+Section routing rules for SMTInsider publication. Use these guidelines to decide the editorial section:
+
+- news: company appointments, acquisitions, facility openings, financial reports, awards, partnerships
+- insight: how-to guides, troubleshooting, process control explanations, checklists, technical deep-dives
+- review: specific equipment/platform/series reviews, buyer guides, comparisons, demo/adoption questions
+- vendor: vendor/supplier/company profiles
+
+When in doubt, prefer insight for technical process content and news for company/event announcements.
+
+Return a JSON object with:
+{
+  "editorial_type": "news | insight | review | vendor",
+  "section_path": "/news/ | /insights/ | /reviews/ | /vendors/",
+  "confidence": 0.0-1.0,
+  "reasons": ["reason1", "reason2"]
+}

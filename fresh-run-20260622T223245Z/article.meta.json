@@ -1,0 +1,40 @@
+{
+  "title": "TRI’s TR7600 SV AXI Launch: What Higher-Throughput X-ray Inspection Changes for SMT Lines",
+  "summary": "TRI’s new TR7600 SV line-scan 3D AXI claims higher throughput and AI-assisted defect detection. For SMT teams, the question is how it affects BGA, THT, SiP inspection and line integration.",
+  "category": "AOI Systems",
+  "tags": [
+    "AXI",
+    "3D X-ray",
+    "TRI",
+    "BGA inspection",
+    "SMT inspection",
+    "Industry 4.0"
+  ],
+  "editorial_type": "insight",
+  "source_topic_brief": {
+    "topic": "New High Throughput X-ray Inspection System",
+    "angle": "Fresh news signal from the last configured lookback window; frame it as practical engineering impact for SMT production teams.",
+    "format": "insight",
+    "keywords": [
+      "inspection",
+      "SMT",
+      "process control"
+    ],
+    "category": "Quality Control",
+    "urgency": "HIGH",
+    "source_count": 1,
+    "source_notes": "Fresh source dated 2026-06-22: New High Throughput X-ray Inspection System",
+    "sources": [
+      {
+        "title": "New High Throughput X-ray Inspection System",
+        "url": "https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/",
+        "date": "2026-06-22"
+      }
+    ]
+  },
+  "source_url": "https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/",
+  "source_date": "2026-06-22",
+  "generated_at": "2026-06-22T22:33:59.071881+00:00",
+  "model": "Arena assistant source-based generation (fresh news run)",
+  "article_file": "/tmp/smtinsider_fresh_article.txt"
+}

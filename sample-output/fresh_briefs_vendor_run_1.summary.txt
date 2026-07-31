@@ -1,0 +1,13 @@
+signal_count=83
+source_count=9
+sources=AIM Solder, Circuits Assembly, EMSNow, Electronics Sourcing, Europlacer Vendor, Fuji Europe Vendor, SMT Today, SMTnet, Saki Vendor
+vendor_sources=AIM Solder, Europlacer Vendor, Fuji Europe Vendor, Saki Vendor
+topic_1=New High Throughput X-ray Inspection System
+section_1=review /reviews/
+source_1=2026-06-22 | https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/
+topic_2=Altus Group Expands Soldering Portfolio with SEHO Partnership
+section_2=news /news/
+source_2=2026-06-22 | Altus Group, a leading distributor of capital equipment for electronics manufacturing in the UK and Ireland, has announced a new partnership with SEHO Systems GmbH, a German manufacturer specialising in wa
+topic_3=Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2
+section_3=insight /insights/
+source_3=2026-06-08 | Altus Group, a leading distributor of electronics assembly equipment in the UK and Ireland, has supported Esprit Electronics, an electronics manufacturing services provider, in selecting new best-in-class

@@ -1,0 +1,5 @@
+{
+  "linkedin_post": "TRI’s TR7600 SV AXI Launch: What Higher-Throughput X-ray Inspection Changes for SMT Lines: the engineering question is not only scan speed. For SMT teams, higher-throughput AXI matters when it improves hidden-joint coverage, review consistency, and connection to MES/SPI/AOI process data. What is your biggest AXI constraint today: programming, review load, sampling policy, or line integration? #SMT #AXI #QualityEngineering",
+  "forum_answer": "Key points:\n- Validate throughput on your own board mix, not only vendor demos.\n- Check BGA/THT/SiP defect coverage by resolution and package family.\n- Measure review time and false calls alongside scan speed.\n- Confirm CFX/Hermes/MES integration if AXI data is used for traceability.\n- Use AXI findings for upstream root-cause work, not just board disposition.",
+  "email_block": "TRI’s TR7600 SV AXI Launch: What Higher-Throughput X-ray Inspection Changes for SMT Lines. A practical look at what higher-throughput AXI changes for hidden-joint inspection, review load, and factory-data integration. Читать полностью"
+}

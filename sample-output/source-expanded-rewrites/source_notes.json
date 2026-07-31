@@ -1,0 +1,48 @@
+{
+  "tri_tr7600_sv_axi_review": {
+    "fresh_topic": "New High Throughput X-ray Inspection System",
+    "sources": [
+      {
+        "title": "New High Throughput X-ray Inspection System",
+        "url": "https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/",
+        "role": "fresh news source",
+        "date": "2026-06-22"
+      },
+      {
+        "title": "TR7600 SV product page",
+        "url": "https://www.tri.com.tw/en/product/product_detail-12-2-1678.html",
+        "role": "vendor product/spec reference",
+        "date": "unknown"
+      },
+      {
+        "title": "DirectIndustry TR7600LL SV product listing",
+        "url": "https://www.directindustry.com/prod/tri-test-research-europe-gmbh/product-178814-2646298.html",
+        "role": "third-party product/spec reference",
+        "date": "unknown"
+      }
+    ]
+  },
+  "koh_young_zenith2_esprit_insight": {
+    "fresh_topic": "Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+    "sources": [
+      {
+        "title": "Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+        "url": "https://www.wnie.online/altus-supports-esprit-electronics-inspection-upgrade-with-koh-young-zenith-2/",
+        "role": "fresh news source",
+        "date": "2026-06-10"
+      },
+      {
+        "title": "SMTnet: Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+        "url": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=50610&news_id=31868",
+        "role": "fresh syndicated source",
+        "date": "2026-06-08"
+      },
+      {
+        "title": "Koh Young Automated Optical Inspection Solutions",
+        "url": "https://kohyoungamerica.com/aoi-automated-optical-inspection/",
+        "role": "vendor technology/context reference",
+        "date": "unknown"
+      }
+    ]
+  }
+}

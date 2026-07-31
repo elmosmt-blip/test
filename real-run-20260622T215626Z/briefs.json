@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-06-22T21:56:26.994875+00:00",
+  "mode": "assistant_real_sources_no_external_llm",
+  "model": "Arena assistant source-based generation (no LLM_API_KEY used)",
+  "signal_count": 5,
+  "topics": [
+    {
+      "topic": "AI Inspection Is Moving Past False-Call Reduction Toward Closed-Loop SMT Control",
+      "angle": "Recent inspection announcements and a 2024 false-call classification study point to a shift from isolated AOI review toward SPI/AOI/AXI data loops that stabilize print and placement before defects appear.",
+      "format": "insight",
+      "keywords": [
+        "AI AOI",
+        "SPI AOI data",
+        "false calls",
+        "closed-loop process control",
+        "SMT inspection"
+      ],
+      "category": "Quality Control",
+      "urgency": "HIGH",
+      "source_count": 5,
+      "source_notes": "2026-current sources: Koh Young IPC APEX EXPO 2026, Koh Young AI-powered AOI article, TRI IPC APEX EXPO 2026, PatSnap April 2026 AOI defect classification/closed-loop discussion, and SMT Today June 2026 Sincotron/Delvitech AI inspection coverage.",
+      "sources": [
+        {
+          "title": "Koh Young to Showcase AI-Powered Inspection Solutions at IPC APEX EXPO 2026",
+          "url": "https://kohyoungamerica.com/koh-young-to-showcase-ai-powered-inspection-solutions-at-ipc-apex-expo-2026/"
+        },
+        {
+          "title": "AI-Powered AOI: The Key to Higher Yields and Smarter Factories",
+          "url": "https://kohyoungamerica.com/ai-powered-aoi-the-key-to-higher-yields-and-smarter-factories/"
+        },
+        {
+          "title": "AI-Powered Test and Inspection Solutions at IPC APEX EXPO 2026",
+          "url": "https://smttoday.com/2025/12/19/ai-powered-test-and-inspection-solutions-at-ipc-apex-expo-2026/"
+        },
+        {
+          "title": "AI-powered PCB defect classification for AOI inspection",
+          "url": "https://www.patsnap.com/resources/blog/articles/ai-powered-pcb-defect-classification-for-aoi-inspection/"
+        },
+        {
+          "title": "Sincotron and Delvitech Reunite to Disrupt the Future of AI Inspection",
+          "url": "https://smttoday.com/2026/06/22/sincotron-and-delvitech-reunite-to-disrupt-the-future-of-ai-inspection-breakthrough-technology/"
+        }
+      ]
+    }
+  ]
+}

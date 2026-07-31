@@ -1,0 +1,58 @@
+{
+  "title": "AI Inspection Is Moving Past False-Call Reduction Toward Closed-Loop SMT Control",
+  "summary": "AI inspection in 2026 is shifting from simple false-call filtering toward closed-loop process control across SPI, AOI, AXI, review, and machine data.",
+  "category": "Quality Control",
+  "tags": [
+    "AI AOI",
+    "SPI",
+    "AOI",
+    "AXI",
+    "false calls",
+    "closed-loop process control",
+    "SMT inspection"
+  ],
+  "editorial_type": "insight",
+  "source_topic_brief": {
+    "topic": "AI Inspection Is Moving Past False-Call Reduction Toward Closed-Loop SMT Control",
+    "angle": "Recent inspection announcements and a 2024 false-call classification study point to a shift from isolated AOI review toward SPI/AOI/AXI data loops that stabilize print and placement before defects appear.",
+    "format": "insight",
+    "keywords": [
+      "AI AOI",
+      "SPI AOI data",
+      "false calls",
+      "closed-loop process control",
+      "SMT inspection"
+    ],
+    "category": "Quality Control",
+    "urgency": "HIGH",
+    "source_count": 5,
+    "source_notes": "Sources include Koh Young IPC APEX EXPO 2026, Koh Young AI-powered AOI article, TRI IPC APEX EXPO 2026, Springer FAIM 2024 AOI false-call classification paper, and SMT Today coverage of Sincotron/Delvitech AI inspection collaboration.",
+    "sources": [
+      {
+        "title": "Koh Young to Showcase AI-Powered Inspection Solutions at IPC APEX EXPO 2026",
+        "url": "https://kohyoungamerica.com/koh-young-to-showcase-ai-powered-inspection-solutions-at-ipc-apex-expo-2026/"
+      },
+      {
+        "title": "AI-Powered AOI: The Key to Higher Yields and Smarter Factories",
+        "url": "https://kohyoungamerica.com/ai-powered-aoi-the-key-to-higher-yields-and-smarter-factories/"
+      },
+      {
+        "title": "AI-Powered Test and Inspection Solutions at IPC APEX EXPO 2026",
+        "url": "https://smttoday.com/2025/12/19/ai-powered-test-and-inspection-solutions-at-ipc-apex-expo-2026/"
+      },
+      {
+        "title": "Surface Mounting Production Line AOI False Call Classification with Machine Learning Algorithms",
+        "url": "https://link.springer.com/chapter/10.1007/978-3-031-74482-2_2"
+      },
+      {
+        "title": "Sincotron and Delvitech Reunite to Disrupt the Future of AI Inspection",
+        "url": "https://smttoday.com/2026/06/22/sincotron-and-delvitech-reunite-to-disrupt-the-future-of-ai-inspection-breakthrough-technology/"
+      }
+    ]
+  },
+  "generated_at": "2026-06-22T21:56:26.994890+00:00",
+  "model": "Arena assistant source-based generation (no external LLM API)",
+  "article_file": "/tmp/smtinsider_real_article.txt",
+  "updated_at": "2026-06-22T22:16:42.356432+00:00",
+  "format_note": "Updated 2026-current version: removed explicit 2024 research paragraph and removed Sources block from article body."
+}

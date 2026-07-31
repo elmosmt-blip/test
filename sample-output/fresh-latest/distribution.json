@@ -1,0 +1,5 @@
+{
+  "linkedin_post": "TRI’s TR7600 SV launch is a useful signal for SMT teams: AXI throughput is no longer only a machine-speed question. The real value is whether faster 3D X-ray inspection can cover BGAs, THT and SiP without creating review bottlenecks — and whether the results connect back to MES, SPI, AOI and process-control data. What is the biggest AXI constraint on your line today: scan time, programming, review load, or data integration? #SMT #AXI #ElectronicsManufacturing #QualityEngineering",
+  "forum_answer": "Engineering takeaways:\n- Validate the 20% throughput claim against your own board mix and sampling plan.\n- Check defect coverage by package family: BGA, THT, SiP, BTC/QFN.\n- Measure review time and false calls, not only scan speed.\n- Confirm MES/CFX/Hermes integration if AXI data is needed for traceability.\n- Use AXI results for upstream root-cause work, not just board disposition.",
+  "email_block": "New AXI systems are pushing beyond scan speed. TRI’s TR7600 SV launch raises practical questions about BGA/THT/SiP coverage, review load, and MES-connected inspection data. Читать полностью"
+}

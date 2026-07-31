@@ -1,0 +1,1020 @@
+{
+  "generated_at": "2026-06-23T20:06:31.636192+03:00",
+  "model": "local-mock-llm",
+  "lookback_days": 30,
+  "strict_fresh": true,
+  "verify_pages": true,
+  "signal_count": 83,
+  "signals": [
+    {
+      "title": "Green Circuits Names Adam Szychowski Chief Revenue Officer",
+      "snippet": "Green Circuits, a full-service electronics manufacturing services (EMS) partner to leading OEMs in aerospace and defense, medical and health technology, industrial electronics, and semiconductor and AI hardware markets, has appointed Adam Szychowski as Chief Revenue Officer (CRO). This appointment strengthens the company’s executive leadership team",
+      "source": "https://smttoday.com/2026/06/23/green-circuits-names-adam-szychowski-chief-revenue-officer/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "PCB Assembly Solutions Summit UK 2026",
+      "snippet": "The post PCB Assembly Solutions Summit UK 2026 appeared first on SMT Today.",
+      "source": "https://smttoday.com/2026/06/23/pcb-assembly-solutions-summit-uk-2026/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "ELANTAS Heads to SMTA Querétaro with Proven Protection Solutions for Electronics",
+      "snippet": "ELANTAS will exhibit at the SMTA Querétaro Expo &#38; Tech Forum, taking place Thursday, July 16, 2026 in Querétaro, Mexico. The event brings together electronics manufacturing professionals from across the region to explore new materials, processes, and technologies. At the event, ELANTAS will highlight its portfolio of conformal coatings and pott",
+      "source": "https://smttoday.com/2026/06/23/elantas-heads-to-smta-queretaro-with-proven-protection-solutions-for-electronics/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Seika Machinery to Kick Off SMI 2026 Webinar Series with Focus on Solder Paste Preparation and Control",
+      "snippet": "Seika Machinery, Inc., a leading provider of advanced machinery, materials and engineering services, will kick off its SMI 2026 Webinar Series with Session 1, “Solder Paste… Automating Preparation Practices,” focusing on the early-stage process variables that often determine print quality and overall SMT stability. The first session will be held on",
+      "source": "https://smttoday.com/2026/06/23/seika-machinery-to-kick-off-smi-2026-webinar-series-with-focus-on-solder-paste-preparation-and-control/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Horizon Sales, Circuit Technology to Host IPC Training to Address Industry Skills Gap",
+      "snippet": "Horizon Sales, a leading manufacturers’ representative and distributor to the electronics industry, will host its next series of Circuit Technology Training Inc. (CTTI) IPC certification classes at its Brighton, Michigan facility, offering hands-on training for electronics manufacturing professionals looking to build or sharpen their skills. With t",
+      "source": "https://smttoday.com/2026/06/23/horizon-sales-circuit-technology-to-host-ipc-training-to-address-industry-skills-gap/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Seica Celebrates 40 Years of Innovation with the Launch of Opera Series, a New Open Platform for the Future of Electronic Test",
+      "snippet": "Seica S.p.A., a global leader in electronic test and selective soldering solutions, is celebrating its 40th anniversary with the launch of OPERA Series, a new-generation platform designed to deliver greater flexibility, scalability, and long-term value to electronics manufacturers worldwide. The announcement was made during Seica&#8217;s annual int",
+      "source": "https://smttoday.com/2026/06/23/seica-celebrates-40-years-of-innovation-with-the-launch-of-opera-series-a-new-open-platform-for-the-future-of-electronic-test/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Controlar Offers Advanced Tooling and Fixturing Solutions to Speed up Production",
+      "snippet": "Controlar develops and builds tooling, test fixtures, and scalable test systems for a wide range of PCB and electronics manufacturing applications, including ICT (In-Circuit Testing), functional test, ISP (In-System Programming), RF testing, LED testing, and end-of-line testing. Many test challenges in production environments are not only related t",
+      "source": "https://smttoday.com/2026/06/22/controlar-offers-advanced-tooling-and-fixturing-solutions-to-speed-up-production/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "MicroCare Appoints Doug Kay as Director of Market and New Business Development",
+      "snippet": "MicroCare, LLC, a leading provider of precision cleaning fluids, specialty chemicals, and application tools, today announced the appointment of Doug Kay as Director of Market and New Business Development. In this newly created role, Kay will focus on finding new growth opportunities, expanding strategic partnerships, and driving market development ",
+      "source": "https://smttoday.com/2026/06/22/microcare-appoints-doug-kay-as-director-of-market-and-new-business-development/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Sincotron and Delvitech Reunite to Disrupt the Future of AI Inspection Breakthrough technology",
+      "snippet": "Sincotron and Delvitech announce a bold and disruptive new collaboration set to redefine the landscape of industrial inspection through next-generation artificial intelligence. This partnership is not new,it is a powerful comeback. In the 90s, Sincotron and Delvitech already revolutionized the inspection market through a groundbreaking collaboratio",
+      "source": "https://smttoday.com/2026/06/22/sincotron-and-delvitech-reunite-to-disrupt-the-future-of-ai-inspection-breakthrough-technology/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "New High Throughput X-ray Inspection System",
+      "snippet": "Test Research, Inc. (TRI), the leading test and inspection systems provider for the electronics manufacturing industry, proudly announces the launch of the TR7600 SV Series. The newly released line scan 3D AXI delivers up to a 20% performance improvement compared to the award-winning TR7600 SIII series. Equipped with a high-speed robust platform, t",
+      "source": "https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/",
+      "query": "RSS:SMT Today",
+      "feed": "SMT Today",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "in4ma & EMSNOW On Tour 2026 – Tour Wrap Up",
+      "snippet": "In this very insightful final conversation of in4ma &#038; EMSNOW's On Tour 2026, Eric Miscoll and Dieter Weiss break down the findings from their in-depth interviews of the nine Nordic EMS companies, representing very different management styles and strategies.",
+      "source": "https://www.emsnow.com/in4ma-emsnow-on-tour-2026-tour-wrap-up/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Flatter, leaner, more technical: The new shape of tech companies in 2026",
+      "snippet": "The tech company of 2021 was built for an era of abundance: cheap capital, hyper-scaled hiring, endless coordination layers, and highly specialized micro-roles. The tech company of 2026 is being rebuilt for leverage. SOURCE: SignalFire&#8217;s State of Talent Report 2026 For the last five years, the story about AI and software jobs has been the sam",
+      "source": "https://www.emsnow.com/flatter-leaner-more-technical-the-new-shape-of-tech-companies-in-2026/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Global Electronics Association Releases IPC-1401B ESG Management System Standard",
+      "snippet": "Update gives manufacturers a global standard to prove ESG performance to customers, investors and regulators The Global Electronics Association has released IPC-1401B, Environmental, Social and Governance (ESG) Management System Standard, an updated industry standard that gives manufacturers a practical, scalable framework to demonstrate ESG perfor",
+      "source": "https://www.emsnow.com/global-electronics-association-releases-ipc-1401b-esg-management-system-standard/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "RoboDK to Demonstrate New CAM Software That Cuts Robotic Machining Deployment Time by Up to 40% at Automate Chicago 2026",
+      "snippet": "RoboDK will showcase CAD-to-robot machining and collision-free motion planning in a production-ready setup using a Mecademic robot. CHICAGO &#8211; RoboDK, a global leader in offline programming (OLP) and simulation software for robots, will showcase its newly launched RoboDK CAM software at Automate (Booth #4476), demonstrating how robotic machini",
+      "source": "https://www.emsnow.com/robodk-to-demonstrate-new-cam-software-that-cuts-robotic-machining-deployment-time-by-up-to-40-at-automate-chicago-2026/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Myrex Announces Launch of IRIS Platform at Automate 2026 in Chicago",
+      "snippet": "Debuts the first manufacturing and training platform that uses 3D spatial models of assets to guide operators and technicians directly to the information and procedures they need Chicago, IL, USA, &#8211; Myrex today announced the official public launch of Myrex IRIS, a new manufacturing maintenance and training platform that uses high-definition 3",
+      "source": "https://www.emsnow.com/myrex-announces-launch-of-iris-platform-at-automate-2026-in-chicago/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Why operators should take control of the charging infrastructure for their AGV fleets",
+      "snippet": "Automation in intralogistics has developed at a rapid pace. More and more companies are turning to automated guided vehicles (AGVs) and autonomous mobile robots (AMRs) to make processes more flexible, faster and more cost-effective. Yet whilst fleet management, navigation and software interfaces have long been subject to strategic planning, one asp",
+      "source": "https://www.emsnow.com/why-operators-should-take-control-of-the-charging-infrastructure-for-their-agv-fleets/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-22",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "DeepSeek Completes First Funding Round, Raises Over CNY 50 Billion at Valuation Above CNY 330 Billion",
+      "snippet": "DeepSeek has completed its first external fundraising round, securing more than CNY 50 billion (approximately USD 7.4 billion), according to people familiar with the matter cited by The Information. The transaction was structured in an unconventional manner. The financing values the large language model developer at more than USD 50 billion. To pre",
+      "source": "https://www.emsnow.com/deepseek-completes-first-funding-round-raises-over-cny-50-billion-at-valuation-above-cny-330-billion/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-21",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Hidden beneath AI chips, Chinese-made circuit boards raise national security concerns in U.S.",
+      "snippet": "Printed circuit boards sit underneath almost every chip, a necessity in nearly every electronic. They make up a quiet but crucial piece of the booming artificial intelligence market, and represent a growing problem for the U.S., because nearly all AI circuit boards, for Nvidiaand others, are made in China. Circuit boards present all sorts of opport",
+      "source": "https://www.emsnow.com/hidden-beneath-ai-chips-chinese-made-circuit-boards-raise-national-security-concerns-in-u-s/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-21",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "in4ma & EMSNOW On Tour 2026 – Neways",
+      "snippet": "In this their final Nordic EMS industry company analysis, Eric Miscoll and Dieter Weiss travelled to Eindhoven, Netherlands, which has become 'the center of the universe' for electronics. The team met with executives from Neways, which is #62 on the EMS &#038; ODM Global 100 list.",
+      "source": "https://www.emsnow.com/in4ma-emsnow-on-tour-2026-neways/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-21",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Neways successfully completes acquisition of Philips Micro Devices",
+      "snippet": "Neways, the global innovator in mission-critical technology for semicon, defense &#38; mobility, and connectivity sectors, announced the successful closing of its previously announced acquisition of Philips Micro Devices. The transaction has now been completed following satisfaction of all closing conditions. Micro Devices is recognized for its adv",
+      "source": "https://www.emsnow.com/neways-successfully-completes-acquisition-of-philips-micro-devices/",
+      "query": "RSS:EMSNow",
+      "feed": "EMSNow",
+      "published_at": "2026-06-21",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Polymatech Opens Singapore Hub for LED Packaging and Memory Module Assembly",
+      "snippet": "SINGAPORE – Polymatech has opened a new advanced electronics manufacturing facility in Singapore that will serve as its Asia-Pacific hub for LED chip-on-board (CoB) packaging and advanced memory module assembly.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43368-polymatech-opens-singapore-hub-for-led-packaging-and-memory-module-assembly.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-17",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Jabil Raises Fiscal 2026 Outlook on Strong AI Infrastructure Demand",
+      "snippet": "ST. PETERSBURG, FL – Jabil reported third-quarter fiscal 2026 revenue of $8.8 billion, driven by continued strength in AI infrastructure programs and improving performance in several end markets.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43367-jabil-raises-fiscal-2026-outlook-on-strong-ai-infrastructure-demand.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-17",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "SigmaTron Names Jim Kircher CEO",
+      "snippet": "ELK GROVE VILLAGE, IL -- SigmaTron International has appointed Jim Kircher chief executive officer, effective May 11, as the electronics manufacturing services provider looks to accelerate growth under its new ownership structure.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43352-sigmatron-names-jim-kircher-ceo.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-11",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Incap Pennsylvania Facility Temporarily Closed Following Storm-Related Power Outage",
+      "snippet": "HELSINKI -- Incap's electronics manufacturing facility in Pennsylvania has temporarily suspended operations following a power outage caused by severe storms in the region.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43348-incap-pennsylvania-facility-temporarily-closed-following-storm-related-power-outage.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-09",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Global Semiconductor Sales Jump 94% Year-Over-Year in April",
+      "snippet": "WASHINGTON, DC -- Global semiconductor sales reached $110.5 billion in April, rising 11% from March and 93.9% from the same month a year ago, according to the Semiconductor Industry Association (SIA).",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43343-global-semiconductor-sales-jump-94-year-over-year-in-april.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-08",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Global Semiconductor Equipment Billings Rise 14% in First Quarter",
+      "snippet": "MILPITAS, CA -- Global semiconductor equipment billings reached a record $36.5 billion in the first quarter, up 14% year-over-year and 1% sequentially, according to SEMI's Worldwide Semiconductor Equipment Market Statistics (WWSEMS) report.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43338-global-semiconductor-equipment-billings-rise-14-in-first-quarter.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-05",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "SEMI Report Forecasts Rapid Growth for Glass Core Substrate Market Through 2040",
+      "snippet": "MILPITAS, CA -- SEMI and Global Net have released a new report examining the emerging market for glass core substrates, a packaging technology being evaluated for future semiconductor applications as artificial intelligence and high-performance computing drive demand for larger and more complex packages.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43335-semi-report-forecasts-rapid-growth-for-glass-core-substrate-market-through-2040.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-04",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Praesidian Capital Exits Investment in Green Circuits",
+      "snippet": "OKLAHOMA CITY -- Praesidian Capital announced the realization and exit of its investment in Green Circuits in connection with the sale of the electronics manufacturing services provider.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43329-praesidian-capital-exits-investment-in-green-circuits.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-02",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "North American EMS Book-to-Bill Ratio Reaches 1.36 in April",
+      "snippet": "WASHINGTON, DC -- The Global Electronics Association reported continued strength in the North American electronics manufacturing services (EMS) market in April, with the industry’s book-to-bill ratio reaching 1.36.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43328-north-american-ems-book-to-bill-ratio-reaches-1-36-in-april.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-02",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Semiconductors Account for 95% of AI Server Rack Value",
+      "snippet": "WASHINGTON, DC -- Semiconductors account for more than 95% of the content value in a leading AI server rack and represent more than half of the capital expenditures required to build and operate AI data centers, according to a new report released by the Semiconductor Industry Association (SIA) and Deloitte.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43327-semiconductors-account-for-95-of-ai-server-rack-value.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-06-02",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "North American PCB Bookings Jumped 25% in April",
+      "snippet": "BANNOCKBURN, IL – North American printed circuit board bookings surged in April as shipments also increased, pushing the industry’s book-to-bill ratio to its highest level in more than a year.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43316-north-american-pcb-bookings-jumped-25-in-april.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-05-29",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Lackey to Lead Flex Webinar June 24",
+      "snippet": "PEACHTREE CITY, GA – MAY 27, 2026 – Flex and rigid-flex circuit design and manufacturing expert Dave Lackey will present a free webinar for PCEA members this month.The talk, “Fundamentals of Flex and Rigid-Flex,” takes place Jun. 24 from 1 to 2 p.m. EDT.",
+      "source": "https://www.circuitsassembly.com/ca/editorial/menu-news/43310-lackey-to-lead-flex-webinar-june-24.html",
+      "query": "RSS:Circuits Assembly",
+      "feed": "Circuits Assembly",
+      "published_at": "2026-05-27",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "“How is the electronic supply chain going to evolve in the next 12 months and what impact will this have on purchasing departments both opportunities and threats?”",
+      "snippet": "The next 12 months will be extremely challenging for purchasing departments. The global semiconductor supply chain remains in a state of constraint, particularly across memory and ICs, where demand shows no sign of slowing. The AI boom is a major driver, but it is not the only one. Capacity limitations, allocation pressure, and uneven recovery acro",
+      "source": "https://electronics-sourcing.com/2026/06/18/how-is-the-electronic-supply-chain-going-to-evolve-in-the-next-12-months-and-what-impact-will-this-have-on-purchasing-departments-both-opportunities-and-threats-3/",
+      "query": "RSS:Electronics Sourcing",
+      "feed": "Electronics Sourcing",
+      "published_at": "2026-06-18",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Diversification becomes a strategic imperative!",
+      "snippet": "Diversification becomes a strategic imperative    Smith’s CEO, Nick Bedford, emphasized: “The semiconductor industry is shifting and supply chains need to shift alongside. Geopolitics and AI infrastructure have taken on significant importance recently, creating uncertainty and unexpected disruptions for manufacturers. With lead times extending and ",
+      "source": "https://electronics-sourcing.com/2026/06/04/diversification-becomes-a-strategic-imperative/",
+      "query": "RSS:Electronics Sourcing",
+      "feed": "Electronics Sourcing",
+      "published_at": "2026-06-04",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "AI demand reshapes the role of independents",
+      "snippet": "AI demand reshapes the role of independents   Classic Components’ Mike Thomas observed: “The component trading (broker) business is entering a more dynamic and strategically important phase. Artificial intelligence is reshaping supply chains, driving unprecedented demand for high-performance semiconductors while also enabling better forecasting, pr",
+      "source": "https://electronics-sourcing.com/2026/06/04/ai-demand-reshapes-the-role-of-independents/",
+      "query": "RSS:Electronics Sourcing",
+      "feed": "Electronics Sourcing",
+      "published_at": "2026-06-04",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "As markets fragment and demand intensifies, independent distributors are providing flexibility, access and speed, helping purchasing teams navigate volatility, shortages and pricing pressure",
+      "snippet": "The independent supply chain for electronic components plays a crucial role in maintaining global manufacturing continuity, particularly in a volatile and demand-driven technology landscape. Independent distributors operate outside formal agreements with original component manufacturers (OCMs), giving them flexibility to source, stock and deliver p",
+      "source": "https://electronics-sourcing.com/2026/06/04/as-markets-fragment-and-demand-intensifies-independent-distributors-are-providing-flexibility-access-and-speed-helping-purchasing-teams-navigate-volatility-shortages-and-pricing-pressure/",
+      "query": "RSS:Electronics Sourcing",
+      "feed": "Electronics Sourcing",
+      "published_at": "2026-06-04",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "AI, geopolitics and the new constraint model!",
+      "snippet": "AI, geopolitics and the new constraint model    Sourceability’s SVP digital transformation, Rob Picken, explained: “We will see continued shifts toward an AI-centric, capacity-constrained model through 2026 and into 2027. High-performance components will continue to take priority amid ongoing supplier restructuring, with AI taking precedence. We ar",
+      "source": "https://electronics-sourcing.com/2026/06/04/ai-geopolitics-and-the-new-constraint-model/",
+      "query": "RSS:Electronics Sourcing",
+      "feed": "Electronics Sourcing",
+      "published_at": "2026-06-04",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "EMX US Inc. represents for US States: \nNew Hampshire, Maine, Massachusetts, Vermont, Connecticut and Rhode Island.",
+      "snippet": "SAKI is pleased to announce our sales partnership with EMX US Inc. represents for US States:New Hampshire, Maine, Massachusetts, Vermont, Connecticut and Rhode Island.EMX US Inc. will offer technical sales for SAKI’s full range of 3D solder paste inspection (SPI), automated optical inspection (AOI), and automated X-ray inspection (AXI) equipment an",
+      "source": "https://www.sakicorp.com/en/news/announcement/4705/",
+      "query": "RSS:Saki Vendor",
+      "feed": "Saki Vendor",
+      "published_at": "2026-06-03",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "FUJI Introduces the CLT-FG: New Series of Compact All-in-One Placement Machines",
+      "snippet": "Combining Compactness and Production Flexibility to Meet Diverse Requirements Kelsterbach, June 11th, 2026 2026 – FUJI CORPORATION has developed the CLT-FG, a new placement machine that combines compactness and flexibility to meet a wide range of production requirements. Featuring an exceptionally compact design with a machine width of just one met",
+      "source": "https://www.fuji-euro.de/en/fuji-introduces-the-clt-fg-new-series-of-compact-all-in-one-placement-machines/",
+      "query": "RSS:Fuji Europe Vendor",
+      "feed": "Fuji Europe Vendor",
+      "published_at": "2026-06-11",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "FUJI Introduces the World’s First Auto Kitting Station for Automated Loading of Component Reels into Feeders",
+      "snippet": "Accelerating Lights-Out Manufacturing with the Final Missing Piece of SMT Floor Automation Kelsterbach, June 2nd, 2026 – FUJI CORPORATION, headquartered in Japan, has developed the Auto Kitting Station, a new system unit that automates the loading of component reels into feeders used for component supply in placement machines. This kitting and setu",
+      "source": "https://www.fuji-euro.de/en/fuji-introduces-the-worlds-first-auto-kitting-station-for-automated-loading-of-component-reels-into-feeders/",
+      "query": "RSS:Fuji Europe Vendor",
+      "feed": "Fuji Europe Vendor",
+      "published_at": "2026-06-02",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Orbit Technologies accelerates growth and doubles production capacity with Europlacer iineo placement machine.",
+      "snippet": "Orbit Technologies Ltd, a UK-based contract electronics manufacturer, has reported significant operational and business improvements following its investment in Europlacer surface-mount technology (SMT) equipment, including the recent installation of an iineo+ pick-and-place system.     Highlights: 500% increase in turnover since switching to Europ",
+      "source": "https://europlacer.com/orbit-technologies-doubles-capacity-with-europlacer-smt-pick-and-place/",
+      "query": "RSS:Europlacer Vendor",
+      "feed": "Europlacer Vendor",
+      "published_at": "2026-06-23",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Industry 4.0: Data-Driven SMT in the Service of Variability",
+      "snippet": "The real challenge of Industry 4.0 isn't generating more data, it's turning it into decisions you can act on. Europlacer's strategy builds on two complementary standards: Hermes for machine-to-machine continuity, and CFX for transforming production events into business intelligence.\nDiscover how Hermes, CFX, EPiiCENTRE and ii-TAB all connect the sh",
+      "source": "https://europlacer.com/industry-4-0-data-driven-smt-in-the-service-of-variability/",
+      "query": "RSS:Europlacer Vendor",
+      "feed": "Europlacer Vendor",
+      "published_at": "2026-06-02",
+      "date_source": "rss_pubDate",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "ELANTAS Heads to SMTA Querétaro with Proven Protection Solutions for Electronics",
+      "snippet": "Jun 22, 2026 | ELANTAS will exhibit at the SMTA Querétaro Expo & Tech Forum, taking place Thursday, July 16, 2026 in Querétaro, Mexico. The event brings together electronics manufacturing professionals from across the region to explore new materials, processes, and technologies. ELANTAS Electrical Insulation",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53858&news_id=31887",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Seika Machinery to Kick Off SMI 2026 Webinar Series with Focus on Solder Paste Preparation and Control",
+      "snippet": "Jun 22, 2026 | Seika Machinery, Inc., a leading provider of advanced machinery, materials and engineering services, will kick off its SMI 2026 Webinar Series with Session 1, \"Solder Paste... Automating Preparation Practices,\" focusing on the early-stage process variables that often determine print quality and overall SMT stability. The first sessio",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=46634&news_id=31886",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Horizon Sales, Circuit Technology to Host IPC Training to Address Industry Skills Gap",
+      "snippet": "Jun 22, 2026 | Horizon Sales, a leading manufacturers' representative and distributor to the electronics industry, will host its next series of Circuit Technology Training Inc. (CTTI) IPC certification classes at its Brighton, Michigan facility, offering hands-on training for electronics manufacturing professionals looking to build or sharpen their",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=43765&news_id=31885",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Altus Group Expands Soldering Portfolio with SEHO Partnership",
+      "snippet": "Jun 22, 2026 | Altus Group, a leading distributor of capital equipment for electronics manufacturing in the UK and Ireland, has announced a new partnership with SEHO Systems GmbH, a German manufacturer specialising in wave and selective soldering systems, automation technology as well as THT inspection solutions. Altus Group",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=50610&news_id=31884",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "MicroCare Appoints Doug Kay as Director of Market and New Business Development",
+      "snippet": "Jun 22, 2026 | Seasoned medical device and industrial technology executive joins MicroCare to expand market opportunities and accelerate growth across key industries MicroCare Corporation",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=52037&news_id=31883",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "The Test Connection Earns 2026 PCBAA Outstanding Contributor Award",
+      "snippet": "Jun 22, 2026 | The Test Connection, Inc., a provider of electronic test and manufacturing solutions, has been recognized by the Printed Circuit Board Association of America (PCBAA) as a recipient of a 2026 Outstanding Contributor Award. The award was presented during the association's annual meetings, honoring members who have made meaningful contr",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=51053&news_id=31882",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Creative Electron Launches TruView™ Prime SDX, Bringing Planar CT to the Benchtop",
+      "snippet": "Jun 22, 2026 | Creative Electron, a U.S.-based developer of X-ray and computed tomography (CT) inspection systems, today announced the launch of the TruView™ Prime SDX, a compact benchtop X-ray system designed to bring advanced inspection capabilities to a wider range of electronics manufacturing environments. Creative Electron Inc",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=52760&news_id=31881",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-23",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Amtech Helps Drone Manufacturers Prepare for the 2027 Compliance Deadline",
+      "snippet": "Jun 22, 2026 | Amtech Electrocircuits, a leading provider of manufacturing solutions, is helping drone manufacturers address compliance early in the design process so they can accelerate product development while reducing supply chain risk. Its engineering-first approach combines supply chain intelligence, rapid manufacturing and advanced process t",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=41827&news_id=31880",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Metal Etch Services Opens New Motor City Facility to Meet Growing Midwest Demand",
+      "snippet": "Jun 22, 2026 | Metal Etch Services, Inc. has opened a new Midwest facility, Metal Etch Services Motor City, located in Detroit, Michigan, expanding its reach to better support customers across the central and eastern United States. Metal Etch Services, Inc.",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=50027&news_id=31879",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "FUJI America Corporation Welcomes Jonathan Wol as Senior Director of Sales and Applications",
+      "snippet": "Jun 22, 2026 | FUJI America Corporation is pleased to announce the appointment of Jonathan Wol as Senior Director of Sales and Applications. Fuji America Corporation",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=48274&news_id=31878",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "KIC to Exhibit at SMTA Querétaro Expo & Tech Forum 2026",
+      "snippet": "Jun 22, 2026 | KIC will exhibit at the SMTA Querétaro Expo & Tech Forum in Querétaro, Mexico on Thursday, July 16, 2026. Visitors to Booth 96 can meet with KIC Service Engineer Miguel Flores to discuss the latest advancements in thermal process optimization, automation, and traceability for electronics manufacturing. KIC Thermal",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=45770&news_id=31877",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Amtech Launches Rapid NPI and RapidRFQ to Accelerate Product Launches and Quoting",
+      "snippet": "Jun 22, 2026 | Amtech Electrocircuits, a leading provider of manufacturing solutions, has introduced two new capabilities--Rapid NPI and RapidRFQ--focused on solving two of the most common bottlenecks in electronics manufacturing: slow product launches and long RFQ cycles. Amtech Electrocircuits",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=41827&news_id=31876",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-22",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Hinge Technology Integrates KD's KD7251 in Automotive Camera System",
+      "snippet": "Jun 15, 2026 | Enabling 10 Gb/s Optical Camera Links over IEEE 802.3cz Fiber-optic Backbone in a Production-ready System KD",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=57389&news_id=31875",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-15",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Magnalytix Introduces Exciting Additions to Objective Evidence (OE) in a Box Kit Lineup",
+      "snippet": "Jun 15, 2026 | Magnalytix, providing real-time reliability solutions for electronics manufacturing, is excited to introduce two additions their lineup of kit offerings of the revolutionary advancement in electronics reliability testing, Objective Evidence (OE) in a Box. Magnalytix",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=58555&news_id=31874",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-15",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Fuji Corporation Launches the Auto Kitting Station, a New Unit Automating the Tape Reel Loading Process for Feeders",
+      "snippet": "Jun 15, 2026 | Accelerating unmanned manufacturing with the final piece of SMT floor automation FUJI CORPORATION",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53890&news_id=31873",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-15",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Hinge Technology Integrates KD's KD7251 in Automotive Camera System",
+      "snippet": "Jun 10, 2026 | Enabling 10 Gb/s Optical Camera Links over IEEE 802.3cz Fiber-optic Backbone in a Production-ready System KD",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=57389&news_id=31872",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-10",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Microscreen Names Nik Thomas Director, Expands Leadership Role Amid Continued Organizational Growth",
+      "snippet": "Jun 08, 2026 | Microscreen, a U.S. manufacturer specializing in high-precision SMT solder stencils and custom tooling solutions, has named Nik Thomas as Director, formalizing an expanded leadership role that has been developing across the organization over the past year. MicroScreen, LLC",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=55137&news_id=31871",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Shenzhen SAM Electronic Equipment to Present PCB, SMT and Semiconductor Cleaning Solutions at JPCA Show 2026",
+      "snippet": "Jun 08, 2026 | Shenzhen SAM Electronic Equipment Co., Ltd. will exhibit at the JPCA Show 2026, taking place June 10-12 in Tokyo, Japan. Visitors are invited to Stand 2D-19 to explore the company's latest cleaning solutions for PCB, SMT, advanced packaging, and semiconductor manufacturing. Shenzhen Sam Electronic Equipment Co.,Ltd",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53586&news_id=31870",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "ViTrox to Showcase Intelligent Inspection and Smart Factory Solutions at VIMF Binh Duong 2026 in Collaboration with Valued Partner - EMIN",
+      "snippet": "Jun 08, 2026 | ViTrox, which aims to be the World's Most Trusted Technology Company in providing innovative, advanced, and cost-effective automated Machine Vision Inspection Solutions for the semiconductor and electronics packaging industries, is pleased to announce its participation in the Vietnam Industrial & Manufacturing Fair (VIMF) 2026. The e",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53864&news_id=31869",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+      "snippet": "Jun 08, 2026 | Altus Group, a leading distributor of electronics assembly equipment in the UK and Ireland, has supported Esprit Electronics, an electronics manufacturing services provider, in selecting new best-in-class inspection technology from Koh Young following an evaluation process. Altus Group",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=50610&news_id=31868",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "YINCAE Announces Office Relocation to Menands, New York",
+      "snippet": "Jun 08, 2026 | YINCAE today announced the relocation of its office from Albany, New York to a new facility located at 93 Broadway, Menands, NY 12204. YINCAE Advanced Materials, LLC.",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=54053&news_id=31866",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-23",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Hanwha Semitech Americas Supports Regal Technology Partners with New SMT Line Installation",
+      "snippet": "Jun 08, 2026 | Hanwha Semitech Americas recently supported Regal Technology Partners with the installation of a new SMT line featuring the SM481 Plus, SM485 Plus, and a 10-zone reflow oven. Hanwha Techwin CO., LTD.",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=54196&news_id=31865",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Inovaxe Brings Smart Storage to SMTA Ontario -- Live Demos of LS350 and a Closer Look at High-Density InoHD",
+      "snippet": "Jun 08, 2026 | Inovaxe, a world leader and provider of innovative material handling and inventory control systems, will exhibit at the SMTA Ontario Expo & Tech Forum 2026 on Tuesday, June 16, 2026 at Venu Event Space. Inovaxe Corporation",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=51236&news_id=31861",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "A.R.T. to Welcome Space East Members for Connect, Collaborate, Launch Event",
+      "snippet": "Jun 08, 2026 | Advanced Rework Technology Ltd (A.R.T.), one of Europe's longest-running IPC Certification Centres, has partnered with Space East, the East of England's space cluster organisation, to host the Connect, Collaborate, Launch networking event on 2 July 2026. A.R.T. (Automation Resources & Technology)",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=44119&news_id=31860",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-08",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Industrial Connectors in AI Data Center Infrastructure",
+      "snippet": "Jun 02, 2026 | As artificial intelligence rack densities surge from 10 kW to over 100 kW, harsh environmental conditions require a critical pivot from standard IT cabling to rugged, industrial grade interconnects to secure vital liquid cooling and power distribution uptime. Mencom Corporation",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=59619&news_id=31859",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-02",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "The SearchWorks Group Shares Mid-Year Read on the EMS Talent Market",
+      "snippet": "Jun 01, 2026 | The SearchWorks Group, a leading executive search firm specializing in the electronics manufacturing market, is seeing a noticeable shift in how electronics manufacturers are hiring--and how candidates are responding--heading into the second half of 2026. SWG",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=54160&news_id=31858",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-01",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "ViTrox Successfully Hosts Smart Solutions Launch Event, Accelerating the Next Frontier of Smart Manufacturing",
+      "snippet": "Jun 01, 2026 | ViTrox, which aims to be the World's Most Trusted Technology Company in providing innovative, advanced, and cost-effective automated Machine Vision Inspection Solutions for the semiconductor and electronics packaging industries, successfully hosted a new milestone event for industrial automation, themed \"Capture. Connect. Control. | ",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53864&news_id=31857",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-01",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "EMS Solutions Joins Industry Leaders at Project Alta Summit in Utah",
+      "snippet": "Jun 01, 2026 | EMS Solutions, a premier regional provider of Electronics Manufacturing Services (EMS), recently participated in the Project Alta Summit hosted by 47G | Utah Aerospace and Defense, bringing together companies, policymakers, and infrastructure leaders working to put advanced air mobility into real use. EMS Solutions, LLC",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=47748&news_id=31856",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-01",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "KYZEN AQUANOX A4618 and KYZEN ANALYST2 RI to Be Featured at SMTA San Diego Expo & Tech Forum",
+      "snippet": "Jun 01, 2026 | KYZEN, the global leader in innovative environmentally responsible cleaning chemistries, will exhibit at the SMTA San Diego Expo & Tech Forum, scheduled to take place Thursday, June 11 at the El Corazon Event Center in Oceanside, CA. The KYZEN Clean Team will be on-site to provide information about award-winning cleaning chemistry AQ",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=41143&news_id=31855",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-01",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Wiwynn Selects TRI as Inspection Partner for Advanced Server Board Manufacturing",
+      "snippet": "Jun 01, 2026 | Test Research, Inc. (TRI) (TWSE: 3030), the leading test and inspection systems provider for the electronics manufacturing industry, is proud to announce its selection by Wiwynn as a trusted equipment vendor for server board inspection. TRI congratulates Wiwynn on its recent business success and the major expansion of its Tainan manu",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53308&news_id=31854",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-01",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Datest to Exhibit at Space Tech Expo Anaheim, Highlighting Advanced Test Engineering and CT Scanning Capabilities for Aerospace and Commercial Space Applications",
+      "snippet": "Jun 01, 2026 | Datest, a leading provider of advanced test engineering, inspection, and failure analysis services, announced today that they will be exhibiting at Space Tech Expo Anaheim 2026, where they will showcase their capabilities supporting aerospace and commercial space organizations with advanced test strategies, X-ray inspection, CT scann",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=52536&news_id=31853",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-23",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "KYZEN to Lead Professional Development Course on Cleanliness Measurement at SMTA STAR Forum 2026",
+      "snippet": "Jun 01, 2026 | KYZEN, the global leader in innovative environmentally responsible cleaning chemistries, will present a professional development course, Fundamentals of Measuring Cleanliness, at the SMTA STAR Forum 2026, taking place July 15–16, 2026 at the Embassy Suites Kansas City Olathe. KYZEN Corporation",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=41143&news_id=31852",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-01",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Essemtec to Showcase Advanced Dispensing, Jetting and Hybrid Packaging Solutions at NEPCON Shanghai 2026",
+      "snippet": "May 25, 2026 | Essemtec, a global leader in adaptive SMT manufacturing solutions, will participate at NEPCON Shanghai 2026, taking place from June 2–4, 2026, in Shanghai, China. Visitors are invited to discover Essemtec's latest innovations together with its Chinese partner Intellengine at Booth 1H70. ESSEMTEC AG",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=44056&news_id=31851",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-05-25",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Jabil and ViTrox Strengthen Manufacturing Excellence Through V-ONE Control Tower Digital Factory Collaboration",
+      "snippet": "May 25, 2026 | ViTrox, which aims to be the World's Most Trusted Technology Company in providing innovative, advanced, and cost-effective automated Machine Vision Inspection Solutions for the semiconductor and electronics packaging industries, proudly announces the successful integration of the V-ONE Digital Factory Solution into Jabil's manufactur",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=53864&news_id=31850",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-05-25",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "PVA Heads to The Battery Show Europe with Automated Coating and Dispensing Solutions for EV and Energy Storage",
+      "snippet": "May 25, 2026 | PVA, a global supplier of automated dispensing and coating equipment, will exhibit in Hall H5, Stand 5-D65 at The Battery Show Europe 2026, taking place June 9–11, 2026 at Messe Stuttgart. Precision Valve & Automation (PVA)",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=54552&news_id=31849",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-05-25",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "Creative Electron CEO Talks Big BGAs, Bigger Questions at Technica USA Tech Day",
+      "snippet": "May 25, 2026 | Creative Electron, a U.S.-based developer of X-ray and computed tomography inspection systems, took part in the recent Technica USA Tech Day, where conversations centered on a topic that's becoming harder to ignore: how do you inspect what you can't easily see anymore? Creative Electron Inc",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=52760&news_id=31848",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-05-25",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "See Inspection in a New Light: Aven Bringing MicroVue™ 2.0 to SMTA Ontario Expo",
+      "snippet": "May 25, 2026 | Aven Tools, a trusted provider of precision tools and inspection solutions, will exhibit at the SMTA Ontario Expo & Tech Forum 2026 on Tuesday, June 16, 2026, at Venu Event Space in Vaughan, Ontario, Canada. Aven, Inc",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=58311&news_id=31847",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-05-25",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "KOKI to Highlight E-Series Zero Flux Residue Solder Paste at PCIM Europe 2026 – Hall 6, Booth 345",
+      "snippet": "May 25, 2026 | KOKI Company Ltd., a global leader in advanced soldering materials, will showcase its E-Series solder paste at PCIM Europe 2026 in Nuremberg, Germany, exhibiting in Hall 6, Booth 345, and bringing a focused solution to the evolving demands of power semiconductor manufacturing. Koki Company LTD",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=55054&news_id=31846",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-05-25",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "KIC to Showcase Heat to Data Ecosystem at EPTECH Vancouver 2026 with Comtree Inc.",
+      "snippet": "May 20, 2026 | KIC, a leader in thermal process technologies for electronics manufacturing, announced today that General Manager Miles Moreau will join KIC representative Comtree Inc. at EPTECH Vancouver 2026 on June 4, 2026, at the Delta Hotels by Marriott Burnaby Conference Centre. KIC Thermal",
+      "source": "https://smtnet.com/news/index.cfm?fuseaction=view_news&company_id=45770&news_id=31834",
+      "query": "HTML:SMTnet",
+      "feed": "SMTnet",
+      "published_at": "2026-06-23",
+      "date_source": "html_page_date",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "AIM Hires Marcus Pee as Sales Engineer for Southeast Asia",
+      "snippet": "Read More » June 2, 2026",
+      "source": "https://www.aimsolder.com/news/aim-hires-marcus-pee-as-sales-engineer-for-southeast-asia/",
+      "query": "VENDOR:AIM Solder",
+      "feed": "AIM Solder",
+      "vendor_group": "materials",
+      "published_at": "2026-06-02",
+      "date_source": "vendor_page",
+      "date_verified": true,
+      "fresh_within_days": true
+    },
+    {
+      "title": "AIM to Highlight Cost-Saving Low Silver REL61 Alloy at SMTA Ontario Expo & Tech Forum",
+      "snippet": "Read More » June 2, 2026",
+      "source": "https://www.aimsolder.com/news/aim-to-highlight-cost-saving-low-silver-rel61-alloy-at-smta-ontario-expo-tech-forum/",
+      "query": "VENDOR:AIM Solder",
+      "feed": "AIM Solder",
+      "vendor_group": "materials",
+      "published_at": "2026-06-02",
+      "date_source": "vendor_page",
+      "date_verified": true,
+      "fresh_within_days": true
+    }
+  ],
+  "topics": [
+    {
+      "topic": "New High Throughput X-ray Inspection System",
+      "angle": "Fresh news signal from the last configured lookback window; frame it as practical engineering impact for SMT production teams.",
+      "format": "insight",
+      "keywords": [
+        "inspection",
+        "SMT",
+        "process control"
+      ],
+      "category": "Quality Control",
+      "urgency": "HIGH",
+      "source_count": 1,
+      "source_notes": "Fresh source dated 2026-06-22: New High Throughput X-ray Inspection System",
+      "sources": [
+        {
+          "title": "New High Throughput X-ray Inspection System",
+          "url": "https://smttoday.com/2026/06/22/new-high-throughput-x-ray-inspection-system/",
+          "date": "2026-06-22"
+        }
+      ],
+      "editorial_type": "review",
+      "target_section": "/reviews/",
+      "section_routing": {
+        "editorial_type": "review",
+        "section_path": "/reviews/",
+        "confidence": 0.84,
+        "reasons": [
+          "review override: specific equipment/system signal"
+        ]
+      }
+    },
+    {
+      "topic": "Altus Group Expands Soldering Portfolio with SEHO Partnership",
+      "angle": "Fresh news signal from the last configured lookback window; frame it as practical engineering impact for SMT production teams.",
+      "format": "news",
+      "keywords": [
+        "SMT",
+        "manufacturing",
+        "quality"
+      ],
+      "category": "Process Engineering",
+      "urgency": "HIGH",
+      "source_count": 1,
+      "source_notes": "Fresh source dated 2026-06-22: Altus Group Expands Soldering Portfolio with SEHO Partnership",
+      "sources": [
+        {
+          "title": "Altus Group Expands Soldering Portfolio with SEHO Partnership",
+          "url": "Altus Group, a leading distributor of capital equipment for electronics manufacturing in the UK and Ireland, has announced a new partnership with SEHO Systems GmbH, a German manufacturer specialising in wa",
+          "date": "2026-06-22"
+        }
+      ],
+      "editorial_type": "news",
+      "target_section": "/news/",
+      "section_routing": {
+        "editorial_type": "news",
+        "section_path": "/news/",
+        "confidence": 0.86,
+        "reasons": [
+          "explicit news/editorial_type"
+        ]
+      }
+    },
+    {
+      "topic": "Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+      "angle": "Fresh news signal from the last configured lookback window; frame it as practical engineering impact for SMT production teams.",
+      "format": "insight",
+      "keywords": [
+        "inspection",
+        "SMT",
+        "process control"
+      ],
+      "category": "Quality Control",
+      "urgency": "HIGH",
+      "source_count": 1,
+      "source_notes": "Fresh source dated 2026-06-08: Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+      "sources": [
+        {
+          "title": "Altus Supports Esprit Electronics Inspection Upgrade with Koh Young Zenith 2",
+          "url": "Altus Group, a leading distributor of electronics assembly equipment in the UK and Ireland, has supported Esprit Electronics, an electronics manufacturing services provider, in selecting new best-in-class",
+          "date": "2026-06-08"
+        }
+      ],
+      "editorial_type": "insight",
+      "target_section": "/insights/",
+      "section_routing": {
+        "editorial_type": "insight",
+        "section_path": "/insights/",
+        "confidence": 0.9,
+        "reasons": [
+          "explicit insight/editorial_type"
+        ]
+      }
+    }
+  ]
+}

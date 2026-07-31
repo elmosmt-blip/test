@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-06-22T21:30:47.719831+00:00",
+  "model": "local-mock-llm",
+  "signal_count": 0,
+  "topics": [
+    {
+      "topic": "AOI False-Call Reduction: Using Defect Taxonomy Before Tuning Thresholds",
+      "angle": "Engineers often tune AOI sensitivity before cleaning up defect classes; the article explains a safer sequence that reduces escapes and review load.",
+      "format": "insight",
+      "keywords": [
+        "AOI",
+        "false calls",
+        "defect taxonomy",
+        "SMT quality"
+      ],
+      "category": "Quality Control",
+      "urgency": "HIGH",
+      "source_count": 3,
+      "source_notes": "Sandbox mock topic generated without external search; replace with real LLM/search in production."
+    },
+    {
+      "topic": "Reflow Profile Drift in High-Mix SMT Lines: What to Check Before Changing Paste",
+      "angle": "A practical troubleshooting path for thermal drift, conveyor loading, and board mass variation.",
+      "format": "insight",
+      "keywords": [
+        "reflow profile",
+        "thermal drift",
+        "high-mix",
+        "solder paste"
+      ],
+      "category": "Process Engineering",
+      "urgency": "MEDIUM",
+      "source_count": 2,
+      "source_notes": "Sandbox mock topic for deployment validation."
+    },
+    {
+      "topic": "Pick-and-Place Nozzle Wear: Early Signals Hidden in Placement Offsets",
+      "angle": "How small offset trends can reveal nozzle contamination or mechanical wear before yield loss appears.",
+      "format": "news",
+      "keywords": [
+        "pick and place",
+        "nozzle wear",
+        "placement accuracy",
+        "SPC"
+      ],
+      "category": "SMT Equipment",
+      "urgency": "LOW",
+      "source_count": 1,
+      "source_notes": "Sandbox mock topic for deployment validation."
+    }
+  ]
+}

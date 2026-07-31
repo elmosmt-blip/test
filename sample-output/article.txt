@@ -1,0 +1,27 @@
+AOI False-Call Reduction: Using Defect Taxonomy Before Tuning Thresholds
+
+AOI False-Call Reduction: Using Defect Taxonomy Before Tuning Thresholds
+
+AOI false calls are rarely solved by a single sensitivity change. In most high-mix SMT environments, the review burden grows because the line is mixing several different problems under one label: illumination variation, solder paste volume scatter, component body reflection, fiducial instability, and true process drift. Treating all of them as one inspection problem usually moves the line from too many false calls to a higher escape risk.
+
+Start With the Defect Taxonomy
+
+The first step is to separate repeatable calls from random noise. A repeatable call that appears on the same reference designator, package family, or board area is process information. A random call that appears across unrelated packages is more likely to be recipe noise or image acquisition instability. Before changing thresholds, export the AOI review history and group calls by defect class, package, feeder lane, board side, and time window.
+
+This classification gives the engineering team a safer decision tree. If bridges cluster around fine-pitch devices after stencil cleaning intervals, the answer is not an AOI recipe change. If missing-component calls cluster on black molded bodies under one camera angle, illumination and library training deserve attention. If polarity calls rise after a product changeover, the issue may be CAD/library mapping rather than placement quality.
+
+Tune the Process Before the Inspection Window
+
+AOI should confirm process control; it should not compensate for an unstable process. Engineers should compare false-call clusters with SPI volume data, placement offsets, reflow profile checks, and operator review notes. When a call class correlates with solder paste height or area, fix the print process first. When it correlates with placement offsets, check nozzle condition, feeder calibration, and vision centering. When it correlates with thermal mass, verify whether the profile still matches the current board mix.
+
+Only after the process signal is separated from inspection noise should the AOI recipe be changed. The safest changes are usually local: package-specific thresholds, controlled lighting updates, improved golden images, and clearer defect classes for operators. Broad global sensitivity reductions are fast, but they can hide emerging process drift.
+
+Measure Review Load and Escapes Together
+
+A false-call reduction program should track at least three numbers: calls per board, confirmed defects per board, and post-AOI escapes. Calls per board alone is not enough. A recipe can look better simply because it stopped seeing marginal defects. The useful target is a lower review load with stable or improved confirmed-defect capture.
+
+For production teams, a weekly Pareto of false calls by package and defect class is more valuable than a one-time recipe cleanup. It creates a feedback loop between process engineering and quality engineering. Over time, the AOI station becomes a process sensor rather than a bottleneck.
+
+The Industry Takeaway
+
+The fastest way to reduce AOI false calls is not to make AOI less sensitive. It is to make the defect language more precise, verify the process signals behind the calls, and tune only the inspection windows that are proven to be noise. That approach protects yield while reducing operator review fatigue.

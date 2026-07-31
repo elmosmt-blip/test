@@ -1,0 +1,1 @@
+{"agents":{"1":"idle","2":"idle","3":"idle","4":"idle","5":"idle","6":"idle","7":"idle"},"pipeline":"idle","llm_api_base":"http://localhost:11434/v1","llm_model":"local-mock-llm","llm_mock":true,"db_connected":true,"allow_db_writes":false}

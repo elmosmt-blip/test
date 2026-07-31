@@ -1,0 +1,52 @@
+# AI Inspection Is Moving Past False-Call Reduction Toward Closed-Loop SMT Control
+
+For SMT process teams, the useful question around AI inspection is changing. The older promise was simple: reduce AOI false calls so operators stop spending time reviewing good boards. In 2026, the more useful target is broader. Inspection systems are being positioned as process-control engines that connect SPI, AOI, AXI, review decisions, and upstream machine corrections.
+
+That shift matters because false calls are rarely just an inspection-programming problem. They can expose unstable paste transfer, component placement drift, lighting-sensitive package libraries, board warpage, thermal self-alignment effects, or inconsistent review rules. If AI only filters review images, it may reduce operator load but leave the root cause untouched. If it links measurement data back to printing and placement, it can help engineers correct the process before the defect reaches reflow or final inspection.
+
+## What changed in 2026
+
+The strongest current signal is that inspection vendors are no longer talking only about better image classification. They are talking about connected inspection ecosystems.
+
+Koh Young’s IPC APEX EXPO 2026 positioning is built around tools that work together: KAP Auto Programming for inspection-program creation, Smart Review for more consistent defect review, KSMART for trend analysis, and KPO for closed-loop optimization of printing and placement. The practical message for process engineers is that AOI data should not stop at pass/fail review. It should help identify systemic issues such as print variation, intermittent placement drift, and process changes across shifts or lines.
+
+TRI’s IPC APEX EXPO 2026 lineup points in the same direction from another vendor angle. The company is presenting 3D SPI, 3D AOI, multi-angle AOI, 3D AXI, and inline test systems under an AI ecosystem. The important point is not the headline accuracy number from a booth announcement; it is the architecture: inspection, programming, measurement, and factory data are being sold as one process layer.
+
+The Sincotron and Delvitech announcement in June 2026 adds another market signal. Their stated focus is next-generation AI inspection with deep learning, real-time intelligence, and continuously evolving algorithms. For SMT teams, that confirms that AI inspection is becoming a competitive category, not a one-vendor feature.
+
+## Why false calls are still the wrong KPI by themselves
+
+False-call reduction matters because every unnecessary review consumes operator time and slows throughput. But false calls should not be measured alone. A line can reduce false calls by loosening thresholds, ignoring marginal conditions, or hiding product variation inside a broader acceptance window. That may make the dashboard look better while increasing escape risk.
+
+A better review metric combines four numbers:
+
+- calls per board
+- confirmed defects per board
+- review minutes per lot
+- post-AOI escapes or customer returns linked to inspection coverage
+
+If calls per board falls while confirmed-defect capture and escape performance stay stable, the improvement is real. If calls fall and escapes rise, the AI system is only making the inspection station quieter, not better.
+
+## What data should be connected
+
+The useful direction for AI inspection is data fusion across the SMT line.
+
+SPI data shows paste volume, height, area, offset, and bridging risk immediately after printing. Pre-reflow AOI shows placement and presence conditions before soldering makes defects expensive. Post-reflow AOI confirms soldered condition, polarity, skew, tombstoning, and visible joint quality. AXI adds visibility for hidden joints such as BGA, QFN thermal pads, and other bottom-terminated packages. Mounter data adds feeder, nozzle, head, placement-offset, and pickup information. Review data adds the human disposition: true defect, false call, process indicator, or engineering exception.
+
+When these streams remain separate, engineers investigate symptoms. When they are connected, the line can show whether a repeated AOI call is more likely to originate in paste transfer, placement drift, component variation, or inspection-library setup.
+
+## What engineers should check before adopting AI inspection
+
+The risk is that “AI inspection” becomes a broad label. Process teams should evaluate it with production questions, not demo-room impressions.
+
+First, ask what data the model actually uses. A classifier trained only on AOI review images may help operators, but it will not automatically explain whether the root cause sits in printing, placement, reflow, or library setup. A stronger system should correlate SPI, AOI, AXI, machine, and review data.
+
+Second, ask how decisions are audited. If Smart Review or auto-classification changes the disposition of calls, quality engineers need traceability: image, measurement, confidence, rule path, operator override, and final defect code. Without that, AI can reduce review time while making escapes harder to investigate.
+
+Third, separate vendor claims from your product mix. Fine-pitch ICs, 0201 passives, dark molded bodies, reflective solder joints, conformal coating, and high-warpage panels all behave differently. A useful pilot should compare the AI system against the factory’s existing false-call Pareto and escape history, not only against vendor sample boards.
+
+Fourth, avoid global sensitivity cuts. The best use of AI is usually targeted: package-specific tuning, better defect taxonomy, local thresholds, review consistency, and upstream correction. Broad sensitivity reductions can hide early process drift.
+
+## Summary
+
+The next stage of SMT inspection is not simply “AI AOI.” It is closed-loop process intelligence built from trustworthy measurement data. False-call reduction remains valuable, but the bigger gain is turning inspection into a control layer that detects drift early, guides root-cause analysis, and stabilizes printing and placement before defects multiply. For engineering teams, the winning systems will be the ones that produce more actionable process evidence, not just fewer alarms.

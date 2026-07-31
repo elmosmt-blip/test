@@ -1,0 +1,5 @@
+{
+  "linkedin_post": "AI inspection in SMT is moving beyond simple false-call filtering. The stronger direction is closed-loop process control: connect SPI, AOI, AXI, review decisions and machine data so teams can detect drift earlier and correct printing or placement before defects multiply. The key evaluation question is not “does it use AI?” but “what data does it correlate, and can engineers audit the decision path?” #SMT #AOI #ElectronicsManufacturing #QualityEngineering",
+  "forum_answer": "Practical takeaways for SMT engineers:\n- Treat false calls as process signals until proven otherwise.\n- Correlate AOI calls with SPI deposits, placement offsets, package type, board location and review codes.\n- Avoid global AOI sensitivity cuts; prefer package/local tuning.\n- Track review load and escape risk together.\n- Ask vendors how AI decisions are audited and whether SPI/AOI/AXI/machine data are actually fused.",
+  "email_block": "AI inspection is becoming a process-control layer, not just an AOI review filter. The new article explains how SPI/AOI/AXI data loops can reduce false calls while stabilizing print and placement. Читать полностью"
+}
