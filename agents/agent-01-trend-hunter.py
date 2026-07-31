@@ -108,7 +108,7 @@ _FALLBACK_RSS_FEEDS = [
     ("I-Connect007 SMT", "https://www.iconnect007.com/feed/smt007/"),
     ("I-Connect007 PCB", "https://www.iconnect007.com/feed/pcb007/"),
     ("I-Connect007 PCBA", "https://www.iconnect007.com/feed/pcbaa007/"),
-    ("Global SMT & Packaging", "https://www.globalsmt.net/feed/"),
+    ("Global SMT & Packaging", "https://www.globalsmt.net/wp-json/wp/v2/posts?per_page=20"),
     ("Production Engineering (PES)", "https://www.pes.eu.com/news/feed/"),
     ("EPP Europe", "https://www.epp-europe-news.com/feed/"),
     ("New Electronics", "https://www.newelectronics.co.uk/feed/"),
@@ -1144,6 +1144,55 @@ def gather_pdf_signals(
     return signals
 
 
+def _wordpress_api_signals(
+    response: requests.Response,
+    feed_name: str,
+    feed_url: str,
+    lookback_days: int,
+    strict_fresh: bool,
+    now: datetime,
+) -> list[dict[str, Any]]:
+    """Normalize a public WordPress REST posts endpoint into RSS-like signals.
+
+    Some publishers protect ``/feed/`` with a WAF while intentionally leaving
+    their documented public ``wp-json/wp/v2/posts`` API available.  This is a
+    first-party API fallback, not scraped or fabricated content.
+    """
+    try:
+        posts = response.json()
+    except (ValueError, json.JSONDecodeError):
+        return []
+    if not isinstance(posts, list):
+        return []
+
+    signals: list[dict[str, Any]] = []
+    for post in posts:
+        if not isinstance(post, dict):
+            continue
+        title = re.sub(r"<[^>]+>", "", str(post.get("title", {}).get("rendered", ""))).strip()
+        link = str(post.get("link", "")).strip()
+        excerpt = re.sub(r"<[^>]+>", "", str(post.get("excerpt", {}).get("rendered", ""))).strip()
+        dt = parse_any_date(str(post.get("date", "")), now)
+        if not title or not link or not text_matches_smt(f"{title} {excerpt} {feed_name}"):
+            continue
+        if dt and not within_lookback(dt, lookback_days, now):
+            continue
+        if strict_fresh and not dt:
+            continue
+        signals.append({
+            "title": title,
+            "snippet": excerpt[:350],
+            "source": link,
+            "query": f"WordPress API:{feed_name}",
+            "feed": feed_name,
+            "published_at": iso_date(dt),
+            "date_source": "wordpress_api_date" if dt else "unknown",
+            "date_verified": bool(dt),
+            "fresh_within_days": bool(dt and within_lookback(dt, lookback_days, now)),
+        })
+    return signals
+
+
 def gather_rss_signals(lookback_days: int = 30, max_items_per_feed: int = 20, strict_fresh: bool = True) -> list[dict[str, Any]]:
     """Collect fresh items from configured RSS/Atom feeds.
 
@@ -1162,6 +1211,13 @@ def gather_rss_signals(lookback_days: int = 30, max_items_per_feed: int = 20, st
         try:
             resp = requests.get(feed_url, headers=headers, timeout=20, allow_redirects=True)
             resp.raise_for_status()
+            if "/wp-json/wp/v2/posts" in feed_url:
+                api_signals = _wordpress_api_signals(
+                    resp, feed_name, feed_url, lookback_days, strict_fresh, now
+                )
+                signals.extend(api_signals)
+                print(f"     → {feed_name}: свежих сигналов принято {len(api_signals)} (WordPress API)")
+                continue
             try:
                 root = ET.fromstring(resp.content)
             except ET.ParseError:

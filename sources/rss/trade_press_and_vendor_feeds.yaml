@@ -68,7 +68,9 @@
 - id: global-smt-packaging-rss
   name: Global SMT & Packaging
   source_type: rss
-  url: https://www.globalsmt.net/feed/
+  # The /feed/ endpoint is WAF-protected; this is Global SMT's public
+  # first-party WordPress posts API, handled by _wordpress_api_signals().
+  url: https://www.globalsmt.net/wp-json/wp/v2/posts?per_page=20
   trust_level: industry_media
   priority: 4
   tags:
