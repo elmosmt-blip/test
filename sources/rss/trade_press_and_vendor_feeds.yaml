@@ -41,7 +41,7 @@
 - id: i-connect007-smt-rss
   name: I-Connect007 SMT
   source_type: rss
-  url: https://smt007.iconnect007.com/feeds/rss/news.xml
+  url: https://www.iconnect007.com/feed/smt007/
   trust_level: industry_media
   priority: 4
   tags:
@@ -50,7 +50,7 @@
 - id: i-connect007-pcb-rss
   name: I-Connect007 PCB
   source_type: rss
-  url: https://pcb007.com/feeds/rss/news.xml
+  url: https://www.iconnect007.com/feed/pcb007/
   trust_level: industry_media
   priority: 4
   tags:
@@ -59,7 +59,7 @@
 - id: i-connect007-pcba-rss
   name: I-Connect007 PCBA
   source_type: rss
-  url: https://pcbaa007.iconnect007.com/feeds/rss/news.xml
+  url: https://www.iconnect007.com/feed/pcbaa007/
   trust_level: industry_media
   priority: 4
   tags:
@@ -77,7 +77,7 @@
 - id: production-engineering-pes-rss
   name: Production Engineering (PES)
   source_type: rss
-  url: https://www.pes.eu.com/feed/
+  url: https://www.pes.eu.com/news/feed/
   trust_level: industry_media
   priority: 4
   tags:

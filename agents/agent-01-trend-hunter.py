@@ -81,17 +81,23 @@ DEFAULT_LOOKBACK_DAYS = int(os.environ.get("NEWS_LOOKBACK_DAYS", "30"))
 # (scripts/migrate_sources.py --verify-parity confirms these fallback lists
 # and the registry currently contain the identical set of sources).
 # ─────────────────────────────────────────────────────────────────────────
+DEFAULT_HTTP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
 _FALLBACK_RSS_FEEDS = [
     # Industry media — core SMT/EMS trade press
     ("SMT Today", "https://smttoday.com/feed/"),
     ("EMSNow", "https://www.emsnow.com/feed/"),
     ("Circuits Assembly", "https://www.circuitsassembly.com/ca/editorial/menu-news.feed"),
     ("Electronics Sourcing", "https://electronics-sourcing.com/feed/"),
-    ("I-Connect007 SMT", "https://smt007.iconnect007.com/feeds/rss/news.xml"),
-    ("I-Connect007 PCB", "https://pcb007.com/feeds/rss/news.xml"),
-    ("I-Connect007 PCBA", "https://pcbaa007.iconnect007.com/feeds/rss/news.xml"),
+    ("I-Connect007 SMT", "https://www.iconnect007.com/feed/smt007/"),
+    ("I-Connect007 PCB", "https://www.iconnect007.com/feed/pcb007/"),
+    ("I-Connect007 PCBA", "https://www.iconnect007.com/feed/pcbaa007/"),
     ("Global SMT & Packaging", "https://www.globalsmt.net/feed/"),
-    ("Production Engineering (PES)", "https://www.pes.eu.com/feed/"),
+    ("Production Engineering (PES)", "https://www.pes.eu.com/news/feed/"),
     ("EPP Europe", "https://www.epp-europe-news.com/feed/"),
     ("New Electronics", "https://www.newelectronics.co.uk/feed/"),
     ("Electronics Weekly", "https://www.electronicsweekly.com/feed/"),
@@ -142,7 +148,7 @@ _FALLBACK_VENDOR_SOURCES = [
     ("Saki", "https://www.sakicorp.com/en/news/", "inspection"),
     ("ViTrox", "https://www.vitrox.com/news-and-events/news.php", "inspection"),
     ("Creative Electron", "https://creativeelectron.com/newsroom/", "inspection"),
-    ("Mirtec", "https://www.mirtec.com/news", "inspection"),
+    ("Mirtec", "https://www.mirtec.com/news.php", "inspection"),
     ("CyberOptics", "https://www.cyberoptics.com/news/", "inspection"),
     # Placement / SMT equipment
     ("Yamaha SMT", "https://global.yamaha-motor.com/business/smt/news/", "placement"),
@@ -454,7 +460,11 @@ def resolve_ddg_url(href: str, fallback_text: str = "") -> str:
 def _http_get(url: str, *, headers: dict | None = None, timeout: int = 20,
                retries: int = 2, backoff: float = 1.5, **kwargs) -> Optional[requests.Response]:
     """GET with small retry/backoff — many trade-press sites are flaky under bot UA."""
-    hdrs = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0; +https://smtinsider.com/bot)"}
+    hdrs = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
     hdrs.update(headers or {})
     last_exc = None
     for attempt in range(retries + 1):
@@ -515,7 +525,7 @@ def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int 
 def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30) -> list[dict[str, Any]]:
     """Search DuckDuckGo HTML with a date filter (df=m for 30 days)."""
     url = "https://html.duckduckgo.com/html/"
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     data = {"q": query}
     df = ddg_df(lookback_days)
     if df:
@@ -582,7 +592,7 @@ def extract_page_date(url: str) -> tuple[Optional[datetime], str]:
     """Fetch a page and try to find publication date in metadata/JSON-LD/time tags."""
     if not url:
         return None, "no_url"
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     try:
         resp = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
         resp.raise_for_status()
@@ -698,7 +708,7 @@ def gather_html_signals(lookback_days: int = 30, max_items: int = 50, strict_fre
     now = now_local()
     signals: list[dict[str, Any]] = []
     seen: set[str] = set()
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     html_sources = configured_html_sources()
     print(f"\n  🌐 HTML/news pages: {len(html_sources)} источников")
     try:
@@ -887,7 +897,7 @@ def _vendor_link_candidate(page_url: str, href: str, title: str) -> bool:
 
 
 def _extract_page_title_and_date(url: str) -> tuple[str, Optional[datetime]]:
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     try:
         resp = requests.get(url, headers=headers, timeout=12, allow_redirects=True)
         resp.raise_for_status()
@@ -914,7 +924,7 @@ def gather_vendor_signals(lookback_days: int = 30, max_links_per_vendor: int = 2
     sources = configured_vendor_sources()
     signals: list[dict[str, Any]] = []
     seen: set[str] = set()
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
     print(f"\n  🏭 Vendor/manufacturer pages: {len(sources)} источников")
     try:
         from bs4 import BeautifulSoup
@@ -1089,14 +1099,18 @@ def gather_rss_signals(lookback_days: int = 30, max_items_per_feed: int = 20, st
     feeds = configured_rss_feeds()
     signals: list[dict[str, Any]] = []
     seen: set[str] = set()
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    headers = DEFAULT_HTTP_HEADERS.copy()
 
     print(f"\n  📰 RSS/news feeds: {len(feeds)} источников")
     for feed_name, feed_url in feeds:
         try:
             resp = requests.get(feed_url, headers=headers, timeout=20, allow_redirects=True)
             resp.raise_for_status()
-            root = ET.fromstring(resp.content)
+            try:
+                root = ET.fromstring(resp.content)
+            except ET.ParseError:
+                cleaned = re.sub(r"&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)", "&amp;", resp.text)
+                root = ET.fromstring(cleaned.encode("utf-8", errors="ignore"))
         except Exception as e:
             print(f"     ⚠ {feed_name}: RSS недоступен — {e}")
             continue
