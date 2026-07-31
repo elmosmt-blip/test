@@ -22,11 +22,13 @@ for _s in ("stdout", "stderr"):
 
 import uuid
 import time
+import re
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, AsyncGenerator
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 ROOT = Path(__file__).parent.parent
@@ -63,6 +65,7 @@ PYTHON_CMD = "python" if sys.platform == "win32" else "python3"
 
 AGENT_CMDS = {
     "1": [PYTHON_CMD, str(AGENTS_DIR / "agent-01-trend-hunter.py"), "scan", "--days", os.environ.get("NEWS_LOOKBACK_DAYS", "30"), "--strict-fresh", "--verify-pages", "--output", str(BRIEFS_FILE)],
+    "1b": [PYTHON_CMD, str(AGENTS_DIR / "agent-01b-pdf-scout.py"), "--url", "https://online.fliphtml5.com/kwnhb/fakj/", "--format", "magazine", "--max-topics", "3", "--brief", str(BRIEFS_FILE)],
     "2": [PYTHON_CMD, str(AGENTS_DIR / "agent-02-writer.py"),
           "--brief", str(BRIEFS_FILE), "--output", str(ARTICLE_FILE)],
     "2b": [PYTHON_CMD, str(AGENTS_DIR / "agent-02b-quality-checker.py"),
@@ -235,6 +238,79 @@ async def run_all():
     run_id = str(uuid.uuid4())
     _runs[run_id] = asyncio.Queue(maxsize=5000)
     asyncio.create_task(_run_pipeline(run_id))
+    return {"run_id": run_id}
+
+
+@app.post("/api/upload/pdf")
+async def upload_pdf_file(req: Request):
+    cache_dir = ROOT / "cache"
+    cache_dir.mkdir(exist_ok=True)
+    filename = req.headers.get("x-filename", "uploaded.pdf")
+    clean_name = re.sub(r"[^a-zA-Z0-9_.-]", "", filename or "uploaded.pdf")
+    file_path = cache_dir / f"uploaded_{clean_name}"
+    content = await req.body()
+    file_path.write_bytes(content)
+    return {"file_path": str(file_path), "filename": filename}
+
+
+@app.post("/api/run/pdf")
+async def run_pdf_scout_custom(req: Request):
+    data = await req.json()
+    url = data.get("url", "").strip() or "https://online.fliphtml5.com/kwnhb/fakj/"
+    file_path = data.get("file_path", "").strip()
+    format_type = data.get("format_type", "magazine")
+    max_topics = str(data.get("max_topics", 3))
+    write_flag = data.get("write", False)
+
+    cmd = [
+        PYTHON_CMD, str(AGENTS_DIR / "agent-01b-pdf-scout.py"),
+        "--url", url,
+        "--format", format_type,
+        "--max-topics", max_topics,
+        "--brief", str(BRIEFS_FILE),
+        "--article", str(ARTICLE_FILE),
+        "--meta", str(META_FILE),
+    ]
+    if file_path and os.path.exists(file_path):
+        cmd.extend(["--file", file_path])
+    if write_flag:
+        cmd.append("--write")
+
+    run_id = str(uuid.uuid4())
+    _runs[run_id] = asyncio.Queue(maxsize=5000)
+
+    async def _run_pdf_task():
+        q = _runs[run_id]
+        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+        _send(q, "log", {"agent": "1b", "line": f"▶ {' '.join(cmd)}"})
+        _agent_status["1b"] = "running"
+        _send(q, "status", {"agent": "1b", "state": "running"})
+
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+            env=env,
+            cwd=str(ROOT),
+        )
+
+        async def read_stdout():
+            while True:
+                line = await proc.stdout.readline()
+                if not line:
+                    break
+                text = line.decode("utf-8", errors="replace").rstrip()
+                _send(q, "log", {"agent": "1b", "line": text})
+
+        await read_stdout()
+        await proc.wait()
+
+        state = "done" if proc.returncode == 0 else "error"
+        _agent_status["1b"] = state
+        _send(q, "status", {"agent": "1b", "state": state, "code": proc.returncode})
+        _send(q, "done", {})
+
+    asyncio.create_task(_run_pdf_task())
     return {"run_id": run_id}
 
 
@@ -675,6 +751,25 @@ header{
     <div class="panel-title">Агенты</div>
     <div class="agent-list" id="agent-list"></div>
     <button class="pipeline-btn" id="btn-run-all" onclick="runAll()">▶ ЗАПУСТИТЬ ПАЙПЛАЙН</button>
+    <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+      <div class="panel-title" style="font-size:11px; margin-bottom:8px;">📄 РУЧНАЯ ПОДАЧА PDF (#1b)</div>
+      <input id="pdf-url-input" type="text" placeholder="URL: https://online.fliphtml5.com/..." 
+             style="width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:4px; font-size:11px; margin-bottom:6px;">
+      <input id="pdf-file-input" type="file" accept=".pdf,.txt,.html" style="font-size:10px; color:var(--text-dim); margin-bottom:6px; width:100%;">
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <select id="pdf-format-select" style="flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:4px; border-radius:4px; font-size:11px;">
+          <option value="magazine">Журнал (magazine)</option>
+          <option value="review">Обзор (review)</option>
+          <option value="datasheet">Даташит (datasheet)</option>
+        </select>
+        <input id="pdf-topics-input" type="number" value="3" min="1" max="10" title="Сколько тем выделить" 
+               style="width:48px; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:4px; border-radius:4px; font-size:11px; text-align:center;">
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button onclick="runPdfScoutUI(false)" style="flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:4px; font-size:10px; cursor:pointer;" title="Создать бриф тем">📋 СОЗДАТЬ БРИФ</button>
+        <button onclick="runPdfScoutUI(true)" style="flex:1; background:var(--accent); border:none; color:#000; font-weight:bold; padding:6px; border-radius:4px; font-size:10px; cursor:pointer;" title="Создать бриф и написать статьи">✍️ НАПИСАТЬ СТАТЬИ</button>
+      </div>
+    </div>
   </div>
 
   <!-- CENTRE: MAIN CONTENT -->
@@ -723,6 +818,7 @@ header{
 // ── State ──────────────────────────────────────────────────────────
 const AGENTS = [
   {id:"1", name:"Trend Hunter",     desc:"Собирает новости, выбирает темы", needs:""},
+  {id:"1b", name:"PDF Scout",       desc:"Ручная подача PDF / журнала",     needs:"URL или файл"},
   {id:"2", name:"Writer",           desc:"Пишет статью по выбранной теме",  needs:"briefs.json"},
   {id:"2b",name:"Quality Checker",  desc:"Проверяет и улучшает текст",      needs:"meta.json"},
   {id:"3", name:"SEO Doctor",       desc:"Slug, meta-description, JSON-LD", needs:"meta.json"},
@@ -858,6 +954,56 @@ async function runAll() {
   const r = await fetch('/run/all/pipeline', {method:'POST'}).then(r=>r.json());
   if (r.run_id) { pipelineRunning = true; renderAgents(); subscribeRun(r.run_id); }
   else toast(r.error || 'Ошибка', 'err');
+}
+
+async function runPdfScoutUI(writeFlag) {
+  showTab('log');
+  let filePath = '';
+  const fileInput = document.getElementById('pdf-file-input');
+  if (fileInput.files && fileInput.files[0]) {
+    appendLog('1b', '▶ Загружаю файл ' + fileInput.files[0].name + ' на сервер...');
+    try {
+      const res = await fetch('/api/upload/pdf', {
+        method: 'POST',
+        headers: {
+          'x-filename': encodeURIComponent(fileInput.files[0].name),
+          'Content-Type': fileInput.files[0].type || 'application/octet-stream'
+        },
+        body: fileInput.files[0]
+      });
+      const data = await res.json();
+      filePath = data.file_path || '';
+    } catch (e) {
+      appendLog('1b', '❌ Ошибка загрузки файла: ' + e);
+      return;
+    }
+  }
+  const urlVal = document.getElementById('pdf-url-input').value.trim() || "https://online.fliphtml5.com/kwnhb/fakj/";
+  const fmtVal = document.getElementById('pdf-format-select').value;
+  const topVal = parseInt(document.getElementById('pdf-topics-input').value) || 3;
+
+  appendLog('1b', `▶ Запуск PDF Scout (#1b): url=${urlVal}, format=${fmtVal}, max-topics=${topVal}, write=${writeFlag}`);
+  try {
+    const res = await fetch('/api/run/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: urlVal,
+        file_path: filePath,
+        format_type: fmtVal,
+        max_topics: topVal,
+        write: writeFlag
+      })
+    });
+    const data = await res.json();
+    if (data.run_id) {
+      subscribeRun(data.run_id);
+    } else {
+      toast(data.error || 'Ошибка запуска PDF Scout', 'err');
+    }
+  } catch (e) {
+    appendLog('1b', '❌ Ошибка запуска PDF Scout: ' + e);
+  }
 }
 
 // ── Topic selection ─────────────────────────────────────────────────
