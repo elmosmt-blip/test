@@ -70,6 +70,47 @@ class TestPDFScout:
         assert topic["sources"][0]["url"] == "https://online.fliphtml5.com/kwnhb/fakj/"
         assert "resolution: 0.5 micron" in topic["key_facts"][0]
 
+    def test_build_pdf_topic_brief_magazine_issue(self, pdf_scout):
+        text = (
+            "SMT Today Magazine Issue 80.\n"
+            "Section 1: Fuji Corporation introduces new placement architecture. Throughput: 45,000 CPH.\n"
+            "Section 2: Koh Young Technology discusses 3D SPI and AOI inspection. Resolution: 0.5 micron.\n"
+            "Section 3: Mirtec showcases 3D AOI systems for automotive lines. Inspection Speed: 120 sq cm/s.\n"
+        )
+        doc = PDFDocument(
+            title="SMT Today Magazine Issue 80",
+            document_type=PDFDocumentType.MAGAZINE,
+            company="SMT Today",
+            products=["Fuji Placement", "Alpha 3D", "Mirtec AOI"],
+            technologies=["Placement", "3D SPI", "3D AOI"],
+            publication_date="2026-07-31",
+            page_count=68,
+            text=text,
+            source_url="https://online.fliphtml5.com/kwnhb/fakj/",
+            key_facts=[
+                {
+                    "parameter": "throughput",
+                    "value": "45,000 CPH",
+                    "raw_context": "Throughput: 45,000 CPH",
+                    "source_url": "https://online.fliphtml5.com/kwnhb/fakj/",
+                    "provenance": "Extracted from magazine",
+                }
+            ],
+        )
+
+        brief_payload = pdf_scout.build_pdf_topic_brief(
+            doc=doc,
+            source_url="https://online.fliphtml5.com/kwnhb/fakj/",
+            max_topics=3,
+        )
+
+        assert brief_payload["source_type"] == "manual_pdf"
+        assert len(brief_payload["topics"]) == 3
+        topic_titles = [t["topic"] for t in brief_payload["topics"]]
+        assert any("Koh Young" in t for t in topic_titles)
+        assert any("Mirtec" in t for t in topic_titles)
+        assert any("Fuji" in t for t in topic_titles)
+
     def test_load_pdf_input_from_file_path(self, pdf_scout, tmp_path):
         # Create a mock PDF file
         pdf_file = tmp_path / "catalog.pdf"
