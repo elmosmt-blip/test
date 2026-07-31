@@ -19,6 +19,20 @@ Used by:
 
 from __future__ import annotations
 
+import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
+
 import json
 import os
 import re

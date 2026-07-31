@@ -19,6 +19,18 @@ source_expander.py — расширение источников для выбр
 
 from __future__ import annotations
 
+import sys
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
 import json
 import re
 import urllib.parse

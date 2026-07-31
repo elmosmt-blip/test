@@ -16,6 +16,18 @@ Usage:
 """
 
 import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
 import os
 import re
 import json
@@ -66,7 +78,7 @@ def main():
         if not args.title or not args.file:
             print("❌ Укажи --title и --file, либо --meta"); sys.exit(1)
         title = args.title
-        with open(args.file) as f:
+        with open(args.file, encoding="utf-8") as f:
             body = f.read()
     print(f"\n📣 Agent #4 — Distributor")
     print(f"   {title}")

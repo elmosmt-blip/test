@@ -5,6 +5,20 @@ Contains specialized collectors for technical data, PDF datasheets,
 brochures, application notes, and vendor specifications.
 """
 
+import sys
+# Ensure UTF-8 console output on Windows (prevent UnicodeEncodeError for emojis/box chars)
+for _s in ("stdout", "stderr"):
+    _stream = getattr(sys, _s, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            try:
+                _stream.reconfigure(errors="replace")
+            except Exception:
+                pass
+
+
 from src.collectors.pdf_collector import (
     PDFDocument,
     PDFDocumentType,
