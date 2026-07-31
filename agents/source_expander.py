@@ -171,18 +171,24 @@ def extract_candidate_links(source_url: str, topic_text: str, limit: int = 20) -
 
 
 def add_source(acc: list[dict[str, Any]], seen: set[str], title: str, url: str,
-               date: str = "unknown", role: str = "source", excerpt: str = "") -> None:
+               date: str = "unknown", role: str = "source", excerpt: str = "",
+               key_facts: list[Any] | None = None, technical_specs: list[Any] | None = None) -> None:
     cu = canonical_url(url)
     if not cu or cu in seen:
         return
     seen.add(cu)
-    acc.append({
+    item = {
         "title": normalize_title(title) or cu,
         "url": cu,
         "date": date or "unknown",
         "role": role,
         "excerpt": (excerpt or "").strip()[:600],
-    })
+    }
+    if key_facts:
+        item["key_facts"] = key_facts
+    if technical_specs:
+        item["technical_specs"] = technical_specs
+    acc.append(item)
 
 
 def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]], max_sources: int = 5) -> list[dict[str, Any]]:
@@ -229,7 +235,7 @@ def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]
         if not title or not url:
             continue
         score = token_score(topic_text, title + " " + s.get("snippet", ""))
-        if 0.28 <= score < 0.97:  # exclude near-identical republished copies
+        if (not expanded and score >= 0.28) or (0.28 <= score < 0.97):  # allow exact match if no primary source yet
             scored.append((score, s))
 
     primary_domains = {urllib.parse.urlparse(x.get("url", "")).netloc for x in expanded}
@@ -242,6 +248,7 @@ def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]
         add_source(
             expanded, seen, s.get("title", ""), s.get("source", ""), s.get("published_at", "unknown"),
             "related_fresh_signal", excerpt=s.get("full_text") or s.get("snippet", ""),
+            key_facts=s.get("key_facts"), technical_specs=s.get("technical_specs"),
         )
         primary_domains.add(domain)
         if len(expanded) >= max_sources:
@@ -251,6 +258,7 @@ def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]
         add_source(
             expanded, seen, s.get("title", ""), s.get("source", ""), s.get("published_at", "unknown"),
             "related_fresh_signal", excerpt=s.get("full_text") or s.get("snippet", ""),
+            key_facts=s.get("key_facts"), technical_specs=s.get("technical_specs"),
         )
         if len(expanded) >= max_sources:
             return expanded

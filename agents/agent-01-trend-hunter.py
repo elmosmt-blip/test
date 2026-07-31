@@ -38,16 +38,21 @@ except Exception:  # pragma: no cover
     ZoneInfo = None
 
 sys.path.insert(0, os.path.dirname(__file__))
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 import llm_client
 import section_router
 import source_expander
 import dedupe
 
-# Repo root (parent of agents/) needs to be importable so `src.config.loader`
-# resolves regardless of the working directory the agent is invoked from.
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+try:
+    from src.collectors import pdf_collector
+    _PDF_COLLECTOR_AVAILABLE = True
+except Exception as _pdf_err:  # pragma: no cover
+    _PDF_COLLECTOR_AVAILABLE = False
+    print(f"  ⚠ PDF collector unavailable: {_pdf_err}")
 
 try:
     from src.config.loader import SourceConfigError, load_source_registry
@@ -507,7 +512,7 @@ def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int 
     return results
 
 
-
+def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30) -> list[dict[str, Any]]:
     """Search DuckDuckGo HTML with a date filter (df=m for 30 days)."""
     url = "https://html.duckduckgo.com/html/"
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
@@ -847,6 +852,8 @@ GENERIC_LINK_TITLES = {
 VENDOR_LINK_PATH_HINTS = [
     "news", "press", "release", "article", "blog", "media", "event",
     "solution", "smt", "aoi", "spi", "axi", "x-ray", "xray",
+    "datasheet", "brochure", "spec", "specification", "catalog", "manual",
+    "pdf", "download",
 ]
 
 
@@ -968,6 +975,26 @@ def gather_vendor_signals(lookback_days: int = 30, max_links_per_vendor: int = 2
             if href in seen:
                 continue
             checked += 1
+            if href.lower().endswith(".pdf") and _PDF_COLLECTOR_AVAILABLE:
+                doc = pdf_collector.fetch_and_parse_pdf(href, timeout=15)
+                if doc and doc.text:
+                    sig = doc.to_signal(vendor_name=vendor_name, vendor_group=vendor_group)
+                    pub_dt = None
+                    if sig.get("published_at") and sig["published_at"] != "unknown":
+                        try:
+                            pub_dt = datetime.fromisoformat(sig["published_at"])
+                        except Exception:
+                            pass
+                    if pub_dt and not within_lookback(pub_dt, lookback_days, now):
+                        continue
+                    if strict_fresh and not pub_dt:
+                        continue
+                    seen.add(href)
+                    signals.append(sig)
+                    kept += 1
+                    if kept >= max_items_per_vendor:
+                        break
+                    continue
             page_title = ""
             if (not dt or len(title) < 18) and verify_child_pages:
                 page_title, page_dt = _extract_page_title_and_date(href)
@@ -1000,6 +1027,54 @@ def gather_vendor_signals(lookback_days: int = 30, max_links_per_vendor: int = 2
                 break
         print(f"     → {vendor_name}: свежих сигналов принято {kept}/{checked}")
         time.sleep(0.2)
+    return signals
+
+
+def gather_pdf_signals(
+    lookback_days: int = 30,
+    max_items_per_vendor: int = 2,
+    strict_fresh: bool = True,
+) -> list[dict[str, Any]]:
+    """Collect technical facts and specifications directly from vendor PDF documents."""
+    if not _PDF_COLLECTOR_AVAILABLE or not _env_bool("NEWS_PDF_COLLECTOR_ENABLED", "1"):
+        return []
+    now = now_local()
+    sources = configured_vendor_sources()
+    signals: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    print(f"\n  📑 PDF technical documents: scan across {len(sources)} vendor pages")
+
+    for vendor_name, page_url, vendor_group in sources:
+        kept = 0
+        try:
+            links = pdf_collector.discover_pdf_links_on_page(page_url, timeout=12, max_links=8)
+        except Exception:
+            continue
+        for l in links[:max_items_per_vendor]:
+            pdf_url = l.get("url", "")
+            if not pdf_url or pdf_url in seen:
+                continue
+            doc = pdf_collector.fetch_and_parse_pdf(pdf_url, timeout=15)
+            if not doc or not doc.text:
+                continue
+            sig = doc.to_signal(vendor_name=vendor_name, vendor_group=vendor_group)
+            pub_dt = None
+            if sig.get("published_at") and sig["published_at"] != "unknown":
+                try:
+                    pub_dt = datetime.fromisoformat(sig["published_at"])
+                except Exception:
+                    pass
+            if pub_dt and not within_lookback(pub_dt, lookback_days, now):
+                continue
+            if strict_fresh and not pub_dt:
+                continue
+            seen.add(pdf_url)
+            signals.append(sig)
+            kept += 1
+            if kept >= max_items_per_vendor:
+                break
+        if kept:
+            print(f"     → {vendor_name}: свежих PDF-документов принято {kept}")
     return signals
 
 
@@ -1220,6 +1295,17 @@ def gather_signals(
             seen.add(url)
             signals.append(item)
 
+    pdf_signals = gather_pdf_signals(
+        lookback_days=lookback_days,
+        max_items_per_vendor=int(os.environ.get("NEWS_PDF_MAX_ITEMS", "2")),
+        strict_fresh=strict_fresh,
+    ) if do_search and _env_bool("NEWS_PDF_COLLECTOR_ENABLED", "1") else []
+    for item in pdf_signals:
+        url = item.get("source", "")
+        if url and url not in seen and not _is_near_duplicate_title(item.get("title", "")):
+            seen.add(url)
+            signals.append(item)
+
     return signals
 
 
@@ -1385,6 +1471,25 @@ def enrich_top_signals_with_fulltext(ranked_signals: list[dict[str, Any]], top_n
         u = s.get("source", "")
         if u in results and results[u]:
             s["full_text"] = results[u]
+        if _PDF_COLLECTOR_AVAILABLE and _env_bool("NEWS_PDF_ENRICH_ENABLED", "1") and not s.get("key_facts"):
+            try:
+                pdf_links = pdf_collector.discover_pdf_links_on_page(u, timeout=10, max_links=2)
+                for pl in pdf_links:
+                    pdoc = pdf_collector.fetch_and_parse_pdf(pl["url"], timeout=10)
+                    if pdoc and pdoc.key_facts:
+                        s["key_facts"] = [
+                            f"{f['parameter']}: {f['value']}"
+                            for f in pdoc.key_facts if isinstance(f, dict) and "value" in f
+                        ]
+                        s["technical_specs"] = pdoc.key_facts
+                        specs_block = "\n".join(
+                            f"- {f['parameter'].upper()}: {f['value']} ({f['provenance']})"
+                            for f in pdoc.key_facts if isinstance(f, dict)
+                        )
+                        s["full_text"] = (s.get("full_text", "") + f"\n\nVERIFIED TECHNICAL SPECIFICATIONS:\n{specs_block}").strip()
+                        break
+            except Exception:
+                pass
 
 
 def find_corroborating_sources(
@@ -1576,6 +1681,15 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         if expanded:
             # Keep `sources` backward-compatible but richer for Writer.
             topic["sources"] = expanded
+        if not topic.get("key_facts"):
+            aggregated_facts = []
+            for src in expanded:
+                for kf in (src.get("key_facts") or []):
+                    kf_str = str(kf)
+                    if kf_str not in aggregated_facts:
+                        aggregated_facts.append(kf_str)
+            if aggregated_facts:
+                topic["key_facts"] = aggregated_facts
     return data
 
 
