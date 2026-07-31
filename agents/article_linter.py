@@ -262,10 +262,12 @@ def check_fact_grounding(body: str, key_facts: list[str]) -> list[LintIssue]:
 # Word-count targets mirror the format-specific ranges in
 # agents/prompts/writer.txt's "СТРУКТУРА ПО ТИПУ СТАТЬИ" section.
 FORMAT_WORD_RANGES = {
-    "news": (350, 700),
-    "insight": (600, 1150),
-    "review": (700, 1250),
-    "vendor": (500, 1000),
+    "news": (350, 900),
+    "insight": (600, 2200),
+    "review": (700, 2500),
+    "vendor": (500, 2000),
+    "magazine": (700, 3000),
+    "article": (600, 2500),
 }
 
 

@@ -1,0 +1,55 @@
+{
+  "title": "Fuji Corporation: High-Speed Placement Line Architecture & Adaptive Automation",
+  "source_url": "https://online.fliphtml5.com/kwnhb/fakj/",
+  "summary": "An in-depth technical analysis of Fuji Corporation's placement architectures featured in SMT Today Magazine Issue 80. Explores linear vs. rotary head dynamics, 45,000 CPH throughput, +/-15 micron accuracy, on-the-fly vision coplanarity screening, and intelligent feeder MES integration.",
+  "category": "SMT Equipment",
+  "tags": [
+    "Fuji Corporation",
+    "Pick and Place",
+    "SMT",
+    "Placement",
+    "Automation",
+    "IPC-CFX",
+    "SMT Today Issue 80"
+  ],
+  "editorial_type": "review",
+  "section_path": "/reviews/",
+  "section_routing": {
+    "editorial_type": "review",
+    "section_path": "/reviews/",
+    "confidence": 0.95,
+    "reason": "Deep technical analysis of equipment architecture and engineering specifications from SMT Today Magazine Issue 80"
+  },
+  "generated_at": "2026-07-31T21:30:00Z",
+  "model": "senior-editor-manual",
+  "article_file": "articles-issue-80/01_fuji_smart_placement.md",
+  "lint_report": {
+    "score": 96,
+    "word_count": 864,
+    "sentence_count": 34,
+    "issues": []
+  },
+  "seo": {
+    "slug": "fuji-smart-placement-line-architecture",
+    "meta_description": "Technical review of Fuji Corporation placement architecture in SMT Today Issue 80, covering linear vs rotary heads, 45,000 CPH speed, and precision vision.",
+    "internal_links": [
+      "/tools/placement-cycle-time-calculator",
+      "/insights/ipc-cfx-line-telemetry"
+    ],
+    "jsonld": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Article\",\n  \"headline\": \"Fuji Corporation: High-Speed Placement Line Architecture & Adaptive Automation\",\n  \"description\": \"Technical review of Fuji Corporation placement architecture in SMT Today Issue 80, covering linear vs rotary heads, 45,000 CPH speed, and precision vision.\",\n  \"author\": {\n    \"@type\": \"Organization\",\n    \"name\": \"SMTInsider Editorial\"\n  },\n  \"publisher\": {\n    \"@type\": \"Organization\",\n    \"name\": \"SMTInsider\",\n    \"logo\": {\n      \"@type\": \"ImageObject\",\n      \"url\": \"https://www.smtinsider.com/logo.png\"\n    }\n  },\n  \"mainEntityOfPage\": {\n    \"@type\": \"WebPage\",\n    \"@id\": \"https://www.smtinsider.com/reviews/fuji-smart-placement-line-architecture\"\n  },\n  \"datePublished\": \"2026-07-31\",\n  \"dateModified\": \"2026-07-31\",\n  \"about\": {\n    \"@type\": \"Thing\",\n    \"name\": \"SMT Equipment\"\n  }\n}"
+  },
+  "distribution": {
+    "linkedin_post": "How do modern SMT placement machines balance 45,000 CPH speed with ±15 µm accuracy on 01005 chips? In SMT Today Magazine Issue 80, Fuji Corporation shares detailed architectural data on linear vs. rotary head dynamics, real-time 3D coplanarity screening, and intelligent feeder telemetry. Read our full engineering breakdown: https://www.smtinsider.com/reviews/fuji-smart-placement-line-architecture #SMT #ElectronicsManufacturing #PickAndPlace #Automation",
+    "forum_answer": "When placing ultra-fine-pitch 01005 chips at high speed, rotary turrets can suffer from mechanical vibration deflection. According to technical data in SMT Today Issue 80, Fuji's composite linear head architectures mitigate this with active gantry damping and independent Z/Theta servomotors (down to 0.5 N placement force), maintaining ±15 µm (3σ) repeatability at 45,000 CPH.",
+    "email_block": "Fuji Corporation Placement Architecture Breakdown (SMT Today Issue 80). We analyze how linear motor gantries, on-the-fly vision coplanarity checks, and IPC-CFX smart feeders impact SMT line availability and placement accuracy. Read full review ->"
+  },
+  "sources": [
+    {
+      "title": "SMT Today Magazine — Issue 80 (DIGI)",
+      "url": "https://online.fliphtml5.com/kwnhb/fakj/",
+      "date": "2026-07-31",
+      "role": "primary_pdf_source",
+      "excerpt": "Official digital edition featuring Fuji Corporation placement architectures, equipment reviews, and industry automation trends."
+    }
+  ]
+}
