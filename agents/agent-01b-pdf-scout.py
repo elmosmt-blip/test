@@ -320,9 +320,9 @@ def main():
     p.add_argument("--topic", default="", help="Заголовок статьи (опционально)")
     p.add_argument("--angle", default="", help="Угол обзора для инженера (опционально)")
     p.add_argument("--category", default="SMT Equipment", help="Категория (default: SMT Equipment)")
-    p.add_argument("--format", dest="format_type", default="review", choices=["review", "insight", "news", "vendor"],
+    p.add_argument("--format", dest="format_type", default="review", choices=["review", "insight", "news", "vendor", "magazine", "article"],
                    help="Формат статьи (default: review)")
-    p.add_argument("--type", dest="editorial_type", default="review", choices=["review", "insight", "news", "vendor"],
+    p.add_argument("--type", dest="editorial_type", default="review", choices=["review", "insight", "news", "vendor", "magazine", "article"],
                    help="Секция сайта: review -> /reviews/, insight -> /insights/ и т.д.")
     p.add_argument("--brief", default="/tmp/pdf_scout_briefs.json", help="Путь сохранения briefs.json")
     p.add_argument("--write", "-w", action="store_true", help="Автоматически запустить Writer, Quality Checker, SEO и Distributor")

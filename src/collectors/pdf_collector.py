@@ -49,6 +49,9 @@ class PDFDocumentType:
     CATALOG = "catalog"
     SPECIFICATION = "specification"
     PRESENTATION = "presentation"
+    MAGAZINE = "magazine"
+    ARTICLE = "article"
+    INTERVIEW = "interview"
     TECHNICAL_DOCUMENT = "technical_document"
 
 
@@ -178,6 +181,10 @@ def classify_pdf_document_type(title: str, text: str, url: str = "") -> str:
     """Classify technical document into standard PDFDocumentType categories."""
     haystack = f"{title} {url} {text[:3000]}".lower()
 
+    if any(k in haystack for k in ["magazine", "issue", "smt today", "emsnow", "circuits assembly", "pcb007"]):
+        return PDFDocumentType.MAGAZINE
+    if any(k in haystack for k in ["interview", "q&a", "conversation with"]):
+        return PDFDocumentType.INTERVIEW
     if any(k in haystack for k in ["datasheet", "data sheet", "spec sheet", "specification sheet", "technical specifications"]):
         return PDFDocumentType.DATASHEET
     if any(k in haystack for k in ["application note", "app note", "technical note", "application brief"]):

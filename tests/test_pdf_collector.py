@@ -82,6 +82,14 @@ class TestPDFDocumentClassification:
         )
         assert doc_type == PDFDocumentType.CASE_STUDY
 
+    def test_classify_magazine(self):
+        doc_type = classify_pdf_document_type(
+            "SMTMag-Issue 80-DIGI",
+            "The 80th Issue of SMT Today, featuring Fuji Corporation, Koh Young Technology, Mirtec.",
+            "https://online.fliphtml5.com/kwnhb/fakj/",
+        )
+        assert doc_type == PDFDocumentType.MAGAZINE
+
     def test_classify_default(self):
         doc_type = classify_pdf_document_type(
             "SMT Assembly Process Report",
