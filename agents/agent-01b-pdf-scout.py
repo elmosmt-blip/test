@@ -91,7 +91,9 @@ def load_pdf_input(
         p = Path(file_path)
         if not p.exists():
             raise FileNotFoundError(f"PDF файл не найден: {file_path}")
+        print(f"📥 Читаю файл: {p.name} ({p.stat().st_size:,} байт)", flush=True)
         content = p.read_bytes()
+        print("🔎 Извлекаю текст и метаданные PDF…", flush=True)
         url_to_use = source_url or f"file://{p.absolute()}"
         doc = pdf_collector.parse_pdf_bytes(
             content,

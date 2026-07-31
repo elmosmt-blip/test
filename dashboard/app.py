@@ -302,8 +302,23 @@ async def run_pdf_scout_custom(req: Request):
                 text = line.decode("utf-8", errors="replace").rstrip()
                 _send(q, "log", {"agent": "1b", "line": text})
 
-        await read_stdout()
-        await proc.wait()
+        timeout_secs = int(os.environ.get("PDF_SCOUT_TIMEOUT_SECONDS", "300"))
+        try:
+            await asyncio.wait_for(read_stdout(), timeout=timeout_secs)
+            await proc.wait()
+        except asyncio.TimeoutError:
+            # Large or malformed PDFs can make a parser stall.  Do not leave the
+            # dashboard in the misleading "RUNNING" state indefinitely.
+            proc.terminate()
+            await proc.wait()
+            _agent_status["1b"] = "error"
+            _send(q, "log", {"agent": "1b", "line": (
+                f"❌ PDF Scout остановлен по тайм-ауту ({timeout_secs} с). "
+                "Проверьте PDF или попробуйте файл меньшего размера."
+            )})
+            _send(q, "status", {"agent": "1b", "state": "error", "code": "timeout"})
+            _send(q, "done", {})
+            return
 
         state = "done" if proc.returncode == 0 else "error"
         _agent_status["1b"] = state
@@ -914,7 +929,7 @@ function clearLog() {
 }
 
 // ── SSE ────────────────────────────────────────────────────────────
-function subscribeRun(runId) {
+function subscribeRun(runId, completionTab = '') {
   const es = new EventSource(`/events?run_id=${runId}`);
   es.addEventListener('log', e => {
     const d = JSON.parse(e.data);
@@ -934,7 +949,10 @@ function subscribeRun(runId) {
     es.close();
     pipelineRunning = false;
     renderAgents();
-    setTimeout(() => { loadBriefs(); loadArticle(); loadDrafts(); }, 700);
+    setTimeout(() => {
+      loadBriefs(); loadArticle(); loadDrafts();
+      if (completionTab) showTab(completionTab);
+    }, 700);
   });
   es.addEventListener('ping', () => {});
   es.onerror = () => { es.close(); pipelineRunning = false; renderAgents(); };
@@ -972,7 +990,11 @@ async function runPdfScoutUI(writeFlag) {
         body: fileInput.files[0]
       });
       const data = await res.json();
-      filePath = data.file_path || '';
+      if (!res.ok || !data.file_path) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      filePath = data.file_path;
+      appendLog('1b', '✓ Файл загружен: ' + data.filename);
     } catch (e) {
       appendLog('1b', '❌ Ошибка загрузки файла: ' + e);
       return;
@@ -997,7 +1019,7 @@ async function runPdfScoutUI(writeFlag) {
     });
     const data = await res.json();
     if (data.run_id) {
-      subscribeRun(data.run_id);
+      subscribeRun(data.run_id, writeFlag ? 'article' : 'briefs');
     } else {
       toast(data.error || 'Ошибка запуска PDF Scout', 'err');
     }
