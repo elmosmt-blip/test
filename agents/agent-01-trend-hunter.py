@@ -534,8 +534,21 @@ def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int 
     return results
 
 
+# DuckDuckGo's HTML endpoint is optional: RSS and direct industry sources are
+# collected independently.  Keep the failure state so gather_signals() can
+# stop retrying an unavailable endpoint for every query in a scan.
+_last_ddg_request_failed = False
+
+
 def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30) -> list[dict[str, Any]]:
-    """Search DuckDuckGo HTML with a date filter (df=m for 30 days)."""
+    """Search DuckDuckGo HTML with a date filter (df=m for 30 days).
+
+    DDG may be unavailable or throttle automated requests. A failed request is
+    deliberately reported to the caller, which opens a circuit breaker for the
+    rest of the scan rather than spending minutes on identical timeouts.
+    """
+    global _last_ddg_request_failed
+    _last_ddg_request_failed = False
     url = "https://html.duckduckgo.com/html/"
     headers = DEFAULT_HTTP_HEADERS.copy()
     data = {"q": query}
@@ -543,10 +556,12 @@ def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30)
     if df:
         data["df"] = df
     try:
-        resp = requests.post(url, data=data, headers=headers, timeout=20)
+        timeout = max(1, int(os.environ.get("NEWS_DDG_TIMEOUT_SECONDS", "8")))
+        resp = requests.post(url, data=data, headers=headers, timeout=timeout)
         resp.raise_for_status()
     except requests.RequestException as e:
-        print(f"  ⚠ Поиск не удался для «{query}»: {e}")
+        _last_ddg_request_failed = True
+        print(f"  ⚠ DDG недоступен для «{query}»: {e}")
         return []
 
     results: list[dict[str, Any]] = []
@@ -1230,15 +1245,22 @@ def gather_signals(
         seen.add(url)
         return True
 
-    # 1) DuckDuckGo HTML search (best-effort; often throttled).
+    # 1) DuckDuckGo HTML search (best-effort; often throttled). It is not a
+    # required source: Google News RSS, configured RSS feeds, vendor pages and
+    # dated HTML sources continue below when DDG is blocked.
     ddg_found: list[dict[str, Any]] = []
-    for q in queries:
-        print(f"  🔍 DDG: {q}")
-        if not do_search:
-            continue
-        found = search_duckduckgo(q, max_results_per_query, lookback_days)
-        ddg_found.extend(found)
-        time.sleep(0.4)
+    ddg_enabled = _env_bool("NEWS_DDG_ENABLED", "1")
+    if do_search and ddg_enabled:
+        for q in queries:
+            print(f"  🔍 DDG: {q}")
+            found = search_duckduckgo(q, max_results_per_query, lookback_days)
+            ddg_found.extend(found)
+            if _last_ddg_request_failed:
+                print("     → DDG отключён до конца этого запуска; продолжаю с Google News RSS, RSS-лентами и сайтами вендоров.")
+                break
+            time.sleep(0.4)
+    elif do_search:
+        print("  ℹ DuckDuckGo отключён (NEWS_DDG_ENABLED=0); использую Google News RSS, RSS-ленты и сайты вендоров.")
 
     if ddg_found and verify_pages:
         # Verifying each page's publication date is the slowest step because it
