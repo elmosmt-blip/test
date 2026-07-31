@@ -1806,8 +1806,18 @@ def scan_topics(
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "pdf":
+        import importlib.util
+        _scout_path = os.path.join(os.path.dirname(__file__), "agent-01b-pdf-scout.py")
+        _spec = importlib.util.spec_from_file_location("agent01b_pdf_scout", _scout_path)
+        _mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        _mod.main()
+        sys.exit(0)
+
     p = argparse.ArgumentParser()
-    p.add_argument("action", choices=["scan"])
+    p.add_argument("action", choices=["scan", "pdf"])
     p.add_argument("--output", default="/tmp/smtinsider_briefs.json")
     p.add_argument("--max-topics", type=int, default=5,
                     help="макс. тем за один scan (default: 5, было 3 — поднято вместе с расширением реестра источников)")

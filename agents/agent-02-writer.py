@@ -356,6 +356,7 @@ def main():
 
     meta = {
         "title": title,
+        "source_url": brief.get("sources", [{}])[0].get("url", "") if brief.get("sources") else "",
         "summary": article.get("summary", body[:200].rstrip() + "…"),
         "category": category,
         "tags": tags,
