@@ -512,7 +512,10 @@ def _fallback_ascii_extract(content: bytes) -> str:
             clean = line.strip()
             if not clean:
                 continue
-            if re.match(r"^(\d+\s+\d+\s+obj|endobj|stream|endstream|xref|trailer|%PDF-)", clean):
+            if re.match(
+                r"^(\d+\s+\d+\s+obj|\d{10}\s+\d{5}\s+[nf]|endobj|stream|endstream|xref|trailer|startxref|%%EOF|%PDF-)",
+                clean,
+            ):
                 continue
             m_title = re.search(r"/Title\s*\(([^)]+)\)", clean)
             if m_title:

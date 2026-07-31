@@ -24,6 +24,7 @@ from src.collectors.pdf_collector import (
     identify_company_and_products,
     parse_pdf_bytes,
     parse_pdf_date,
+    _fallback_ascii_extract,
 )
 
 try:
@@ -222,6 +223,22 @@ class TestPDFByteParsingWithPyPDF:
         assert doc.document_type == PDFDocumentType.DATASHEET
         assert doc.publication_date == "2026-07-28"
         assert doc.file_hash == hash_bytes(pdf_bytes)
+
+
+class TestFallbackPDFExtraction:
+    def test_ignores_pdf_xref_entries_and_extracts_title(self):
+        content = (
+            b"%PDF-1.4\n"
+            b"1 0 obj\n"
+            b"<< /Title (SMT Today Issue 80) >>\n"
+            b"endobj\n"
+            b"xref\n"
+            b"0000000016 00000 n\n"
+            b"trailer\n"
+            b"%%EOF\n"
+        )
+
+        assert _fallback_ascii_extract(content) == "SMT Today Issue 80"
 
 
 class TestPDFLinkDiscovery:
