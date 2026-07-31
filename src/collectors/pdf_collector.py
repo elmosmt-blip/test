@@ -507,12 +507,20 @@ def _fallback_ascii_extract(content: bytes) -> str:
     """Best-effort printable ASCII/UTF-8 extraction for PDF test stubs or when pypdf fails."""
     try:
         raw_str = content.decode("utf-8", errors="ignore")
-        # Strip out PDF syntax operators
         lines = []
         for line in raw_str.splitlines():
             clean = line.strip()
-            if clean and not re.match(r"^(\d+\s+\d+\s+obj|endobj|stream|endstream|xref|trailer|%PDF-)", clean):
-                lines.append(clean)
+            if not clean:
+                continue
+            if re.match(r"^(\d+\s+\d+\s+obj|endobj|stream|endstream|xref|trailer|%PDF-)", clean):
+                continue
+            m_title = re.search(r"/Title\s*\(([^)]+)\)", clean)
+            if m_title:
+                lines.append(m_title.group(1).strip())
+                continue
+            if clean.startswith("<<") and clean.endswith(">>"):
+                continue
+            lines.append(clean)
         return "\n".join(lines)
     except Exception:
         return ""
