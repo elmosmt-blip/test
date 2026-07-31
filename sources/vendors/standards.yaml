@@ -5,7 +5,7 @@
 - id: ipc-standards
   name: IPC
   source_type: vendor
-  url: https://www.ipc.org/newsroom
+  url: https://www.ipc.org/news
   category: standards
   trust_level: official_vendor
   priority: 3

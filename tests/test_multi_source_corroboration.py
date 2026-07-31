@@ -71,6 +71,31 @@ def agent01(monkeypatch):
     return module
 
 
+class TestDuckDuckGoSearch:
+    def test_uses_get_html_endpoint_and_parses_results(self, agent01, monkeypatch):
+        class FakeResponse:
+            text = '''
+                <div class="result"><a class="result__a" href="https://example.com/news">SMT launch</a>
+                <span class="result__snippet">New AOI system</span>
+                <span class="result__url">example.com/news</span></div>
+            '''
+            def raise_for_status(self):
+                pass
+
+        calls = []
+        def fake_get(url, **kwargs):
+            calls.append((url, kwargs))
+            return FakeResponse()
+
+        monkeypatch.setattr(agent01.requests, "get", fake_get)
+        results = agent01.search_duckduckgo("SMT AOI")
+
+        assert calls[0][0] == "https://html.duckduckgo.com/html/"
+        assert calls[0][1]["params"]["q"] == "SMT AOI"
+        assert results[0]["title"] == "SMT launch"
+        assert results[0]["source"] == "https://example.com/news"
+
+
 class TestFindCorroboratingSources:
     def test_finds_relevant_corroborating_source(self, agent01):
         def fake_gnews(q, max_results=5, lookback_days=30):

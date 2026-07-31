@@ -169,7 +169,7 @@ _FALLBACK_VENDOR_SOURCES = [
     ("Fuji Europe", "https://www.fuji-euro.de/en/", "placement"),
     ("Essemtec", "https://essemtec.com/en/news/", "placement"),
     ("Europlacer", "https://europlacer.com/news-hub/", "placement"),
-    ("Mycronic", "https://www.mycronic.com/en/news/", "placement"),
+    ("Mycronic", "https://www.mycronic.com/news-events/news/", "placement"),
     ("Panasonic Factory Solutions", "https://na.panasonic.com/us/factory-solutions/news", "placement"),
     # Reflow / soldering / cleaning / materials
     ("Heller", "https://hellerindustries.com/news/", "reflow"),
@@ -180,7 +180,7 @@ _FALLBACK_VENDOR_SOURCES = [
     ("Nordson SELECT", "https://www.nordsonselect.com/en/news", "soldering"),
     ("Indium Corporation", "https://www.indium.com/blog/", "materials"),
     # Standards / test / stencils
-    ("IPC", "https://www.ipc.org/newsroom", "standards"),
+    ("IPC", "https://www.ipc.org/news", "standards"),
     ("Photo Stencil", "https://www.photostencil.com/news/", "stencil"),
     # THT insertion (verified live news pages, added after Apodex-sourced
     # gap analysis — see docs/SOURCE_REGISTRY.md "THT scope" note)
@@ -549,19 +549,32 @@ def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30)
     """
     global _last_ddg_request_failed
     _last_ddg_request_failed = False
-    url = "https://html.duckduckgo.com/html/"
-    headers = DEFAULT_HTTP_HEADERS.copy()
-    data = {"q": query}
+    # GET works in more corporate/proxy environments than the legacy POST
+    # endpoint. The lite endpoint is a second independent DDG frontend.
+    params = {"q": query}
     df = ddg_df(lookback_days)
     if df:
-        data["df"] = df
-    try:
-        timeout = max(1, int(os.environ.get("NEWS_DDG_TIMEOUT_SECONDS", "8")))
-        resp = requests.post(url, data=data, headers=headers, timeout=timeout)
-        resp.raise_for_status()
-    except requests.RequestException as e:
+        params["df"] = df
+    headers = {
+        **DEFAULT_HTTP_HEADERS,
+        "Referer": "https://duckduckgo.com/",
+        "DNT": "1",
+    }
+    timeout = max(1, int(os.environ.get("NEWS_DDG_TIMEOUT_SECONDS", "12")))
+    resp = None
+    errors: list[str] = []
+    for url in ("https://html.duckduckgo.com/html/", "https://lite.duckduckgo.com/lite/"):
+        try:
+            candidate = requests.get(url, params=params, headers=headers, timeout=timeout)
+            candidate.raise_for_status()
+            resp = candidate
+            break
+        except requests.RequestException as e:
+            errors.append(f"{urllib.parse.urlparse(url).netloc}: {e}")
+
+    if resp is None:
         _last_ddg_request_failed = True
-        print(f"  ⚠ DDG недоступен для «{query}»: {e}")
+        print(f"  ⚠ DDG недоступен для «{query}»: {'; '.join(errors)}")
         return []
 
     results: list[dict[str, Any]] = []
@@ -569,11 +582,27 @@ def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30)
     try:
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(resp.text, "html.parser")
+        # html.duckduckgo.com uses result__* classes; lite.duckduckgo.com
+        # uses result-link anchors. Supporting both avoids a single fragile
+        # endpoint and keeps DDG search available when one frontend is blocked.
         blocks = soup.select(".result__body") or soup.select(".result")
-        for r in blocks:
-            title_el = r.select_one("a.result__a") or r.select_one(".result__title a")
-            snip_el = r.select_one(".result__snippet")
-            url_el = r.select_one(".result__url")
+        if blocks:
+            candidates = [
+                (
+                    r.select_one("a.result__a") or r.select_one(".result__title a"),
+                    r.select_one(".result__snippet"),
+                    r.select_one(".result__url"),
+                    r.get_text(" ", strip=True),
+                )
+                for r in blocks
+            ]
+        else:
+            candidates = [
+                (a, a.find_parent("td") or a.parent, None, (a.find_parent("tr") or a.parent).get_text(" ", strip=True))
+                for a in soup.select("a.result-link")
+            ]
+
+        for title_el, snip_el, url_el, result_text in candidates:
             title = title_el.get_text(" ", strip=True) if title_el else ""
             snippet = snip_el.get_text(" ", strip=True) if snip_el else ""
             fallback_url = url_el.get_text(" ", strip=True) if url_el else ""
@@ -581,7 +610,7 @@ def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30)
             if not title or not source or source in seen:
                 continue
             seen.add(source)
-            date_dt = parse_any_date(r.get_text(" ", strip=True))
+            date_dt = parse_any_date(result_text)
             results.append({
                 "title": title,
                 "snippet": snippet,

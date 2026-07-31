@@ -65,7 +65,7 @@
 - id: mycronic-placement
   name: Mycronic
   source_type: vendor
-  url: https://www.mycronic.com/en/news/
+  url: https://www.mycronic.com/news-events/news/
   category: placement
   trust_level: official_vendor
   priority: 3
