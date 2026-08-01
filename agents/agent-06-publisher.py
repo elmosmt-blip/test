@@ -374,6 +374,13 @@ if __name__ == "__main__":
         if args.meta:
             with open(args.meta, encoding="utf-8") as f:
                 meta = json.load(f)
+            quality = meta.get("quality_check") or {}
+            if not quality.get("approved") or quality.get("factual_verdict") != "pass":
+                print(
+                    "❌ Публикация заблокирована: Agent #2b должен подтвердить factual pass. "
+                    f"Текущий статус: {quality.get('status', 'quality_check отсутствует')}"
+                )
+                sys.exit(2)
             with open(meta["article_file"], encoding="utf-8") as f:
                 raw = f.read()
             text = html_to_plain(raw)
