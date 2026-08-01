@@ -28,6 +28,7 @@ for _s in ("stdout", "stderr"):
 
 
 import os, sys
+import shutil
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 
@@ -74,22 +75,50 @@ SEARCH_QUERIES = [
     "SMT smart factory",
 ]
 
+def _youtube_ydl_options() -> tuple[dict, str]:
+    """Use a local JS runtime when available; otherwise search metadata only."""
+    runtime = os.environ.get("YTDLP_JS_RUNTIME", "").strip().lower()
+    if not runtime:
+        for candidate in ("node", "deno", "bun", "qjs"):
+            if shutil.which(candidate):
+                runtime = candidate
+                break
+    options = {
+        "quiet": True,
+        "no_warnings": True,
+        "ignoreerrors": True,
+        "extract_flat": True,
+        "skip_download": True,
+    }
+    if runtime:
+        options["js_runtimes"] = {runtime: {}}
+    return options, runtime
+
+
 def search_videos(query, max_results=5, max_days=30):
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=max_days)
     videos = []
     
     try:
-        with yt_dlp.YoutubeDL({"quiet": True, "extract_flat": False}) as ydl:
-            info = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False)
+        options, runtime = _youtube_ydl_options()
+        # ytsearchdate sorts results by recency and flat extraction avoids
+        # opening every video page (the source of repeated JS warnings).
+        with yt_dlp.YoutubeDL(options) as ydl:
+            info = ydl.extract_info(f"ytsearchdate{max_results}:{query}", download=False)
             for e in info.get("entries", []):
+                if not isinstance(e, dict):
+                    continue
                 vid = e.get("id", "")
-                if not vid: continue
+                if not vid:
+                    continue
                 pub_str = e.get("upload_date", "")
-                if not pub_str: continue
+                timestamp = e.get("timestamp") or e.get("release_timestamp")
                 try:
-                    pub_dt = datetime.strptime(pub_str, "%Y%m%d").replace(tzinfo=timezone.utc)
-                except:
+                    pub_dt = (datetime.strptime(pub_str, "%Y%m%d").replace(tzinfo=timezone.utc)
+                              if pub_str else datetime.fromtimestamp(timestamp, tz=timezone.utc))
+                except (TypeError, ValueError, OverflowError):
+                    # Freshness is mandatory; do not write an undated video.
                     continue
                 if pub_dt < cutoff: continue
                 videos.append({
@@ -151,7 +180,12 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if args.action == "scan":
-        print(f"\n🎯 YouTube Scout — {len(SEARCH_QUERIES)} zaprosov, ishu svezhee {args.days} dney\n")
+        options, runtime = _youtube_ydl_options()
+        print(f"\n🎯 YouTube Scout — {len(SEARCH_QUERIES)} zaprosov, ishu svezhee {args.days} dney")
+        if runtime:
+            print(f"   JS runtime: {runtime} (yt-dlp enhanced extraction enabled)\n")
+        else:
+            print("   JS runtime не найден: использую тихий metadata-only поиск. Для полной совместимости установите Node.js или задайте YTDLP_JS_RUNTIME.\n")
         total = 0
         for q in SEARCH_QUERIES:
             videos = search_videos(q, args.limit, args.days)
