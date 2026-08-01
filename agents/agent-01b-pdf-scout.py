@@ -542,6 +542,63 @@ def run_pipeline(
     return results
 
 
+def recover_fliphtml5_text_layer(source_url: str, doc: PDFDocument) -> tuple[Optional[PDFDocument], str]:
+    """Read FlipHTML5's own per-page searchable text layer.
+
+    FlipHTML5 publishes text positions for its reader search feature at
+    ``files/search/text_position[N].js``. This is the publisher/viewer's own
+    text layer, not an OCR guess and not raw PDF stream parsing. Keeping page
+    markers allows the next segmentation stage to build separate articles from
+    a magazine issue.
+    """
+    parsed = urllib.parse.urlparse(source_url)
+    if not parsed.netloc.endswith("fliphtml5.com"):
+        return None, "источник не является FlipHTML5"
+    base = source_url.split("#", 1)[0].rstrip("/") + "/"
+    max_pages = max(1, int(os.environ.get("FLIPHTML5_MAX_PAGES", "120")))
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    pages: list[str] = []
+    try:
+        for page_number in range(1, max_pages + 1):
+            response = requests.get(
+                f"{base}files/search/text_position[{page_number}].js",
+                headers=headers,
+                timeout=15,
+            )
+            if response.status_code == 404:
+                break
+            response.raise_for_status()
+            match = re.search(r"=\s*(\{.*\})\s*;?\s*$", response.text, re.S)
+            if not match:
+                continue
+            page_data = json.loads(match.group(1))
+            words = [str(item.get("w", "")).replace("|", " ").strip() for item in page_data.get("positions", [])]
+            page_text = " ".join(word for word in words if word)
+            if page_text:
+                pages.append(f"\n\n--- PAGE {page_number} ---\n{page_text}")
+            if page_number % 10 == 0:
+                print(f"   FlipHTML5 text layer: {page_number} страниц", flush=True)
+    except (requests.RequestException, json.JSONDecodeError) as e:
+        return None, f"не удалось получить text layer FlipHTML5: {e}"
+
+    recovered_text = "".join(pages).strip()
+    if len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", recovered_text)) < 80:
+        return None, "FlipHTML5 text layer не содержит достаточно читаемого текста"
+
+    doc.text = recovered_text
+    doc.text_hash = pdf_collector.hash_text(recovered_text)
+    doc.page_count = max(doc.page_count, len(pages))
+    # Never retain a PDF syntax object as a document title.
+    if not doc.title or any(marker in doc.title for marker in ("FlateDecode", "<<", "/Filter")):
+        doc.title = "SMT Magazine Issue"
+    doc.document_type = PDFDocumentType.MAGAZINE
+    doc.company, doc.products, doc.technologies = pdf_collector.identify_company_and_products(
+        recovered_text, doc.title, doc.source_url, doc.metadata
+    )
+    doc.key_facts = pdf_collector.extract_technical_facts(recovered_text, doc.source_url, doc.title)
+    return doc, ""
+
+
 def recover_pdf_text_with_ocr(file_path: str, doc: PDFDocument) -> tuple[Optional[PDFDocument], str]:
     """OCR a scanned/malformed local PDF when normal text extraction is unusable.
 
@@ -713,18 +770,29 @@ def main():
         sys.exit(1)
 
     editorial_error = validate_document_for_editorial_use(doc)
-    # A FlipHTML5 issue is often an image-based PDF or has a broken text layer.
-    # Recover from the uploaded local file with OCR before rejecting it; never
-    # attempt to OCR a viewer HTML URL because it is not the source document.
-    if editorial_error and args.file:
-        print(f"⚠ Обычное извлечение не пригодно: {editorial_error}. Пробую локальный OCR…", flush=True)
-        recovered_doc, ocr_error = recover_pdf_text_with_ocr(args.file, doc)
+    # For FlipHTML5, use the platform's own searchable per-page text layer
+    # before considering any local image OCR. It is faster, keeps page
+    # boundaries, and gives the article segmenter actual publisher text.
+    if editorial_error and args.url:
+        print(f"⚠ Обычное извлечение не пригодно: {editorial_error}. Проверяю text layer источника…", flush=True)
+        recovered_doc, layer_error = recover_fliphtml5_text_layer(args.url, doc)
         if recovered_doc is not None:
             doc = recovered_doc
             editorial_error = validate_document_for_editorial_use(doc)
             if not editorial_error:
-                ocr_word_count = len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", doc.text))
-                print(f"✅ OCR восстановил {ocr_word_count} читаемых слов; запускаю evidence gate.", flush=True)
+                layer_word_count = len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", doc.text))
+                print(f"✅ Получено {layer_word_count} слов из text layer FlipHTML5; запускаю evidence gate.", flush=True)
+        else:
+            print(f"⚠ Text layer недоступен: {layer_error}", flush=True)
+
+    # OCR is an explicit last resort for a local scanned document, never the
+    # default workflow. The FlipHTML5 path above does not require Tesseract.
+    if editorial_error and args.file and os.environ.get("PDF_ENABLE_LOCAL_OCR", "0").lower() in {"1", "true", "yes", "on"}:
+        print("⚠ Включён локальный OCR fallback…", flush=True)
+        recovered_doc, ocr_error = recover_pdf_text_with_ocr(args.file, doc)
+        if recovered_doc is not None:
+            doc = recovered_doc
+            editorial_error = validate_document_for_editorial_use(doc)
         else:
             print(f"⚠ OCR fallback недоступен: {ocr_error}", flush=True)
 
