@@ -302,7 +302,7 @@ async def run_pdf_scout_custom(req: Request):
                 text = line.decode("utf-8", errors="replace").rstrip()
                 _send(q, "log", {"agent": "1b", "line": text})
 
-        timeout_secs = int(os.environ.get("PDF_SCOUT_TIMEOUT_SECONDS", "300"))
+        timeout_secs = int(os.environ.get("PDF_SCOUT_TIMEOUT_SECONDS", "900"))
         try:
             await asyncio.wait_for(read_stdout(), timeout=timeout_secs)
             await proc.wait()

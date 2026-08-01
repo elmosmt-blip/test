@@ -32,6 +32,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
@@ -541,6 +542,64 @@ def run_pipeline(
     return results
 
 
+def recover_pdf_text_with_ocr(file_path: str, doc: PDFDocument) -> tuple[Optional[PDFDocument], str]:
+    """OCR a scanned/malformed local PDF when normal text extraction is unusable.
+
+    This is intentionally a local, opt-in-by-availability recovery path: OCR
+    reads page images from the operator's uploaded file and does not ask the
+    LLM to guess missing text. Tesseract must be installed on the host; PyMuPDF
+    and pytesseract are Python dependencies.
+    """
+    try:
+        import fitz  # PyMuPDF
+        import pytesseract
+        from PIL import Image
+    except ImportError:
+        return None, "OCR-модули не установлены (нужны PyMuPDF и pytesseract)"
+
+    tesseract_cmd = os.environ.get("TESSERACT_CMD", "").strip()
+    if tesseract_cmd:
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+    try:
+        pytesseract.get_tesseract_version()
+    except Exception:
+        return None, "Tesseract OCR не найден. Установите Tesseract и при необходимости задайте TESSERACT_CMD"
+
+    max_pages = max(1, int(os.environ.get("PDF_OCR_MAX_PAGES", "30")))
+    try:
+        pdf = fitz.open(file_path)
+        page_count = min(len(pdf), max_pages)
+        print(f"🧾 Запускаю OCR: {page_count} из {len(pdf)} страниц (это может занять несколько минут)…", flush=True)
+        pages: list[str] = []
+        for page_number in range(page_count):
+            # 2x rasterization is a practical balance for small magazine text
+            # without turning a 80-page document into an unbounded job.
+            pix = pdf.load_page(page_number).get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+            image = Image.open(io.BytesIO(pix.tobytes("png")))
+            page_text = pytesseract.image_to_string(image, lang=os.environ.get("PDF_OCR_LANGUAGE", "eng"))
+            if len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", page_text)) >= 20:
+                pages.append(page_text)
+            if (page_number + 1) % 5 == 0 or page_number + 1 == page_count:
+                print(f"   OCR обработано страниц: {page_number + 1}/{page_count}", flush=True)
+        pdf.close()
+    except Exception as e:
+        return None, f"OCR не выполнился: {e}"
+
+    recovered_text = "\n".join(pages).strip()
+    if len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", recovered_text)) < 80:
+        return None, "OCR не получил достаточно читаемого текста"
+
+    doc.text = recovered_text
+    doc.text_hash = pdf_collector.hash_text(recovered_text)
+    doc.document_type = pdf_collector.classify_pdf_document_type(doc.title, recovered_text, doc.source_url)
+    doc.company, doc.products, doc.technologies = pdf_collector.identify_company_and_products(
+        recovered_text, doc.title, doc.source_url, doc.metadata
+    )
+    doc.key_facts = pdf_collector.extract_technical_facts(recovered_text, doc.source_url, doc.title)
+    doc.page_count = max(doc.page_count, page_count)
+    return doc, ""
+
+
 def validate_document_for_editorial_use(doc: PDFDocument) -> Optional[str]:
     """Return an error when extraction cannot support a factual article.
 
@@ -654,6 +713,21 @@ def main():
         sys.exit(1)
 
     editorial_error = validate_document_for_editorial_use(doc)
+    # A FlipHTML5 issue is often an image-based PDF or has a broken text layer.
+    # Recover from the uploaded local file with OCR before rejecting it; never
+    # attempt to OCR a viewer HTML URL because it is not the source document.
+    if editorial_error and args.file:
+        print(f"⚠ Обычное извлечение не пригодно: {editorial_error}. Пробую локальный OCR…", flush=True)
+        recovered_doc, ocr_error = recover_pdf_text_with_ocr(args.file, doc)
+        if recovered_doc is not None:
+            doc = recovered_doc
+            editorial_error = validate_document_for_editorial_use(doc)
+            if not editorial_error:
+                ocr_word_count = len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", doc.text))
+                print(f"✅ OCR восстановил {ocr_word_count} читаемых слов; запускаю evidence gate.", flush=True)
+        else:
+            print(f"⚠ OCR fallback недоступен: {ocr_error}", flush=True)
+
     editorial_gate: dict[str, Any] = {"decision": "not_run", "recommended_format": ""}
     if not editorial_error:
         print("🧠 Nemotron выбирает допустимый editorial format по доказательствам…", flush=True)
