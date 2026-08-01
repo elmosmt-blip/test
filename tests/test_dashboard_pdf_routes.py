@@ -4,6 +4,7 @@ Tests for PDF Scout UI and API endpoints in dashboard/app.py.
 
 import asyncio
 import io
+import json
 import pytest
 from pathlib import Path
 

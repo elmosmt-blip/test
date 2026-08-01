@@ -160,6 +160,31 @@ class TestPDFScout:
         assert "--- PAGE 1 ---" in recovered.text
         assert "Fuji Corporation" in recovered.text
 
+    def test_segments_page_bounded_magazine_article_before_topic_creation(self, pdf_scout, monkeypatch):
+        page_text = "Fuji NXTR Placement Breakthrough verified production evidence " * 30
+        doc = PDFDocument(
+            title="SMT Magazine Issue",
+            document_type=PDFDocumentType.MAGAZINE,
+            company="",
+            text=f"--- PAGE 6 ---\n{page_text}\n--- PAGE 7 ---\n{page_text}",
+            source_url="https://online.fliphtml5.com/kwnhb/fakj/",
+        )
+        monkeypatch.setattr(pdf_scout.llm_client, "LLM_MOCK", False)
+        responses = iter([
+            {"articles": [{"title": "Fuji NXTR Placement Breakthrough", "company": "Fuji", "start_page": 6, "end_page": 7, "recommended_format": "news"}]},
+            {"decision": "accept", "recommended_format": "news", "allow_segmentation": False},
+        ])
+        monkeypatch.setattr(pdf_scout.llm_client, "ask_json", lambda **kwargs: next(responses))
+
+        topics = pdf_scout._segment_magazine_with_llm(
+            doc, doc.source_url, doc.title, "SMT Equipment", "magazine", "review", 3, datetime.now(timezone.utc)
+        )
+
+        assert len(topics) == 1
+        assert topics[0]["topic"] == "Fuji NXTR Placement Breakthrough"
+        assert topics[0]["sources"][0]["page_range"] == [6, 7]
+        assert "--- PAGE 6 ---" in topics[0]["sources"][0]["excerpt"]
+
     def test_rejects_pdf_syntax_as_editorial_evidence(self, pdf_scout):
         doc = PDFDocument(
             title="Unknown PDF",
