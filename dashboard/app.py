@@ -603,6 +603,32 @@ async def select_topic(index: int):
     return {"ok": True, "selected_topic": selected.get("topic", ""), "index": 0}
 
 
+@app.post("/briefs/select-many")
+async def select_briefs(req: Request):
+    """Persist selected topic indices without reordering the editorial plan."""
+    data = await req.json()
+    indices = sorted(set(data.get("indices", [])))
+    if not isinstance(indices, list) or not all(isinstance(index, int) for index in indices):
+        return JSONResponse({"error": "Некорректный список тем"}, status_code=400)
+    if not BRIEFS_FILE.exists():
+        return JSONResponse({"error": "briefs.json не найден"}, status_code=404)
+    payload = json.loads(BRIEFS_FILE.read_text("utf-8"))
+    topics = payload.get("topics", [])
+    if any(index < 0 or index >= len(topics) for index in indices):
+        return JSONResponse({"error": "Выбранная тема больше не существует"}, status_code=400)
+    payload["selected_topic_indices"] = indices
+    BRIEFS_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    # The single Writer play button must honour a single selected card, not
+    # silently write topics[0]. Multi-selection uses the explicit full cycle.
+    if len(indices) == 1:
+        AGENT_CMDS["2"] = [
+            PYTHON_CMD, str(AGENTS_DIR / "agent-02-writer.py"),
+            "--brief", str(BRIEFS_FILE), "--pick", str(indices[0]),
+            "--output", str(ARTICLE_FILE),
+        ]
+    return {"ok": True, "indices": indices}
+
+
 @app.post("/briefs/run-selected")
 async def run_selected_briefs(req: Request):
     """Continue all selected topics through Writer, QC, SEO and distribution."""
@@ -657,6 +683,11 @@ async def delete_brief(index: int):
         return JSONResponse({"error": f"Индекс {index} вне диапазона (0-{len(topics)-1})"}, status_code=400)
     deleted = topics.pop(index)
     data["topics"] = topics
+    selected_indices = data.get("selected_topic_indices", [])
+    data["selected_topic_indices"] = [
+        value - 1 if value > index else value
+        for value in selected_indices if value != index
+    ]
     BRIEFS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     if index == _selected_topic_index:
         _selected_topic_index = -1
@@ -1266,6 +1297,12 @@ function subscribeRun(runId, completionTab = '') {
 
 // ── Run agent / pipeline ────────────────────────────────────────────
 async function runAgent(agentId) {
+  if (agentId === '2' && selectedTopicIndices.size > 1) {
+    // A multi-selection is deliberately a full per-topic workflow. Do not
+    // silently pick index 0 through Writer's legacy single-topic command.
+    await runSelectedTopics();
+    return;
+  }
   showTab('log');
   const r = await fetch(`/run/${agentId}`, {method:'POST'}).then(r=>r.json());
   if (r.run_id) { subscribeRun(r.run_id); }
@@ -1487,6 +1524,10 @@ function workflowAction(step) {
 async function loadBriefs() {
   const data = await fetch('/briefs').then(r=>r.json()).catch(()=>null);
   briefsData = data;
+  if (Array.isArray(data?.selected_topic_indices)) {
+    selectedTopicIndices = new Set(data.selected_topic_indices);
+    selectedTopicIndex = selectedTopicIndices.size ? [...selectedTopicIndices][0] : null;
+  }
   const el = document.getElementById('briefs-content');
   const countEl = document.getElementById('briefs-count');
 
@@ -1581,11 +1622,16 @@ function updateSelectedTopicsUI() {
   if (button) button.disabled = !count;
 }
 
-function toggleTopic(index) {
+async function toggleTopic(index) {
   if (selectedTopicIndices.has(index)) selectedTopicIndices.delete(index);
   else selectedTopicIndices.add(index);
   selectedTopicIndex = selectedTopicIndices.size ? [...selectedTopicIndices][0] : null;
-  loadBriefs();
+  const result = await fetch('/briefs/select-many', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({indices: [...selectedTopicIndices].sort((a, b) => a - b)})
+  }).then(r => r.json()).catch(() => null);
+  if (!result || result.error) { toast(result?.error || 'Не удалось сохранить выбор', 'err'); return; }
+  await loadBriefs();
 }
 
 async function runSelectedTopics() {

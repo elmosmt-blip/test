@@ -57,6 +57,21 @@ class TestDashboardPDFRoutes:
         assert "run_id" in res
         assert len(res["run_id"]) > 5
 
+    async def test_select_briefs_persists_nonzero_writer_index(self, tmp_path, monkeypatch):
+        briefs_file = tmp_path / "briefs.json"
+        briefs_file.write_text(json.dumps({"topics": [{"topic": "First"}, {"topic": "Chosen"}]}), encoding="utf-8")
+        monkeypatch.setattr(dashboard_app, "BRIEFS_FILE", briefs_file)
+
+        class FakeRequest:
+            async def json(self):
+                return {"indices": [1]}
+
+        res = await dashboard_app.select_briefs(FakeRequest())
+        saved = json.loads(briefs_file.read_text(encoding="utf-8"))
+        assert res["indices"] == [1]
+        assert saved["selected_topic_indices"] == [1]
+        assert dashboard_app.AGENT_CMDS["2"][dashboard_app.AGENT_CMDS["2"].index("--pick") + 1] == "1"
+
     async def test_delete_brief_removes_unwanted_topic(self, tmp_path, monkeypatch):
         briefs_file = tmp_path / "briefs.json"
         briefs_file.write_text(json.dumps({"topics": [{"topic": "Bad topic"}, {"topic": "Good topic"}]}), encoding="utf-8")
