@@ -229,27 +229,29 @@ def _segment_magazine_with_llm(
         )
         company = company or detected_company
         facts = pdf_collector.extract_technical_facts(segment_text, source_url, title)
-        # The article-level gate runs on the bounded source text, not the whole
-        # magazine. Page markers are removed so the gate cannot confuse this
-        # segment with a multi-article container.
-        segment_doc = PDFDocument(
-            title=title,
-            document_type=PDFDocumentType.ARTICLE,
-            company=company,
-            products=products,
-            technologies=technologies,
-            page_count=end - start + 1,
-            text=re.sub(r"--- PAGE \d+ ---", "", segment_text).strip(),
-            source_url=source_url,
-            key_facts=facts,
-        )
-        segment_error, segment_gate = audit_document_evidence_with_llm(segment_doc)
-        if segment_error:
+        # Do not send every segment through a second JSON-only LLM gate. Some
+        # reasoning models expose their analysis before the final answer and
+        # truncate a small JSON response. Page-bounded source evidence is
+        # checked deterministically here; Quality Checker later audits the
+        # generated claims against this exact excerpt.
+        plain_segment = re.sub(r"--- PAGE \d+ ---", "", segment_text).strip()
+        word_count = len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", plain_segment))
+        if word_count < 120:
             continue
-        recommended = str(segment_gate.get("recommended_format") or item.get("recommended_format", format_type)).lower()
-        if recommended not in allowed_formats:
+        if facts:
+            recommended = "news"
+        elif word_count >= 300:
+            recommended = "insight"
+        else:
             continue
         section_type = "review" if recommended == "review" else recommended
+        segment_gate = {
+            "decision": "accept",
+            "recommended_format": recommended,
+            "reason": "Page-bounded source text passed deterministic segmentation evidence checks",
+            "word_count": word_count,
+            "fact_count": len(facts),
+        }
         section = section_router.decide_section(
             title=title,
             body=segment_text,
