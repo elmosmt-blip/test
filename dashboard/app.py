@@ -775,7 +775,7 @@ html,body{overflow:hidden;background:radial-gradient(circle at 56% -25%,#17345a 
 header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .logo{font-size:15px;letter-spacing:.04em}.logo::before{content:'◆';font-size:10px;margin-right:9px;color:var(--green)}
 .header-meta{gap:8px}.pill{padding:5px 10px;background:rgba(21,35,58,.75);font-family:var(--sans);font-size:11px}
-.panel-agents,.panel-drafts{background:rgba(12,23,40,.76);backdrop-filter:blur(12px)}
+.panel-agents,.panel-drafts{background:rgba(12,23,40,.76);backdrop-filter:blur(12px)}.panel-drafts.attention{box-shadow:inset 3px 0 0 var(--green),0 0 0 2px rgba(0,229,160,.22);transition:box-shadow .2s ease}
 .panel-title{padding:17px 16px 11px;color:var(--text-mid);font-weight:700;letter-spacing:.1em}
 .agent-list{padding:10px 9px;gap:6px}.agent-card{padding:11px 10px;border-color:rgba(38,59,91,.45);background:rgba(21,35,58,.36)}
 .agent-card:hover{transform:translateX(2px);background:var(--surface2);border-color:var(--border2)}
@@ -790,7 +790,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 /* Overview is the default decision surface. */
 .overview-grid{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}.metric-card,.overview-card{border:1px solid var(--border);border-radius:12px;background:linear-gradient(145deg,rgba(22,38,63,.94),rgba(14,25,43,.9));box-shadow:0 12px 30px rgba(0,0,0,.12)}
 .metric-card{padding:16px}.metric-label{font:600 10px var(--mono);letter-spacing:.09em;color:var(--text-dim);text-transform:uppercase}.metric-value{font-size:27px;font-weight:600;color:#fff;margin-top:9px}.metric-note{font-size:11px;color:var(--text-mid);margin-top:4px}
-.overview-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.9fr);gap:16px}.overview-card{padding:20px}.overview-eyebrow{font:600 10px var(--mono);color:var(--green);letter-spacing:.1em;text-transform:uppercase}.overview-title{font-size:21px;line-height:1.25;margin:8px 0;color:#fff}.overview-copy{line-height:1.55;font-size:13px;color:var(--text-mid)}.workflow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:20px}.workflow-step{padding:10px;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-dim)}.workflow-step b{display:block;color:var(--text);font-size:12px;margin-bottom:4px}.workflow-step.active{border-color:var(--green);background:var(--green-dim);color:var(--green)}
+.overview-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.9fr);gap:16px}.overview-card{padding:20px}.overview-eyebrow{font:600 10px var(--mono);color:var(--green);letter-spacing:.1em;text-transform:uppercase}.overview-title{font-size:21px;line-height:1.25;margin:8px 0;color:#fff}.overview-copy{line-height:1.55;font-size:13px;color:var(--text-mid)}.workflow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:20px}.workflow-step{min-height:68px;padding:10px;border-radius:8px;border:1px solid var(--border);background:rgba(12,23,40,.46);color:var(--text-dim);font:11px var(--sans);text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.workflow-step:hover{transform:translateY(-2px);border-color:var(--blue);background:var(--blue-dim);color:var(--text)}.workflow-step:focus-visible{outline:3px solid rgba(74,158,255,.45);outline-offset:2px}.workflow-step b{display:block;color:var(--text);font-size:12px;margin-bottom:4px}.workflow-step span{display:block}.workflow-step.active{border-color:var(--green);background:var(--green-dim);color:var(--green);box-shadow:inset 0 0 0 1px rgba(0,229,160,.14)}.workflow-step.active b{color:var(--green)}
 .next-action{border-left:3px solid var(--green)}.overview-action{margin-top:16px;padding:9px 13px;border-radius:7px;border:1px solid var(--green);background:var(--green);font:700 11px var(--sans);cursor:pointer;color:#06251d}.overview-action:hover{filter:brightness(1.08)}
 .source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1174,6 +1174,7 @@ async function loadOverview() {
     el.innerHTML = '<div class="empty-state"><div class="empty-icon">!</div>Не удалось получить состояние Control Room</div>';
     return;
   }
+  briefsData = briefs;
   const agents = status.agents || {};
   const running = Object.values(agents).filter(s => s === 'running').length;
   const failed = Object.values(agents).filter(s => s === 'error').length;
@@ -1201,12 +1202,12 @@ async function loadOverview() {
         <div class="overview-eyebrow">Рекомендуемое действие</div>
         <h1 class="overview-title">${escHtml(nextTitle)}</h1>
         <p class="overview-copy">${escHtml(nextCopy)}</p>
-        <div class="workflow-steps">
-          <div class="workflow-step ${!topics && !running ? 'active' : ''}"><b>01 · Collect</b>Источники и PDF</div>
-          <div class="workflow-step ${topics ? 'active' : ''}"><b>02 · Plan</b>Темы и evidence</div>
-          <div class="workflow-step"><b>03 · Create</b>Текст и проверка</div>
-          <div class="workflow-step"><b>04 · Review</b>SEO и качество</div>
-          <div class="workflow-step"><b>05 · Publish</b>Approval и каналы</div>
+        <div class="workflow-steps" aria-label="Этапы редакционного процесса">
+          <button type="button" class="workflow-step ${!topics && !running ? 'active' : ''}" onclick="workflowAction('collect')" title="Открыть загрузку PDF или начать сбор источников"><b>01 · Collect</b><span>Источники и PDF</span></button>
+          <button type="button" class="workflow-step ${topics ? 'active' : ''}" onclick="workflowAction('plan')" title="Открыть темы и проверить evidence"><b>02 · Plan</b><span>Темы и evidence</span></button>
+          <button type="button" class="workflow-step" onclick="workflowAction('create')" title="Открыть подготовленную статью или выбрать тему"><b>03 · Create</b><span>Текст и проверка</span></button>
+          <button type="button" class="workflow-step" onclick="workflowAction('review')" title="Открыть качество, SEO и журнал выполнения"><b>04 · Review</b><span>SEO и качество</span></button>
+          <button type="button" class="workflow-step" onclick="workflowAction('publish')" title="Перейти к очереди черновиков справа"><b>05 · Publish</b><span>Approval и каналы</span></button>
         </div>
         <button class="overview-action" onclick="${nextAction}">${nextLabel} →</button>
       </section>
@@ -1218,6 +1219,44 @@ async function loadOverview() {
         <div class="source-summary"><span>Детальная диагностика</span><button class="clear-btn" onclick="showTab('log')">Открыть логи →</button></div>
       </aside>
     </div>`;
+}
+
+// ── Workflow navigation: cards are real, safe actions — never dead UI. ──
+function workflowAction(step) {
+  if (step === 'collect') {
+    openPdfScout();
+    return;
+  }
+  if (step === 'plan') {
+    showTab('briefs');
+    return;
+  }
+  if (step === 'create') {
+    if (!briefsData?.topics?.length) {
+      toast('Сначала соберите источники и создайте тему', 'info');
+      openPdfScout();
+      return;
+    }
+    if (selectedTopicIndex === null) {
+      toast('Выберите тему в разделе «План» перед запуском Writer', 'info');
+      showTab('briefs');
+      return;
+    }
+    showTab('article');
+    return;
+  }
+  if (step === 'review') {
+    showTab('article');
+    toast('Quality Checker и SEO запускаются после Writer; подробности — в журнале запуска', 'info');
+    return;
+  }
+  if (step === 'publish') {
+    const drafts = document.querySelector('.panel-drafts');
+    drafts?.scrollIntoView({behavior: 'smooth', block: 'start'});
+    drafts?.classList.add('attention');
+    setTimeout(() => drafts?.classList.remove('attention'), 1200);
+    toast('Черновики доступны в панели справа. Публикуйте только материалы со статусом factual pass.', 'info');
+  }
 }
 
 // ── Briefs ─────────────────────────────────────────────────────────
