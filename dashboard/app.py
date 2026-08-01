@@ -795,6 +795,8 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
+.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
+.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}}
 </style>
 </head>
 <body>
@@ -819,25 +821,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
     <div class="panel-title">Агенты</div>
     <div class="agent-list" id="agent-list"></div>
     <button class="pipeline-btn" id="btn-run-all" onclick="runAll()">▶ ЗАПУСТИТЬ ПАЙПЛАЙН</button>
-    <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
-      <div class="panel-title" style="font-size:11px; margin-bottom:8px;">📄 РУЧНАЯ ПОДАЧА PDF (#1b)</div>
-      <input id="pdf-url-input" type="text" placeholder="URL: https://online.fliphtml5.com/..." 
-             style="width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:4px; font-size:11px; margin-bottom:6px;">
-      <input id="pdf-file-input" type="file" accept=".pdf,.txt,.html" style="font-size:10px; color:var(--text-dim); margin-bottom:6px; width:100%;">
-      <div style="display:flex; gap:6px; margin-bottom:6px;">
-        <select id="pdf-format-select" style="flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:4px; border-radius:4px; font-size:11px;">
-          <option value="magazine">Журнал (magazine)</option>
-          <option value="review">Обзор (review)</option>
-          <option value="datasheet">Даташит (datasheet)</option>
-        </select>
-        <input id="pdf-topics-input" type="number" value="3" min="1" max="10" title="Сколько тем выделить" 
-               style="width:48px; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:4px; border-radius:4px; font-size:11px; text-align:center;">
-      </div>
-      <div style="display:flex; gap:6px;">
-        <button onclick="runPdfScoutUI(false)" style="flex:1; background:var(--bg-card); border:1px solid var(--border); color:var(--text); padding:6px; border-radius:4px; font-size:10px; cursor:pointer;" title="Создать бриф тем">📋 СОЗДАТЬ БРИФ</button>
-        <button onclick="runPdfScoutUI(true)" style="flex:1; background:var(--accent); border:none; color:#000; font-weight:bold; padding:6px; border-radius:4px; font-size:10px; cursor:pointer;" title="Создать бриф и написать статьи">✍️ НАПИСАТЬ СТАТЬИ</button>
-      </div>
-    </div>
+    <button class="pdf-launch-btn" onclick="openPdfScout()">＋ НОВЫЙ PDF / ЖУРНАЛ</button>
   </div>
 
   <!-- CENTRE: MAIN CONTENT -->
@@ -884,6 +868,46 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
       <div class="empty-state"><div class="empty-icon">☰</div>Загрузка…</div>
     </div>
   </div>
+</div>
+
+<!-- PDF Scout is a focused workflow, not a compressed sidebar form. -->
+<div class="modal-backdrop" id="pdf-scout-modal" role="dialog" aria-modal="true" aria-labelledby="pdf-scout-title" onclick="closePdfScout(event)">
+  <section class="pdf-scout-dialog">
+    <div class="pdf-dialog-header">
+      <div>
+        <div class="overview-eyebrow">Collect · Manual source</div>
+        <h2 id="pdf-scout-title">Добавить PDF или журнал</h2>
+        <p>Сначала извлечём и проверим evidence. Writer запускается только после успешной проверки.</p>
+      </div>
+      <button class="modal-close" onclick="closePdfScout()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="pdf-form-grid">
+      <label class="pdf-field pdf-field-wide"><span>Официальный URL источника <em>необязательно для локального PDF</em></span>
+        <input id="pdf-url-input" type="url" placeholder="https://vendor.com/news/product-release или https://online.fliphtml5.com/...">
+      </label>
+      <label class="pdf-field pdf-field-wide"><span>Файл документа</span>
+        <input id="pdf-file-input" type="file" accept=".pdf,.txt,.html">
+        <small>PDF с полноценным текстовым слоем предпочтительнее. Повреждённые streams и OCR-мусор будут отклонены.</small>
+      </label>
+      <label class="pdf-field"><span>Тип материала</span>
+        <select id="pdf-format-select">
+          <option value="magazine">Журнал / выпуск</option>
+          <option value="review">Продуктовый материал</option>
+          <option value="datasheet">Datasheet / specification</option>
+        </select>
+      </label>
+      <label class="pdf-field"><span>Максимум тем</span>
+        <input id="pdf-topics-input" type="number" value="3" min="1" max="10">
+        <small>Фактическое разделение доступно только при подтверждённых самостоятельных статьях.</small>
+      </label>
+    </div>
+    <div class="pdf-evidence-note"><b>Evidence gate:</b> Nemotron проверит, есть ли в документе названный предмет, источники и достаточные факты для выбранного editorial format.</div>
+    <div class="pdf-dialog-actions">
+      <button class="modal-secondary" onclick="closePdfScout()">Отмена</button>
+      <button class="modal-secondary" onclick="runPdfScoutUI(false)">Создать briefs</button>
+      <button class="modal-primary" onclick="runPdfScoutUI(true)">Проверить и написать статью →</button>
+    </div>
+  </section>
 </div>
 
 <div id="toast"></div>
@@ -1033,6 +1057,16 @@ async function runAll() {
   else toast(r.error || 'Ошибка', 'err');
 }
 
+function openPdfScout() {
+  document.getElementById('pdf-scout-modal').classList.add('open');
+  setTimeout(() => document.getElementById('pdf-url-input').focus(), 0);
+}
+
+function closePdfScout(event) {
+  if (event && event.target !== document.getElementById('pdf-scout-modal')) return;
+  document.getElementById('pdf-scout-modal').classList.remove('open');
+}
+
 async function runPdfScoutUI(writeFlag) {
   showTab('log');
   let filePath = '';
@@ -1078,6 +1112,7 @@ async function runPdfScoutUI(writeFlag) {
     });
     const data = await res.json();
     if (data.run_id) {
+      closePdfScout();
       subscribeRun(data.run_id, writeFlag ? 'article' : 'briefs');
     } else {
       toast(data.error || 'Ошибка запуска PDF Scout', 'err');
