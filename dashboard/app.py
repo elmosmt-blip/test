@@ -383,6 +383,39 @@ async def get_drafts():
         return {"drafts": [], "error": str(e)}
 
 
+@app.get("/drafts/{article_id}")
+async def get_draft(article_id: int):
+    """Return one unpublished article for the Control Room reader."""
+    db_url = os.environ.get("NEON_DATABASE_URL")
+    if not db_url:
+        return JSONResponse({"error": "NEON_DATABASE_URL не задан"}, status_code=400)
+    try:
+        import psycopg2, psycopg2.extras
+        conn = psycopg2.connect(db_url)
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT id, title, content, summary, editorial_type, category_name,
+                       date, slug, source, source_url, author_name, frontmatter_json
+                FROM news WHERE id=%s AND is_published=false
+            """, (article_id,))
+            row = cur.fetchone()
+        conn.close()
+        if not row:
+            return JSONResponse({"error": "Черновик не найден"}, status_code=404)
+        draft = dict(row)
+        if draft.get("date"):
+            draft["date"] = draft["date"].isoformat()
+        raw_frontmatter = draft.get("frontmatter_json")
+        if isinstance(raw_frontmatter, str):
+            try:
+                draft["frontmatter_json"] = json.loads(raw_frontmatter)
+            except json.JSONDecodeError:
+                draft["frontmatter_json"] = {}
+        return {"draft": draft}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.post("/drafts/{article_id}/approve")
 async def approve_draft(article_id: int):
     db_url = os.environ.get("NEON_DATABASE_URL")
@@ -739,6 +772,7 @@ header{
   transition:all .15s;
 }
 .btn-approve:hover{background:var(--green);color:#000}
+.btn-read{padding:5px 9px;background:var(--blue-dim);border:1px solid rgba(74,158,255,.35);color:var(--blue);border-radius:5px;font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s}.btn-read:hover{background:var(--blue);color:#041221}
 .btn-del{
   padding:5px 10px;background:none;border:1px solid var(--border);color:var(--text-dim);
   border-radius:5px;font-size:11px;cursor:pointer;transition:all .15s;
@@ -796,7 +830,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
 .preview-toolbar{align-items:center;justify-content:space-between}.preview-label{display:block;color:var(--green);font:700 10px var(--mono);letter-spacing:.12em}.preview-note{display:block;margin-top:4px;color:var(--text-dim);font-size:11px}.preview-actions{display:flex;align-items:center;gap:8px}.site-preview{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--bg);color:#d9e1ed}.site-preview-hero{display:grid;grid-template-columns:minmax(0,1fr) 278px;gap:58px;max-width:920px;margin:0 auto;padding:54px 36px 38px}.preview-back{color:#8998ad;text-decoration:none;font-size:13px}.preview-kicker{margin-top:40px;color:#7c899e;font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase}.site-preview h1{max-width:590px;margin:22px 0 15px;color:#f5f2ed;font:400 clamp(37px,4.2vw,58px)/1.02 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.preview-dek{max-width:590px;color:#aeb9ca;font-size:16px;line-height:1.55}.preview-context{align-self:start;margin-top:60px;padding:24px 20px;border:1px solid rgba(66,81,104,.6);border-radius:16px;background:rgba(17,23,34,.9)}.preview-context>div{color:var(--green);font:700 9px var(--mono);letter-spacing:.15em}.preview-context dl{margin:20px 0 0}.preview-context dt{margin-top:17px;color:#6f7d92;font:9px var(--mono);letter-spacing:.12em}.preview-context dd{margin:7px 0 0;color:#e1e6ee;font-size:12px;font-weight:600;line-height:1.4}.preview-decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:920px;margin:0 auto 32px;padding:0 36px}.preview-decision-grid>div{min-height:160px;padding:22px 18px;border:1px solid rgba(53,69,91,.6);border-radius:12px;background:rgba(15,21,31,.82)}.preview-decision-grid b{color:var(--green);font:700 9px var(--mono);letter-spacing:.16em}.preview-decision-grid p,.preview-decision-grid li{margin-top:15px;color:#c7d0de;font-size:12px;line-height:1.55}.preview-decision-grid ul{margin:12px 0 0;padding-left:15px}.preview-decision-grid li{margin:6px 0}.preview-body{max-width:760px;margin:0 auto;padding:38px 44px 58px;border:1px solid rgba(53,69,91,.6);border-radius:14px 14px 0 0;background:rgba(14,19,29,.92);font-size:15px;line-height:1.8;color:#d0d7e2}.preview-body p{margin:0 0 18px}.preview-body .article-section-heading{margin:34px 0 11px;color:#f2f4f8;font-size:22px}.preview-qa{margin:16px 0;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-mid);font-size:12px}.preview-qa summary{cursor:pointer;color:var(--blue);font-weight:600}.preview-qa .article-evidence{margin:15px 0 0}.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.article-evidence{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 14px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.article-evidence.pass{border-left:3px solid var(--green)}.article-evidence.blocked{border-left:3px solid var(--red)}.article-evidence h2{margin:5px 0;color:#fff;font-size:15px}.article-evidence p{color:var(--text-mid);font-size:12px;line-height:1.5}.evidence-details{display:flex;align-items:flex-end;flex-direction:column;gap:7px;color:var(--text-dim);font:11px var(--mono)}.evidence-alert{grid-column:1/-1;padding:10px 12px;border-radius:7px;background:var(--red-dim);color:var(--text-mid);font-size:11px;line-height:1.55}.evidence-alert b{display:block;color:var(--red);margin-bottom:3px}.evidence-sources{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;color:var(--text-mid);font-size:12px}.evidence-sources summary{cursor:pointer;color:var(--blue)}.evidence-sources>div{margin:11px 0;padding-left:10px;border-left:2px solid var(--border)}.evidence-sources a{color:var(--blue);text-decoration:none}.evidence-sources p{margin-top:4px;font-size:11px}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
-.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}.site-preview-hero{grid-template-columns:1fr;gap:20px;padding:30px 22px}.preview-context{margin-top:0}.preview-decision-grid{grid-template-columns:1fr;padding:0 22px}.preview-body{margin:0 22px;padding:28px 22px}.preview-actions{margin-top:10px;flex-wrap:wrap}.article-evidence{grid-template-columns:1fr}.evidence-details{align-items:flex-start}}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}}
+.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}.site-preview-hero{grid-template-columns:1fr;gap:20px;padding:30px 22px}.preview-context{margin-top:0}.preview-decision-grid{grid-template-columns:1fr;padding:0 22px}.preview-body{margin:0 22px;padding:28px 22px}.preview-actions{margin-top:10px;flex-wrap:wrap}.article-evidence{grid-template-columns:1fr}.evidence-details{align-items:flex-start}}.draft-reader-dialog{width:min(960px,100%);max-height:calc(100vh - 42px);overflow:auto;padding:22px 28px 46px;border:1px solid var(--border2);border-radius:16px;background:#0d1522;box-shadow:0 30px 90px rgba(0,0,0,.55)}.draft-reader-topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--border)}.draft-reader-topbar>div{display:flex;align-items:center;gap:8px}.draft-reader-content{max-width:720px;margin:45px auto 0}.draft-reader-meta{color:var(--green);font:700 10px var(--mono);letter-spacing:.13em;text-transform:uppercase}.draft-reader-content h1{margin:18px 0;color:#f5f2ed;font:400 clamp(35px,5vw,58px)/1.04 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.draft-reader-summary{margin:0 0 24px;color:var(--text-mid);font-size:17px;line-height:1.55}.draft-reader-context{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text-dim);font-size:11px}.draft-reader-context a{color:var(--blue);text-decoration:none}.draft-reader-body{padding-top:28px;color:#d6deea;font-size:15px;line-height:1.8}.draft-reader-body p{margin:0 0 18px}.draft-reader-body h2{margin:34px 0 12px;color:#fff;font-size:23px}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog,.draft-reader-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}.draft-reader-context{flex-direction:column}.draft-reader-topbar{align-items:flex-start}.draft-reader-topbar>div{flex-wrap:wrap;justify-content:flex-end}}
 </style>
 </head>
 <body>
@@ -917,6 +951,14 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
       <button class="modal-secondary" onclick="runPdfScoutUI(false)">Создать briefs</button>
       <button class="modal-primary" onclick="runPdfScoutUI(true)">Проверить и написать статью →</button>
     </div>
+  </section>
+</div>
+
+<!-- Read-only draft preview. The article remains unpublished until approval. -->
+<div class="modal-backdrop" id="draft-reader-modal" role="dialog" aria-modal="true" aria-labelledby="draft-reader-title" onclick="closeDraftReader(event)">
+  <section class="draft-reader-dialog">
+    <div class="draft-reader-topbar"><span class="preview-label">UNPUBLISHED DRAFT · READ ONLY</span><div><button class="modal-secondary" id="draft-reader-publish" type="button">✓ Опубликовать</button><button class="modal-close" onclick="closeDraftReader()" aria-label="Закрыть">×</button></div></div>
+    <article id="draft-reader-content" class="draft-reader-content"></article>
   </section>
 </div>
 
@@ -1491,11 +1533,49 @@ async function loadDrafts() {
         ${dt ? `<span>${dt}</span>` : ''}
       </div>
       <div class="draft-actions">
+        <button class="btn-read" onclick="openDraftReader(${d.id})">Читать</button>
         <button class="btn-approve" onclick="approveDraft(${d.id})">✓ Опубликовать</button>
-        <button class="btn-del" onclick="deleteDraft(${d.id})">✕</button>
+        <button class="btn-del" onclick="deleteDraft(${d.id})" title="Удалить черновик">✕</button>
       </div>
     </div>`;
   }).join(''));
+}
+
+function formatDraftReaderBody(text) {
+  return String(text || '').split('\n').map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return '';
+    if (/^##\s+/.test(trimmed)) return `<h2>${escHtml(trimmed.replace(/^##\s+/, ''))}</h2>`;
+    if (/^#\s+/.test(trimmed)) return `<h1>${escHtml(trimmed.replace(/^#\s+/, ''))}</h1>`;
+    return `<p>${escHtml(trimmed)}</p>`;
+  }).join('');
+}
+
+async function openDraftReader(id) {
+  const modal = document.getElementById('draft-reader-modal');
+  const content = document.getElementById('draft-reader-content');
+  content.innerHTML = '<div class="empty-state">Загружаю черновик…</div>';
+  modal.classList.add('open');
+  const r = await fetch(`/drafts/${id}`).then(res => res.json()).catch(() => null);
+  if (!r || r.error || !r.draft) {
+    content.innerHTML = `<div class="empty-state">${escHtml(r?.error || 'Не удалось открыть черновик')}</div>`;
+    return;
+  }
+  const d = r.draft;
+  const date = d.date ? new Date(d.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : 'Draft';
+  content.innerHTML = `
+    <div class="draft-reader-meta">${escHtml(d.editorial_type || 'Editorial')} · ${escHtml(d.category_name || 'SMT Equipment')} · ${escHtml(date)}</div>
+    <h1 id="draft-reader-title">${escHtml(d.title || 'Untitled')}</h1>
+    ${d.summary ? `<p class="draft-reader-summary">${escHtml(d.summary)}</p>` : ''}
+    <div class="draft-reader-context"><span>Source: ${escHtml(d.source || 'SMTInsider Editorial')}</span>${d.source_url ? `<a href="${escHtml(d.source_url)}" target="_blank" rel="noopener">Открыть источник ↗</a>` : ''}</div>
+    <div class="draft-reader-body">${formatDraftReaderBody(d.content)}</div>`;
+  const publish = document.getElementById('draft-reader-publish');
+  publish.onclick = async () => { await approveDraft(id); closeDraftReader(); };
+}
+
+function closeDraftReader(event) {
+  if (event && event.target !== document.getElementById('draft-reader-modal')) return;
+  document.getElementById('draft-reader-modal').classList.remove('open');
 }
 
 async function approveDraft(id) {

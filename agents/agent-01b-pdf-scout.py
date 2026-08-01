@@ -565,7 +565,7 @@ def recover_pdf_text_with_ocr(file_path: str, doc: PDFDocument) -> tuple[Optiona
     except Exception:
         return None, "Tesseract OCR не найден. Установите Tesseract и при необходимости задайте TESSERACT_CMD"
 
-    max_pages = max(1, int(os.environ.get("PDF_OCR_MAX_PAGES", "30")))
+    max_pages = max(1, int(os.environ.get("PDF_OCR_MAX_PAGES", "80")))
     try:
         pdf = fitz.open(file_path)
         page_count = min(len(pdf), max_pages)
