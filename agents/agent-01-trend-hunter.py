@@ -493,6 +493,28 @@ def _http_get(url: str, *, headers: dict | None = None, timeout: int = 20,
     return None
 
 
+def resolve_google_news_url(url: str) -> str:
+    """Resolve a Google News redirect to the publisher's canonical URL.
+
+    Google News is an index/discovery channel, never a publishable source URL.
+    If its redirect cannot be resolved, the result is deliberately discarded by
+    the caller rather than storing news.google.com as an "Official Source".
+    """
+    if not url:
+        return ""
+    host = urllib.parse.urlparse(url).netloc.lower()
+    if "news.google.com" not in host:
+        return url
+    try:
+        response = requests.get(url, headers=DEFAULT_HTTP_HEADERS, timeout=12, allow_redirects=True)
+        response.raise_for_status()
+        final_url = response.url
+        final_host = urllib.parse.urlparse(final_url).netloc.lower()
+        return final_url if final_url and "news.google.com" not in final_host else ""
+    except requests.RequestException:
+        return ""
+
+
 def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int = 30) -> list[dict[str, Any]]:
     """Search Google News RSS — a resilient, date-stamped alternative to scraping
     DuckDuckGo's HTML results page. Every item ships with a real pubDate, so it
@@ -517,12 +539,13 @@ def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int 
             source_tag = item.find("source")
             src_name = source_tag.text.strip() if source_tag is not None and source_tag.text else "Google News"
             dt = parse_rss_date(date_raw)
-            if not title or not link:
+            canonical_link = resolve_google_news_url(link)
+            if not title or not canonical_link:
                 continue
             results.append({
                 "title": title,
                 "snippet": re.sub(r"<[^>]+>", "", desc or "")[:350],
-                "source": link,
+                "source": canonical_link,
                 "query": query,
                 "feed": f"GoogleNews:{src_name}",
                 "search_date": iso_date(dt),
