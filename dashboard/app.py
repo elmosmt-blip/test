@@ -456,6 +456,26 @@ async def select_topic(index: int):
     return {"ok": True, "selected_topic": selected.get("topic", ""), "index": 0}
 
 
+@app.delete("/briefs/{index}")
+async def delete_brief(index: int):
+    """Remove an unsuitable topic before it reaches Writer."""
+    global _selected_topic_index
+    if not BRIEFS_FILE.exists():
+        return JSONResponse({"error": "briefs.json не найден"}, status_code=404)
+    data = json.loads(BRIEFS_FILE.read_text("utf-8"))
+    topics = data.get("topics", [])
+    if index < 0 or index >= len(topics):
+        return JSONResponse({"error": f"Индекс {index} вне диапазона (0-{len(topics)-1})"}, status_code=400)
+    deleted = topics.pop(index)
+    data["topics"] = topics
+    BRIEFS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    if index == _selected_topic_index:
+        _selected_topic_index = -1
+    elif index < _selected_topic_index:
+        _selected_topic_index -= 1
+    return {"ok": True, "deleted_topic": deleted.get("topic", ""), "remaining": len(topics)}
+
+
 @app.get("/briefs/selected")
 async def get_selected_topic():
     return {"selected_index": _selected_topic_index}
@@ -662,6 +682,11 @@ header{
 }
 .select-topic-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-dim)}
 .select-topic-btn.active{border-color:var(--green);color:#000;background:var(--green)}
+.delete-topic-btn{
+  padding:6px 10px;border-radius:6px;font-size:11px;font-family:var(--mono);cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--text-dim);transition:all .2s;
+}
+.delete-topic-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-dim)}
 
 /* ── ARTICLE PANEL ── */
 .article-toolbar{
@@ -1077,6 +1102,20 @@ async function selectTopic(index) {
   await loadBriefs();
 }
 
+async function deleteTopic(index) {
+  const topic = briefsData?.topics?.[index]?.topic || 'эту тему';
+  if (!confirm(`Удалить «${topic}»? Writer не сможет использовать её.`)) return;
+  const r = await fetch(`/briefs/${index}`, {method:'DELETE'}).then(res => res.json()).catch(() => null);
+  if (!r || r.error) { toast(r?.error || 'Не удалось удалить тему', 'err'); return; }
+  if (index === selectedTopicIndex) {
+    selectedTopicIndex = null;
+    document.getElementById('selected-topic-pill').style.display = 'none';
+  }
+  toast(`Удалено. Осталось тем: ${r.remaining}`, 'info');
+  await loadBriefs();
+  loadOverview();
+}
+
 // ── Tabs ───────────────────────────────────────────────────────────
 function showTab(name) {
   const tabs = ['overview', 'briefs', 'article', 'log'];
@@ -1215,6 +1254,9 @@ async function loadBriefs() {
         <div style="display:flex;gap:4px;flex-wrap:wrap;flex:1">
           ${(t.keywords||[]).map(k=>`<span class="key-tag">${escHtml(k)}</span>`).join('')}
         </div>
+        <button class="delete-topic-btn" onclick="deleteTopic(${i})" title="Удалить тему до запуска Writer">
+          ✕ Удалить
+        </button>
         ${!isCurrentPriority ? `
           <button class="select-topic-btn" onclick="selectTopic(${i})">
             ★ Выбрать для Writer

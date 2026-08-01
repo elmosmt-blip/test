@@ -55,3 +55,17 @@ class TestDashboardPDFRoutes:
         res = await dashboard_app.run_pdf_scout_custom(FakeRequest())
         assert "run_id" in res
         assert len(res["run_id"]) > 5
+
+    async def test_delete_brief_removes_unwanted_topic(self, tmp_path, monkeypatch):
+        briefs_file = tmp_path / "briefs.json"
+        briefs_file.write_text(json.dumps({"topics": [{"topic": "Bad topic"}, {"topic": "Good topic"}]}), encoding="utf-8")
+        monkeypatch.setattr(dashboard_app, "BRIEFS_FILE", briefs_file)
+        monkeypatch.setattr(dashboard_app, "_selected_topic_index", 0)
+
+        res = await dashboard_app.delete_brief(0)
+
+        assert res["ok"] is True
+        assert res["deleted_topic"] == "Bad topic"
+        assert res["remaining"] == 1
+        assert json.loads(briefs_file.read_text(encoding="utf-8"))["topics"] == [{"topic": "Good topic"}]
+        assert dashboard_app._selected_topic_index == -1
