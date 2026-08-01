@@ -375,10 +375,13 @@ if __name__ == "__main__":
             with open(args.meta, encoding="utf-8") as f:
                 meta = json.load(f)
             quality = meta.get("quality_check") or {}
-            if not quality.get("approved") or quality.get("factual_verdict") != "pass":
+            human_override = quality.get("human_override") or {}
+            factual_pass = quality.get("approved") and quality.get("factual_verdict") == "pass"
+            editorial_override = human_override.get("approved") and human_override.get("reason")
+            if not factual_pass and not editorial_override:
                 print(
-                    "❌ Публикация заблокирована: Agent #2b должен подтвердить factual pass. "
-                    f"Текущий статус: {quality.get('status', 'quality_check отсутствует')}"
+                    "❌ Публикация заблокирована: нужен factual pass или явное ручное "
+                    f"редакционное исключение. Текущий статус: {quality.get('status', 'quality_check отсутствует')}"
                 )
                 sys.exit(2)
             with open(meta["article_file"], encoding="utf-8") as f:

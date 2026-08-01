@@ -359,6 +359,120 @@ async def get_article():
     return result
 
 
+def _review_meta_files() -> list[Path]:
+    """Local editorial artifacts, including factual-blocked selected topics."""
+    selected_dir = _TMP / "smtinsider_selected_articles"
+    files = list(selected_dir.glob("*.meta.json")) if selected_dir.exists() else []
+    if META_FILE.exists():
+        files.append(META_FILE)
+    return sorted(set(files), key=lambda path: path.stat().st_mtime, reverse=True)
+
+
+@app.get("/review-queue")
+async def get_review_queue():
+    items = []
+    for path in _review_meta_files():
+        try:
+            meta = json.loads(path.read_text("utf-8"))
+            quality = meta.get("quality_check") or {}
+            items.append({
+                "id": path.name,
+                "title": meta.get("title", path.stem),
+                "status": quality.get("status", "pending"),
+                "approved": bool(quality.get("approved")),
+                "human_override": quality.get("human_override", {}),
+                "score": quality.get("score"),
+                "issues": quality.get("issues", []),
+            })
+        except Exception:
+            continue
+    return {"items": items}
+
+
+@app.get("/review-queue/{item_id}")
+async def get_review_item(item_id: str):
+    path = next((candidate for candidate in _review_meta_files() if candidate.name == Path(item_id).name), None)
+    if path is None:
+        return JSONResponse({"error": "Материал review queue не найден"}, status_code=404)
+    try:
+        meta = json.loads(path.read_text("utf-8"))
+        article_path = Path(meta.get("article_file", ""))
+        text = article_path.read_text("utf-8") if article_path.exists() else ""
+        return {"id": path.name, "meta": meta, "text": text}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/review-queue/{item_id}/override")
+async def override_review_item(item_id: str, req: Request):
+    """Record an explicit human editorial exception; never silently bypass QC."""
+    payload = await req.json()
+    reason = str(payload.get("reason", "")).strip()
+    if len(reason) < 10:
+        return JSONResponse({"error": "Укажите причину ручного редакционного решения (минимум 10 символов)"}, status_code=400)
+    path = next((candidate for candidate in _review_meta_files() if candidate.name == Path(item_id).name), None)
+    if path is None:
+        return JSONResponse({"error": "Материал review queue не найден"}, status_code=404)
+    try:
+        meta = json.loads(path.read_text("utf-8"))
+        quality = meta.setdefault("quality_check", {})
+        quality["human_override"] = {
+            "approved": True,
+            "reason": reason,
+            "approved_at": datetime.now(timezone.utc).isoformat(),
+        }
+        quality["status"] = "editorial_override"
+        path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+        return {"ok": True, "id": path.name}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/review-queue/{item_id}/continue")
+async def continue_review_item(item_id: str):
+    """Continue an explicitly approved exception through SEO and distribution."""
+    path = next((candidate for candidate in _review_meta_files() if candidate.name == Path(item_id).name), None)
+    if path is None:
+        return JSONResponse({"error": "Материал review queue не найден"}, status_code=404)
+    meta = json.loads(path.read_text("utf-8"))
+    override = (meta.get("quality_check") or {}).get("human_override") or {}
+    if not override.get("approved"):
+        return JSONResponse({"error": "Сначала сохраните редакторское исключение с причиной"}, status_code=400)
+    run_id = str(uuid.uuid4())
+    _runs[run_id] = asyncio.Queue(maxsize=2000)
+    commands = [
+        ("3", [PYTHON_CMD, str(AGENTS_DIR / "agent-03-seo-doctor.py"), "--meta", str(path)]),
+        ("4", [PYTHON_CMD, str(AGENTS_DIR / "agent-04-distributor.py"), "--meta", str(path)]),
+    ]
+    if os.environ.get("NEON_DATABASE_URL") and _env_truthy("ALLOW_DB_WRITES"):
+        # submit creates an unpublished DB draft; it never makes the article public.
+        commands.append(("6", [PYTHON_CMD, str(AGENTS_DIR / "agent-06-publisher.py"), "submit", "--meta", str(path)]))
+
+    async def task():
+        q = _runs[run_id]
+        for agent_id, command in commands:
+            _agent_status[agent_id] = "running"
+            _send(q, "status", {"agent": agent_id, "state": "running"})
+            proc = await asyncio.create_subprocess_exec(*command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, cwd=str(ROOT), env={**os.environ, "PYTHONUNBUFFERED": "1"})
+            while True:
+                line = await proc.stdout.readline()
+                if not line:
+                    break
+                _send(q, "log", {"agent": agent_id, "line": line.decode("utf-8", errors="replace").rstrip()})
+            await proc.wait()
+            if proc.returncode:
+                _agent_status[agent_id] = "error"
+                _send(q, "status", {"agent": agent_id, "state": "error", "code": proc.returncode})
+                _send(q, "done", {})
+                return
+            _agent_status[agent_id] = "done"
+            _send(q, "status", {"agent": agent_id, "state": "done", "code": 0})
+        _send(q, "done", {})
+
+    asyncio.create_task(task())
+    return {"run_id": run_id}
+
+
 @app.get("/drafts")
 async def get_drafts():
     db_url = os.environ.get("NEON_DATABASE_URL")
@@ -871,8 +985,8 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}.health.blocked{background:var(--red-dim);color:var(--red)}.plan-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:2px 0 18px}.plan-header h1{margin:6px 0;color:#fff;font-size:25px;letter-spacing:-.03em}.plan-header p{max-width:650px;color:var(--text-mid);font-size:13px;line-height:1.55}.plan-summary{display:flex;align-items:center;gap:10px;color:var(--text-mid);font-size:12px;white-space:nowrap}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
-.preview-toolbar{align-items:center;justify-content:space-between}.preview-label{display:block;color:var(--green);font:700 10px var(--mono);letter-spacing:.12em}.preview-note{display:block;margin-top:4px;color:var(--text-dim);font-size:11px}.preview-actions{display:flex;align-items:center;gap:8px}.site-preview{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--bg);color:#d9e1ed}.site-preview-hero{display:grid;grid-template-columns:minmax(0,1fr) 278px;gap:58px;max-width:920px;margin:0 auto;padding:54px 36px 38px}.preview-back{color:#8998ad;text-decoration:none;font-size:13px}.preview-kicker{margin-top:40px;color:#7c899e;font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase}.site-preview h1{max-width:590px;margin:22px 0 15px;color:#f5f2ed;font:400 clamp(37px,4.2vw,58px)/1.02 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.preview-dek{max-width:590px;color:#aeb9ca;font-size:16px;line-height:1.55}.preview-context{align-self:start;margin-top:60px;padding:24px 20px;border:1px solid rgba(66,81,104,.6);border-radius:16px;background:rgba(17,23,34,.9)}.preview-context>div{color:var(--green);font:700 9px var(--mono);letter-spacing:.15em}.preview-context dl{margin:20px 0 0}.preview-context dt{margin-top:17px;color:#6f7d92;font:9px var(--mono);letter-spacing:.12em}.preview-context dd{margin:7px 0 0;color:#e1e6ee;font-size:12px;font-weight:600;line-height:1.4}.preview-decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:920px;margin:0 auto 32px;padding:0 36px}.preview-decision-grid>div{min-height:160px;padding:22px 18px;border:1px solid rgba(53,69,91,.6);border-radius:12px;background:rgba(15,21,31,.82)}.preview-decision-grid b{color:var(--green);font:700 9px var(--mono);letter-spacing:.16em}.preview-decision-grid p,.preview-decision-grid li{margin-top:15px;color:#c7d0de;font-size:12px;line-height:1.55}.preview-decision-grid ul{margin:12px 0 0;padding-left:15px}.preview-decision-grid li{margin:6px 0}.preview-body{max-width:760px;margin:0 auto;padding:38px 44px 58px;border:1px solid rgba(53,69,91,.6);border-radius:14px 14px 0 0;background:rgba(14,19,29,.92);font-size:15px;line-height:1.8;color:#d0d7e2}.preview-body p{margin:0 0 18px}.preview-body .article-section-heading{margin:34px 0 11px;color:#f2f4f8;font-size:22px}.preview-qa{margin:16px 0;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-mid);font-size:12px}.preview-qa summary{cursor:pointer;color:var(--blue);font-weight:600}.preview-qa .article-evidence{margin:15px 0 0}.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.article-evidence{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 14px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.article-evidence.pass{border-left:3px solid var(--green)}.article-evidence.blocked{border-left:3px solid var(--red)}.article-evidence h2{margin:5px 0;color:#fff;font-size:15px}.article-evidence p{color:var(--text-mid);font-size:12px;line-height:1.5}.evidence-details{display:flex;align-items:flex-end;flex-direction:column;gap:7px;color:var(--text-dim);font:11px var(--mono)}.evidence-alert{grid-column:1/-1;padding:10px 12px;border-radius:7px;background:var(--red-dim);color:var(--text-mid);font-size:11px;line-height:1.55}.evidence-alert b{display:block;color:var(--red);margin-bottom:3px}.evidence-sources{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;color:var(--text-mid);font-size:12px}.evidence-sources summary{cursor:pointer;color:var(--blue)}.evidence-sources>div{margin:11px 0;padding-left:10px;border-left:2px solid var(--border)}.evidence-sources a{color:var(--blue);text-decoration:none}.evidence-sources p{margin-top:4px;font-size:11px}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
-.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}.site-preview-hero{grid-template-columns:1fr;gap:20px;padding:30px 22px}.preview-context{margin-top:0}.preview-decision-grid{grid-template-columns:1fr;padding:0 22px}.preview-body{margin:0 22px;padding:28px 22px}.preview-actions{margin-top:10px;flex-wrap:wrap}.article-evidence{grid-template-columns:1fr}.evidence-details{align-items:flex-start}}.draft-reader-dialog{width:min(960px,100%);max-height:calc(100vh - 42px);overflow:auto;padding:22px 28px 46px;border:1px solid var(--border2);border-radius:16px;background:#0d1522;box-shadow:0 30px 90px rgba(0,0,0,.55)}.draft-reader-topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--border)}.draft-reader-topbar>div{display:flex;align-items:center;gap:8px}.draft-reader-content{max-width:720px;margin:45px auto 0}.draft-reader-meta{color:var(--green);font:700 10px var(--mono);letter-spacing:.13em;text-transform:uppercase}.draft-reader-content h1{margin:18px 0;color:#f5f2ed;font:400 clamp(35px,5vw,58px)/1.04 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.draft-reader-summary{margin:0 0 24px;color:var(--text-mid);font-size:17px;line-height:1.55}.draft-reader-context{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text-dim);font-size:11px}.draft-reader-context a{color:var(--blue);text-decoration:none}.draft-reader-body{padding-top:28px;color:#d6deea;font-size:15px;line-height:1.8}.draft-reader-body p{margin:0 0 18px}.draft-reader-body h2{margin:34px 0 12px;color:#fff;font-size:23px}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog,.draft-reader-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}.draft-reader-context{flex-direction:column}.draft-reader-topbar{align-items:flex-start}.draft-reader-topbar>div{flex-wrap:wrap;justify-content:flex-end}}
+.preview-toolbar{align-items:center;justify-content:space-between}.preview-label{display:block;color:var(--green);font:700 10px var(--mono);letter-spacing:.12em}.preview-note{display:block;margin-top:4px;color:var(--text-dim);font-size:11px}.preview-actions{display:flex;align-items:center;gap:8px}.site-preview{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--bg);color:#d9e1ed}.site-preview-hero{display:grid;grid-template-columns:minmax(0,1fr) 278px;gap:58px;max-width:920px;margin:0 auto;padding:54px 36px 38px}.preview-back{color:#8998ad;text-decoration:none;font-size:13px}.preview-kicker{margin-top:40px;color:#7c899e;font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase}.site-preview h1{max-width:590px;margin:22px 0 15px;color:#f5f2ed;font:400 clamp(37px,4.2vw,58px)/1.02 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.preview-dek{max-width:590px;color:#aeb9ca;font-size:16px;line-height:1.55}.preview-context{align-self:start;margin-top:60px;padding:24px 20px;border:1px solid rgba(66,81,104,.6);border-radius:16px;background:rgba(17,23,34,.9)}.preview-context>div{color:var(--green);font:700 9px var(--mono);letter-spacing:.15em}.preview-context dl{margin:20px 0 0}.preview-context dt{margin-top:17px;color:#6f7d92;font:9px var(--mono);letter-spacing:.12em}.preview-context dd{margin:7px 0 0;color:#e1e6ee;font-size:12px;font-weight:600;line-height:1.4}.preview-decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:920px;margin:0 auto 32px;padding:0 36px}.preview-decision-grid>div{min-height:160px;padding:22px 18px;border:1px solid rgba(53,69,91,.6);border-radius:12px;background:rgba(15,21,31,.82)}.preview-decision-grid b{color:var(--green);font:700 9px var(--mono);letter-spacing:.16em}.preview-decision-grid p,.preview-decision-grid li{margin-top:15px;color:#c7d0de;font-size:12px;line-height:1.55}.preview-decision-grid ul{margin:12px 0 0;padding-left:15px}.preview-decision-grid li{margin:6px 0}.preview-body{max-width:760px;margin:0 auto;padding:38px 44px 58px;border:1px solid rgba(53,69,91,.6);border-radius:14px 14px 0 0;background:rgba(14,19,29,.92);font-size:15px;line-height:1.8;color:#d0d7e2}.preview-body p{margin:0 0 18px}.preview-body .article-section-heading{margin:34px 0 11px;color:#f2f4f8;font-size:22px}.preview-qa{margin:16px 0;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-mid);font-size:12px}.preview-qa summary{cursor:pointer;color:var(--blue);font-weight:600}.preview-qa .article-evidence{margin:15px 0 0}.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.review-queue{display:grid;gap:12px}.review-card{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.review-card h2{margin:10px 0 6px;color:#fff;font-size:16px}.review-card p,.review-card small{display:block;color:var(--text-mid);font-size:12px;line-height:1.45}.review-card-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.article-evidence{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 14px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.article-evidence.pass{border-left:3px solid var(--green)}.article-evidence.blocked{border-left:3px solid var(--red)}.article-evidence h2{margin:5px 0;color:#fff;font-size:15px}.article-evidence p{color:var(--text-mid);font-size:12px;line-height:1.5}.evidence-details{display:flex;align-items:flex-end;flex-direction:column;gap:7px;color:var(--text-dim);font:11px var(--mono)}.evidence-alert{grid-column:1/-1;padding:10px 12px;border-radius:7px;background:var(--red-dim);color:var(--text-mid);font-size:11px;line-height:1.55}.evidence-alert b{display:block;color:var(--red);margin-bottom:3px}.evidence-sources{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;color:var(--text-mid);font-size:12px}.evidence-sources summary{cursor:pointer;color:var(--blue)}.evidence-sources>div{margin:11px 0;padding-left:10px;border-left:2px solid var(--border)}.evidence-sources a{color:var(--blue);text-decoration:none}.evidence-sources p{margin-top:4px;font-size:11px}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
+.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}.review-card{flex-direction:column}.review-card-actions{justify-content:flex-start}.site-preview-hero{grid-template-columns:1fr;gap:20px;padding:30px 22px}.preview-context{margin-top:0}.preview-decision-grid{grid-template-columns:1fr;padding:0 22px}.preview-body{margin:0 22px;padding:28px 22px}.preview-actions{margin-top:10px;flex-wrap:wrap}.article-evidence{grid-template-columns:1fr}.evidence-details{align-items:flex-start}}.draft-reader-dialog{width:min(960px,100%);max-height:calc(100vh - 42px);overflow:auto;padding:22px 28px 46px;border:1px solid var(--border2);border-radius:16px;background:#0d1522;box-shadow:0 30px 90px rgba(0,0,0,.55)}.draft-reader-topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--border)}.draft-reader-topbar>div{display:flex;align-items:center;gap:8px}.draft-reader-content{max-width:720px;margin:45px auto 0}.draft-reader-meta{color:var(--green);font:700 10px var(--mono);letter-spacing:.13em;text-transform:uppercase}.draft-reader-content h1{margin:18px 0;color:#f5f2ed;font:400 clamp(35px,5vw,58px)/1.04 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.draft-reader-summary{margin:0 0 24px;color:var(--text-mid);font-size:17px;line-height:1.55}.draft-reader-context{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text-dim);font-size:11px}.draft-reader-context a{color:var(--blue);text-decoration:none}.draft-reader-body{padding-top:28px;color:#d6deea;font-size:15px;line-height:1.8}.draft-reader-body p{margin:0 0 18px}.draft-reader-body h2{margin:34px 0 12px;color:#fff;font-size:23px}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog,.draft-reader-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}.draft-reader-context{flex-direction:column}.draft-reader-topbar{align-items:flex-start}.draft-reader-topbar>div{flex-wrap:wrap;justify-content:flex-end}}
 </style>
 </head>
 <body>
@@ -907,6 +1021,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
       <div class="tab" onclick="showTab('collect')">Сбор</div>
       <div class="tab" onclick="showTab('briefs')">План <span id="briefs-count" style="font-size:10px;color:var(--text-dim)"></span></div>
       <div class="tab" onclick="showTab('article')">Создание</div>
+      <div class="tab" onclick="showTab('review')">Review</div>
       <div class="tab" onclick="showTab('publish')">Публикация</div>
       <div class="tab" onclick="showTab('log')">Активность</div>
       <div class="tab-spacer"></div>
@@ -945,6 +1060,12 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
     <!-- Article pane -->
     <div id="pane-article" class="content-pane">
       <div id="article-content"></div>
+    </div>
+
+    <!-- Human review workspace -->
+    <div id="pane-review" class="content-pane">
+      <div class="workspace-hero compact"><div><div class="overview-eyebrow">Human review</div><h1>Решения редактора</h1><p>Читайте остановленные материалы, изучайте factual findings и при необходимости фиксируйте осознанное редакционное исключение.</p></div><button class="modal-secondary" onclick="loadReviewQueue()">↻ Обновить</button></div>
+      <div class="review-queue" id="review-queue"><div class="empty-state">Загружаю материалы review…</div></div>
     </div>
 
     <!-- Publish workspace -->
@@ -1001,6 +1122,13 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
   <section class="draft-reader-dialog">
     <div class="draft-reader-topbar"><span class="preview-label">UNPUBLISHED DRAFT · READ ONLY</span><div><button class="modal-secondary" id="draft-reader-publish" type="button">✓ Опубликовать</button><button class="modal-close" onclick="closeDraftReader()" aria-label="Закрыть">×</button></div></div>
     <article id="draft-reader-content" class="draft-reader-content"></article>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="review-reader-modal" role="dialog" aria-modal="true" onclick="closeReviewReader(event)">
+  <section class="draft-reader-dialog">
+    <div class="draft-reader-topbar"><span class="preview-label">EDITORIAL REVIEW · NOT PUBLISHED</span><button class="modal-close" onclick="closeReviewReader()" aria-label="Закрыть">×</button></div>
+    <article id="review-reader-content" class="draft-reader-content"></article>
   </section>
 </div>
 
@@ -1251,13 +1379,14 @@ async function deleteTopic(index) {
 
 // ── Tabs ───────────────────────────────────────────────────────────
 function showTab(name) {
-  const tabs = ['overview', 'collect', 'briefs', 'article', 'publish', 'log'];
+  const tabs = ['overview', 'collect', 'briefs', 'article', 'review', 'publish', 'log'];
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === name));
   tabs.forEach(n => document.getElementById(`pane-${n}`).classList.toggle('active', n === name));
   document.getElementById('clear-btn').style.display = name === 'log' ? '' : 'none';
   if (name === 'overview') loadOverview();
   if (name === 'briefs') loadBriefs();
   if (name === 'article') loadArticle();
+  if (name === 'review') loadReviewQueue();
   if (name === 'publish') loadDrafts();
 }
 
@@ -1345,8 +1474,7 @@ function workflowAction(step) {
     return;
   }
   if (step === 'review') {
-    showTab('article');
-    toast('Quality Checker и SEO запускаются после Writer; подробности — в журнале запуска', 'info');
+    showTab('review');
     return;
   }
   if (step === 'publish') {
@@ -1575,6 +1703,50 @@ async function copyArticle() {
     await navigator.clipboard.writeText(data.text);
     toast('Скопировано!', 'ok');
   } catch { toast('Ошибка копирования', 'err'); }
+}
+
+// ── Human review queue ─────────────────────────────────────────────
+async function loadReviewQueue() {
+  const data = await fetch('/review-queue').then(r => r.json()).catch(() => null);
+  const el = document.getElementById('review-queue');
+  if (!data || data.error) { el.innerHTML = '<div class="empty-state">Не удалось загрузить review queue</div>'; return; }
+  if (!data.items.length) { el.innerHTML = '<div class="empty-state">Нет материалов, ожидающих редакционного решения</div>'; return; }
+  el.innerHTML = data.items.map(item => {
+    const override = item.human_override?.approved;
+    const state = override ? 'editorial override' : item.approved ? 'factual pass' : item.status || 'pending';
+    const cls = override || item.approved ? 'ok' : 'blocked';
+    return `<article class="review-card"><div><span class="health ${cls}">${escHtml(state)}</span><h2>${escHtml(item.title)}</h2><p>${item.score !== null && item.score !== undefined ? `Quality score: ${item.score}/100` : 'Quality score unavailable'}</p>${item.issues?.length ? `<small>${escHtml(item.issues[0])}</small>` : ''}</div><div class="review-card-actions"><button class="btn-read" onclick="openReviewReader('${escHtml(item.id)}')">Читать и проверить</button>${!override && !item.approved ? `<button class="modal-secondary" onclick="overrideReviewItem('${escHtml(item.id)}')">Редакторское исключение</button>` : ''}${override ? `<button class="overview-action" onclick="continueReviewItem('${escHtml(item.id)}')">Продолжить SEO →</button>` : ''}</div></article>`;
+  }).join('');
+}
+
+async function openReviewReader(itemId) {
+  const modal = document.getElementById('review-reader-modal');
+  const content = document.getElementById('review-reader-content');
+  modal.classList.add('open');
+  content.innerHTML = '<div class="empty-state">Загружаю статью и factual report…</div>';
+  const data = await fetch(`/review-queue/${encodeURIComponent(itemId)}`).then(r => r.json()).catch(() => null);
+  if (!data || data.error) { content.innerHTML = `<div class="empty-state">${escHtml(data?.error || 'Не удалось открыть материал')}</div>`; return; }
+  const m = data.meta || {}; const q = m.quality_check || {};
+  content.innerHTML = `<div class="draft-reader-meta">${escHtml(q.status || 'pending')} · ${escHtml(m.editorial_type || 'editorial')}</div><h1>${escHtml(m.title || 'Untitled')}</h1><p class="draft-reader-summary">${escHtml(m.summary || '')}</p><div class="evidence-alert"><b>Factual findings</b>${(q.unsupported_claims || q.issues || []).map(x => `<div>• ${escHtml(x.claim || x)}</div>`).join('') || '<div>Нет сохранённых findings</div>'}</div><div class="draft-reader-body">${formatDraftReaderBody(data.text)}</div>`;
+}
+
+function closeReviewReader(event) { if (event && event.target !== document.getElementById('review-reader-modal')) return; document.getElementById('review-reader-modal').classList.remove('open'); }
+
+async function overrideReviewItem(itemId) {
+  const reason = prompt('Почему вы принимаете это редакторское исключение? Причина будет сохранена в metadata и нужна для публикации.');
+  if (!reason) return;
+  const result = await fetch(`/review-queue/${encodeURIComponent(itemId)}/override`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({reason})}).then(r=>r.json()).catch(()=>null);
+  if (!result || result.error) { toast(result?.error || 'Не удалось сохранить решение', 'err'); return; }
+  toast('Редакторское исключение сохранено и зафиксировано', 'info');
+  loadReviewQueue();
+}
+
+async function continueReviewItem(itemId) {
+  const result = await fetch(`/review-queue/${encodeURIComponent(itemId)}/continue`, {method:'POST'}).then(r=>r.json()).catch(()=>null);
+  if (!result || result.error) { toast(result?.error || 'Не удалось продолжить цикл', 'err'); return; }
+  showTab('log');
+  toast('Запущены SEO, Distributor и создание непубличного draft. Публикация остаётся ручным действием.', 'info');
+  subscribeRun(result.run_id, 'publish');
 }
 
 // ── Drafts ─────────────────────────────────────────────────────────
