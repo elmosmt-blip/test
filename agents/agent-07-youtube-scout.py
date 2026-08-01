@@ -66,6 +66,19 @@ def configured_queries() -> list[str]:
     return DEFAULT_SEARCH_QUERIES
 
 
+class _ScoutYDLLogger:
+    """Capture yt-dlp extractor errors without flooding the Control Room log."""
+    def __init__(self) -> None:
+        self.errors: list[str] = []
+    def debug(self, _message: str) -> None: pass
+    def warning(self, _message: str) -> None: pass
+    def error(self, message: str) -> None:
+        self.errors.append(message)
+
+
+_SEARCH_FAILURES: list[str] = []
+
+
 def _youtube_ydl_options() -> tuple[dict[str, Any], str]:
     """Use an installed JS runtime when available, otherwise quiet metadata search."""
     runtime = os.environ.get("YTDLP_JS_RUNTIME", "").strip().lower()
@@ -80,6 +93,7 @@ def _youtube_ydl_options() -> tuple[dict[str, Any], str]:
         "ignoreerrors": True,
         "extract_flat": True,
         "skip_download": True,
+        "logger": _ScoutYDLLogger(),
     }
     if runtime:
         options["js_runtimes"] = {runtime: {}}
@@ -126,6 +140,13 @@ def search_videos(query: str, max_results: int = 5, max_days: int = 30) -> list[
             # ytsearchdate is not implemented by every yt-dlp build. Use the
             # universally supported ytsearch and enforce freshness ourselves.
             info = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False) or {}
+        logger = options["logger"]
+        raw_entries = [entry for entry in (info.get("entries") or []) if isinstance(entry, dict)]
+        if logger.errors and not raw_entries:
+            message = logger.errors[-1].split("\n", 1)[0][:240]
+            _SEARCH_FAILURES.append(f"{query}: {message}")
+            print(f"  ⚠ {query}: поиск недоступен — {message}")
+            return []
         seen: set[str] = set()
         for entry in info.get("entries", []) or []:
             if not isinstance(entry, dict):
@@ -162,7 +183,9 @@ def search_videos(query: str, max_results: int = 5, max_days: int = 30) -> list[
             )
             videos.append(candidate)
     except Exception as exc:
-        print(f"  ⚠ {query}: ошибка поиска — {exc}")
+        message = str(exc).split("\n", 1)[0][:240]
+        _SEARCH_FAILURES.append(f"{query}: {message}")
+        print(f"  ⚠ {query}: поиск недоступен — {message}")
     return videos
 
 
@@ -243,6 +266,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.action in {"preview", "scan"}:
+        _SEARCH_FAILURES.clear()
         queries = configured_queries()
         _, runtime = _youtube_ydl_options()
         print(f"\n🎯 YouTube Scout — {len(queries)} запросов, свежесть {args.days} дней")
@@ -255,6 +279,9 @@ def main() -> int:
                 if current is None or video["relevance_score"] > current["relevance_score"]:
                     candidates[video["video_id"]] = video
             print(f"  → {query}: {len(found)} подходящих видео")
+        if len(_SEARCH_FAILURES) == len(queries):
+            print("\n❌ YouTube search недоступен для всех запросов. Drafts не создавались.")
+            return 1
         ordered = sorted(candidates.values(), key=lambda item: (item["relevance_score"], item["published_at"]), reverse=True)
         print(f"\n📺 Найдено для review: {len(ordered)}")
         for video in ordered:
