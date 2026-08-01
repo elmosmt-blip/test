@@ -297,7 +297,19 @@ def chat(messages, temperature: float = 0.7, max_tokens: int = 2000,
             if resp.status_code >= 400:
                 raise LLMError(f"{resp.status_code} {resp.text[:300]}")
             data = resp.json()
-            return data["choices"][0]["message"]["content"]
+            choices = data.get("choices") if isinstance(data, dict) else None
+            if not choices:
+                # Some OpenAI-compatible gateways return an error object with
+                # HTTP 200. Do not hide its useful message behind KeyError:
+                # 'choices' — it is needed to distinguish rate limits, context
+                # overflow and provider-side validation failures.
+                detail = (data.get("error") or data.get("detail") or data.get("message") or data) if isinstance(data, dict) else data
+                raise LLMError(f"Ответ LLM без choices: {str(detail)[:700]}")
+            message = choices[0].get("message", {}) if isinstance(choices[0], dict) else {}
+            content = message.get("content")
+            if not content:
+                raise LLMError(f"Ответ LLM не содержит message.content: {str(choices[0])[:700]}")
+            return content
         except (requests.RequestException, LLMError, KeyError, IndexError) as e:
             last_err = e
             if attempt < LLM_MAX_RETRIES:

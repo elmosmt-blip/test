@@ -152,11 +152,13 @@ def _segment_magazine_with_llm(
     for i, match in enumerate(page_matches):
         end = page_matches[i + 1].start() if i + 1 < len(page_matches) else len(doc.text)
         pages[int(match.group(1))] = doc.text[match.end():end].strip()
-    # Preserve sufficient page context while keeping the segmentation request
-    # bounded for a large magazine.
+    # Segmentation needs page headings/TOC, not the full magazine body. A
+    # 68-page issue at 70k characters can exceed hosted-model context limits
+    # and return an API error instead of choices. Keep a compact page outline;
+    # the full bounded page text is used only after ranges are selected.
     outline = "\n\n".join(
-        f"[PAGE {number}]\n{text[:1800]}" for number, text in pages.items() if text
-    )[:70000]
+        f"[PAGE {number}]\n{text[:420]}" for number, text in pages.items() if text
+    )[:30000]
     raw_fallback = ""
     try:
         result = llm_client.ask_json(
