@@ -742,6 +742,34 @@ header{
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── CONTROL ROOM REDESIGN: workflow-first application shell ── */
+:root{--bg:#09111e;--surface:#101b2d;--surface2:#15233a;--surface3:#1c2e49;--border:#263b5b;--border2:#345070;--text:#e6eefb;--text-mid:#a9bdd8;--text-dim:#7188a8;--radius:12px}
+html,body{overflow:hidden;background:radial-gradient(circle at 56% -25%,#17345a 0,var(--bg) 42%)}
+.shell{grid-template-rows:64px 1fr;grid-template-columns:264px minmax(0,1fr) 310px;max-width:1800px;margin:auto;border-left:1px solid rgba(52,80,112,.45);border-right:1px solid rgba(52,80,112,.45)}
+header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
+.logo{font-size:15px;letter-spacing:.04em}.logo::before{content:'◆';font-size:10px;margin-right:9px;color:var(--green)}
+.header-meta{gap:8px}.pill{padding:5px 10px;background:rgba(21,35,58,.75);font-family:var(--sans);font-size:11px}
+.panel-agents,.panel-drafts{background:rgba(12,23,40,.76);backdrop-filter:blur(12px)}
+.panel-title{padding:17px 16px 11px;color:var(--text-mid);font-weight:700;letter-spacing:.1em}
+.agent-list{padding:10px 9px;gap:6px}.agent-card{padding:11px 10px;border-color:rgba(38,59,91,.45);background:rgba(21,35,58,.36)}
+.agent-card:hover{transform:translateX(2px);background:var(--surface2);border-color:var(--border2)}
+.agent-name{font-size:12px;font-weight:600}.agent-desc{font-size:10.5px;line-height:1.35}.agent-state{font-size:8px}
+.pipeline-btn{margin:12px;border-radius:9px;padding:13px;box-shadow:0 8px 24px rgba(0,229,160,.08)}
+.panel-main{background:rgba(9,17,30,.38)}.main-tabs{padding:0 24px;background:rgba(12,23,40,.72);gap:10px}.tab{padding:18px 10px 15px;font-weight:600}.tab.active{color:#fff}
+.content-pane{padding:24px;scrollbar-gutter:stable}#pane-log{margin:0 24px 24px;padding:0;border:1px solid var(--border);border-radius:12px;background:rgba(7,14,25,.68);min-height:0}.log-stream{padding:18px;font-size:12px;line-height:1.75}
+.briefs-toolbar{position:sticky;top:-24px;z-index:2;padding:14px 16px;background:rgba(16,27,45,.96);backdrop-filter:blur(12px);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+.brief-card{padding:20px;margin-bottom:14px;border-radius:12px;background:linear-gradient(135deg,rgba(21,35,58,.92),rgba(16,27,45,.85));box-shadow:0 10px 28px rgba(0,0,0,.12)}
+.brief-topic{font-size:16px}.brief-angle{font-size:13px}.fact-item{font-size:12px}.select-topic-btn{padding:8px 13px}
+.drafts-header{padding:17px 14px 11px}.drafts-list{padding:9px}.draft-card{padding:14px;border-radius:10px;background:rgba(21,35,58,.62)}
+/* Overview is the default decision surface. */
+.overview-grid{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}.metric-card,.overview-card{border:1px solid var(--border);border-radius:12px;background:linear-gradient(145deg,rgba(22,38,63,.94),rgba(14,25,43,.9));box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.metric-card{padding:16px}.metric-label{font:600 10px var(--mono);letter-spacing:.09em;color:var(--text-dim);text-transform:uppercase}.metric-value{font-size:27px;font-weight:600;color:#fff;margin-top:9px}.metric-note{font-size:11px;color:var(--text-mid);margin-top:4px}
+.overview-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.9fr);gap:16px}.overview-card{padding:20px}.overview-eyebrow{font:600 10px var(--mono);color:var(--green);letter-spacing:.1em;text-transform:uppercase}.overview-title{font-size:21px;line-height:1.25;margin:8px 0;color:#fff}.overview-copy{line-height:1.55;font-size:13px;color:var(--text-mid)}.workflow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:20px}.workflow-step{padding:10px;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-dim)}.workflow-step b{display:block;color:var(--text);font-size:12px;margin-bottom:4px}.workflow-step.active{border-color:var(--green);background:var(--green-dim);color:var(--green)}
+.next-action{border-left:3px solid var(--green)}.overview-action{margin-top:16px;padding:9px 13px;border-radius:7px;border:1px solid var(--green);background:var(--green);font:700 11px var(--sans);cursor:pointer;color:#06251d}.overview-action:hover{filter:brightness(1.08)}
+.source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}
+@media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
 </style>
 </head>
 <body>
@@ -790,15 +818,21 @@ header{
   <!-- CENTRE: MAIN CONTENT -->
   <div class="panel-main">
     <div class="main-tabs">
-      <div class="tab active" onclick="showTab('log')">Лог</div>
-      <div class="tab" onclick="showTab('briefs')">Темы <span id="briefs-count" style="font-size:10px;color:var(--text-dim)"></span></div>
-      <div class="tab" onclick="showTab('article')">Статья</div>
+      <div class="tab active" onclick="showTab('overview')">Обзор</div>
+      <div class="tab" onclick="showTab('briefs')">План <span id="briefs-count" style="font-size:10px;color:var(--text-dim)"></span></div>
+      <div class="tab" onclick="showTab('article')">Создание</div>
+      <div class="tab" onclick="showTab('log')">Запуски и логи</div>
       <div class="tab-spacer"></div>
       <button class="clear-btn" id="clear-btn" onclick="clearLog()" style="display:none">✕ очистить лог</button>
     </div>
 
+    <!-- Overview pane: decision-first default workspace -->
+    <div id="pane-overview" class="content-pane active">
+      <div id="overview-content"><div class="empty-state"><div class="empty-icon">◇</div>Загружаю рабочее состояние…</div></div>
+    </div>
+
     <!-- Log pane -->
-    <div id="pane-log" class="content-pane active">
+    <div id="pane-log" class="content-pane">
       <div class="log-stream" id="log-stream">
         <div class="empty-state"><div class="empty-icon">⬡</div>Лог пуст — запусти агента или пайплайн</div>
       </div>
@@ -1045,15 +1079,71 @@ async function selectTopic(index) {
 
 // ── Tabs ───────────────────────────────────────────────────────────
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['log','briefs','article'][i] === name);
-  });
-  ['log','briefs','article'].forEach(n => {
-    document.getElementById(`pane-${n}`).classList.toggle('active', n === name);
-  });
+  const tabs = ['overview', 'briefs', 'article', 'log'];
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === name));
+  tabs.forEach(n => document.getElementById(`pane-${n}`).classList.toggle('active', n === name));
   document.getElementById('clear-btn').style.display = name === 'log' ? '' : 'none';
+  if (name === 'overview') loadOverview();
   if (name === 'briefs') loadBriefs();
   if (name === 'article') loadArticle();
+}
+
+// ── Overview: concise operating state, not a raw diagnostic log ─────
+async function loadOverview() {
+  const [status, briefs, drafts] = await Promise.all([
+    fetch('/status').then(r => r.json()).catch(() => null),
+    fetch('/briefs').then(r => r.json()).catch(() => null),
+    fetch('/drafts').then(r => r.json()).catch(() => null),
+  ]);
+  const el = document.getElementById('overview-content');
+  if (!status) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">!</div>Не удалось получить состояние Control Room</div>';
+    return;
+  }
+  const agents = status.agents || {};
+  const running = Object.values(agents).filter(s => s === 'running').length;
+  const failed = Object.values(agents).filter(s => s === 'error').length;
+  const topics = briefs?.topics?.length || 0;
+  const draftCount = drafts?.drafts?.length || 0;
+  const nextTitle = running ? 'Пайплайн выполняется' : topics ? 'Выберите тему для подготовки статьи' : 'Соберите свежие сигналы';
+  const nextCopy = running
+    ? 'Следите за прогрессом в разделе «Запуски и логи». Результаты появятся после завершения этапа.'
+    : topics ? `${topics} тем готовы к редакционному решению. Выбранная тема станет входом для Writer.`
+    : 'Запустите сбор новостей или загрузите технический PDF, чтобы получить проверяемые темы.';
+  const nextAction = running ? "showTab('log')" : topics ? "showTab('briefs')" : "runAgent('1')";
+  const nextLabel = running ? 'Открыть ход запуска' : topics ? 'Открыть темы' : 'Запустить сбор';
+  const dbHealth = status.db_connected ? (status.allow_db_writes ? 'DB · запись разрешена' : 'DB · только чтение') : 'База данных не подключена';
+  const llmHealth = status.llm_mock ? 'LLM · тестовый режим' : (status.llm_api_base !== 'не задан' ? 'LLM · подключён' : 'LLM не настроен');
+
+  el.innerHTML = `
+    <div class="overview-grid">
+      <div class="metric-card"><div class="metric-label">Активные запуски</div><div class="metric-value">${running}</div><div class="metric-note">${failed ? `${failed} требуют внимания` : 'Без блокирующих ошибок'}</div></div>
+      <div class="metric-card"><div class="metric-label">Темы готовы</div><div class="metric-value">${topics}</div><div class="metric-note">Переходят в редакционный план</div></div>
+      <div class="metric-card"><div class="metric-label">Черновики</div><div class="metric-value">${draftCount}</div><div class="metric-note">Ожидают review или публикации</div></div>
+      <div class="metric-card"><div class="metric-label">Пайплайн</div><div class="metric-value">${status.pipeline === 'running' ? 'RUN' : 'READY'}</div><div class="metric-note">${status.pipeline === 'running' ? 'Этапы выполняются' : 'Готов к следующему запуску'}</div></div>
+    </div>
+    <div class="overview-layout">
+      <section class="overview-card next-action">
+        <div class="overview-eyebrow">Рекомендуемое действие</div>
+        <h1 class="overview-title">${escHtml(nextTitle)}</h1>
+        <p class="overview-copy">${escHtml(nextCopy)}</p>
+        <div class="workflow-steps">
+          <div class="workflow-step ${!topics && !running ? 'active' : ''}"><b>01 · Collect</b>Источники и PDF</div>
+          <div class="workflow-step ${topics ? 'active' : ''}"><b>02 · Plan</b>Темы и evidence</div>
+          <div class="workflow-step"><b>03 · Create</b>Текст и проверка</div>
+          <div class="workflow-step"><b>04 · Review</b>SEO и качество</div>
+          <div class="workflow-step"><b>05 · Publish</b>Approval и каналы</div>
+        </div>
+        <button class="overview-action" onclick="${nextAction}">${nextLabel} →</button>
+      </section>
+      <aside class="overview-card">
+        <div class="overview-eyebrow">Состояние системы</div>
+        <div class="source-summary"><span>${escHtml(llmHealth)}</span><span class="health ${status.llm_api_base !== 'не задан' ? 'ok' : 'watch'}">${status.llm_api_base !== 'не задан' ? 'READY' : 'SETUP'}</span></div>
+        <div class="source-summary"><span>${escHtml(dbHealth)}</span><span class="health ${status.db_connected ? 'ok' : 'watch'}">${status.db_connected ? 'ONLINE' : 'OFFLINE'}</span></div>
+        <div class="source-summary"><span>Состояние источников</span><span class="health ok">MONITORED</span></div>
+        <div class="source-summary"><span>Детальная диагностика</span><button class="clear-btn" onclick="showTab('log')">Открыть логи →</button></div>
+      </aside>
+    </div>`;
 }
 
 // ── Briefs ─────────────────────────────────────────────────────────
@@ -1277,7 +1367,9 @@ function escHtml(s) {
 // ── Boot ───────────────────────────────────────────────────────────
 loadStatus();
 loadDrafts();
+loadOverview();
 setInterval(loadStatus, 30000);
+setInterval(loadOverview, 30000);
 </script>
 </body>
 </html>
