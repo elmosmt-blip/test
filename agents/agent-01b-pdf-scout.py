@@ -561,6 +561,48 @@ def validate_document_for_editorial_use(doc: PDFDocument) -> Optional[str]:
     return None
 
 
+def audit_document_evidence_with_llm(doc: PDFDocument) -> Optional[str]:
+    """Use the configured LLM as a *gatekeeper*, never as an extractor.
+
+    Nemotron can judge whether a clean extraction has a named subject and
+    enough attributable engineering evidence. It must not repair binary PDF
+    data, invent a vendor/model, or write an article at this stage. Deterministic
+    checks run first; a failed LLM call is non-blocking so local operation stays
+    reliable.
+    """
+    if os.environ.get("PDF_SCOUT_LLM_AUDIT", "1").lower() in {"0", "false", "no", "off"}:
+        return None
+    if getattr(llm_client, "LLM_MOCK", False):
+        return None
+
+    excerpt = (doc.text or "")[:12000]
+    try:
+        result = llm_client.ask_json(
+            system=(
+                "Ты — строгий редактор по SMT-инженерии. Проверяешь только качество "
+                "доказательств в извлечённом документе. Не добавляй фактов из своих знаний, "
+                "не угадывай производителя, модель, характеристики или контекст. Ответь JSON: "
+                '{"decision":"accept|reject","reason":"...","named_subject":true|false,'
+                '"attributable_facts":0}. Reject, если нет названного предмета/компании либо '
+                "если меньше двух конкретных, связанных с ним фактов."
+            ),
+            user=(
+                f"TITLE: {doc.title}\nCOMPANY: {doc.company or 'unknown'}\n"
+                f"EXTRACTED TEXT:\n{excerpt}"
+            ),
+            temperature=0,
+            max_tokens=300,
+        )
+    except Exception as e:
+        print(f"⚠ LLM-проверка доказательств недоступна, использую детерминированную проверку: {e}")
+        return None
+
+    if str(result.get("decision", "")).lower() != "accept":
+        reason = str(result.get("reason", "недостаточно связанного с темой проверяемого содержания"))
+        return f"LLM-проверка отклонила материал: {reason}"
+    return None
+
+
 def main():
     p = argparse.ArgumentParser(
         prog="agent-01b-pdf-scout",
@@ -597,6 +639,9 @@ def main():
         sys.exit(1)
 
     editorial_error = validate_document_for_editorial_use(doc)
+    if not editorial_error:
+        print("🧠 Nemotron проверяет, достаточно ли доказательств для статьи…", flush=True)
+        editorial_error = audit_document_evidence_with_llm(doc)
     if editorial_error:
         print(
             "❌ Статья не создана: " + editorial_error + ". "
