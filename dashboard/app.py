@@ -771,7 +771,7 @@ header{
 /* ── CONTROL ROOM REDESIGN: workflow-first application shell ── */
 :root{--bg:#09111e;--surface:#101b2d;--surface2:#15233a;--surface3:#1c2e49;--border:#263b5b;--border2:#345070;--text:#e6eefb;--text-mid:#a9bdd8;--text-dim:#7188a8;--radius:12px}
 html,body{overflow:hidden;background:radial-gradient(circle at 56% -25%,#17345a 0,var(--bg) 42%)}
-.shell{grid-template-rows:64px 1fr;grid-template-columns:264px minmax(0,1fr) 310px;max-width:1800px;margin:auto;border-left:1px solid rgba(52,80,112,.45);border-right:1px solid rgba(52,80,112,.45)}
+.shell{grid-template-rows:64px 1fr;grid-template-columns:264px minmax(0,1fr);max-width:1800px;margin:auto;border-left:1px solid rgba(52,80,112,.45);border-right:1px solid rgba(52,80,112,.45)}
 header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .logo{font-size:15px;letter-spacing:.04em}.logo::before{content:'◆';font-size:10px;margin-right:9px;color:var(--green)}
 .header-meta{gap:8px}.pill{padding:5px 10px;background:rgba(21,35,58,.75);font-family:var(--sans);font-size:11px}
@@ -795,8 +795,8 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
-.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
-.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}}
+.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
+.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}}
 </style>
 </head>
 <body>
@@ -828,9 +828,11 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
   <div class="panel-main">
     <div class="main-tabs">
       <div class="tab active" onclick="showTab('overview')">Обзор</div>
+      <div class="tab" onclick="showTab('collect')">Сбор</div>
       <div class="tab" onclick="showTab('briefs')">План <span id="briefs-count" style="font-size:10px;color:var(--text-dim)"></span></div>
       <div class="tab" onclick="showTab('article')">Создание</div>
-      <div class="tab" onclick="showTab('log')">Запуски и логи</div>
+      <div class="tab" onclick="showTab('publish')">Публикация</div>
+      <div class="tab" onclick="showTab('log')">Активность</div>
       <div class="tab-spacer"></div>
       <button class="clear-btn" id="clear-btn" onclick="clearLog()" style="display:none">✕ очистить лог</button>
     </div>
@@ -838,6 +840,18 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
     <!-- Overview pane: decision-first default workspace -->
     <div id="pane-overview" class="content-pane active">
       <div id="overview-content"><div class="empty-state"><div class="empty-icon">◇</div>Загружаю рабочее состояние…</div></div>
+    </div>
+
+    <!-- Collect workspace -->
+    <div id="pane-collect" class="content-pane">
+      <div class="workspace-hero">
+        <div><div class="overview-eyebrow">Collect</div><h1>Соберите доказательства, а не просто ссылки</h1><p>Запустите мониторинг источников или добавьте документ. Каждый материал проходит извлечение текста и evidence gate до появления в редакционном плане.</p></div>
+        <div class="workspace-actions"><button class="modal-primary" onclick="openPdfScout()">＋ Добавить PDF / журнал</button><button class="modal-secondary" onclick="runAgent('1')">Запустить Trend Hunter</button></div>
+      </div>
+      <div class="collect-grid">
+        <section class="overview-card"><div class="overview-eyebrow">Web sources</div><h2>Автоматический мониторинг</h2><p class="overview-copy">Trend Hunter собирает свежие сигналы, проверяет даты и передаёт только подходящие evidence в план.</p><button class="overview-action" onclick="runAgent('1')">Начать сбор →</button></section>
+        <section class="overview-card"><div class="overview-eyebrow">Manual source</div><h2>PDF, datasheet или журнал</h2><p class="overview-copy">Загрузите исходный файл или укажите официальный URL. Повреждённый текст, metadata и неподтверждённые claims будут остановлены до Writer.</p><button class="overview-action" onclick="openPdfScout()">Открыть PDF Scout →</button></section>
+      </div>
     </div>
 
     <!-- Log pane -->
@@ -856,18 +870,14 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
     <div id="pane-article" class="content-pane">
       <div id="article-content"></div>
     </div>
+
+    <!-- Publish workspace -->
+    <div id="pane-publish" class="content-pane">
+      <div class="workspace-hero compact"><div><div class="overview-eyebrow">Publish</div><h1>Очередь редакционной публикации</h1><p>Публикуйте только материалы с factual pass. Черновики остаются доступными для ручного review.</p></div><button class="modal-secondary" onclick="loadDrafts()">↻ Обновить очередь</button></div>
+      <div class="drafts-list publish-drafts" id="publish-drafts-list"><div class="empty-state"><div class="empty-icon">☰</div>Загрузка черновиков…</div></div>
+    </div>
   </div>
 
-  <!-- RIGHT: DRAFTS -->
-  <div class="panel-drafts">
-    <div class="drafts-header">
-      <div class="panel-title" style="padding:0;border:none;font-size:10px">Черновики в БД</div>
-      <button class="clear-btn" onclick="loadDrafts()">↻ обновить</button>
-    </div>
-    <div class="drafts-list" id="drafts-list">
-      <div class="empty-state"><div class="empty-icon">☰</div>Загрузка…</div>
-    </div>
-  </div>
 </div>
 
 <!-- PDF Scout is a focused workflow, not a compressed sidebar form. -->
@@ -1153,13 +1163,14 @@ async function deleteTopic(index) {
 
 // ── Tabs ───────────────────────────────────────────────────────────
 function showTab(name) {
-  const tabs = ['overview', 'briefs', 'article', 'log'];
+  const tabs = ['overview', 'collect', 'briefs', 'article', 'publish', 'log'];
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === name));
   tabs.forEach(n => document.getElementById(`pane-${n}`).classList.toggle('active', n === name));
   document.getElementById('clear-btn').style.display = name === 'log' ? '' : 'none';
   if (name === 'overview') loadOverview();
   if (name === 'briefs') loadBriefs();
   if (name === 'article') loadArticle();
+  if (name === 'publish') loadDrafts();
 }
 
 // ── Overview: concise operating state, not a raw diagnostic log ─────
@@ -1251,11 +1262,8 @@ function workflowAction(step) {
     return;
   }
   if (step === 'publish') {
-    const drafts = document.querySelector('.panel-drafts');
-    drafts?.scrollIntoView({behavior: 'smooth', block: 'start'});
-    drafts?.classList.add('attention');
-    setTimeout(() => drafts?.classList.remove('attention'), 1200);
-    toast('Черновики доступны в панели справа. Публикуйте только материалы со статусом factual pass.', 'info');
+    showTab('publish');
+    toast('Публикуйте только материалы со статусом factual pass.', 'info');
   }
 }
 
@@ -1423,16 +1431,17 @@ async function copyArticle() {
 // ── Drafts ─────────────────────────────────────────────────────────
 async function loadDrafts() {
   const data = await fetch('/drafts').then(r=>r.json()).catch(()=>null);
-  const el = document.getElementById('drafts-list');
+  const targets = [document.getElementById('sidebar-drafts-list'), document.getElementById('publish-drafts-list')].filter(Boolean);
+  const setDrafts = html => targets.forEach(el => { el.innerHTML = html; });
   if (!data || data.error) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗄</div><span style="font-size:11px">${data?.error||'Ошибка загрузки'}</span></div>`;
+    setDrafts(`<div class="empty-state"><div class="empty-icon">🗄</div><span style="font-size:11px">${data?.error||'Ошибка загрузки'}</span></div>`);
     return;
   }
   if (!data.drafts.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">☰</div>Черновиков нет</div>';
+    setDrafts('<div class="empty-state"><div class="empty-icon">☰</div>Черновиков нет</div>');
     return;
   }
-  el.innerHTML = data.drafts.map(d => {
+  setDrafts(data.drafts.map(d => {
     const dt = d.date ? new Date(d.date).toLocaleDateString('ru') : '';
     const typeBadge = d.editorial_type
       ? `<span class="badge badge-gray">${escHtml(d.editorial_type)}</span>` : '';
@@ -1450,19 +1459,19 @@ async function loadDrafts() {
         <button class="btn-del" onclick="deleteDraft(${d.id})">✕</button>
       </div>
     </div>`;
-  }).join('');
+  }).join(''));
 }
 
 async function approveDraft(id) {
   const r = await fetch(`/drafts/${id}/approve`, {method:'POST'}).then(r=>r.json());
-  if (r.ok) { toast(`Опубликовано #${id}`, 'ok'); document.getElementById(`draft-${id}`)?.remove(); }
+  if (r.ok) { toast(`Опубликовано #${id}`, 'ok'); loadDrafts(); }
   else toast(r.error||'Ошибка', 'err');
 }
 
 async function deleteDraft(id) {
   if (!confirm(`Удалить черновик #${id}?`)) return;
   const r = await fetch(`/drafts/${id}`, {method:'DELETE'}).then(r=>r.json());
-  if (r.ok) { toast(`Удалено #${id}`, 'ok'); document.getElementById(`draft-${id}`)?.remove(); }
+  if (r.ok) { toast(`Удалено #${id}`, 'ok'); loadDrafts(); }
   else toast(r.error||'Ошибка', 'err');
 }
 
