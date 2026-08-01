@@ -792,10 +792,10 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .metric-card{padding:16px}.metric-label{font:600 10px var(--mono);letter-spacing:.09em;color:var(--text-dim);text-transform:uppercase}.metric-value{font-size:27px;font-weight:600;color:#fff;margin-top:9px}.metric-note{font-size:11px;color:var(--text-mid);margin-top:4px}
 .overview-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.9fr);gap:16px}.overview-card{padding:20px}.overview-eyebrow{font:600 10px var(--mono);color:var(--green);letter-spacing:.1em;text-transform:uppercase}.overview-title{font-size:21px;line-height:1.25;margin:8px 0;color:#fff}.overview-copy{line-height:1.55;font-size:13px;color:var(--text-mid)}.workflow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:20px}.workflow-step{min-height:68px;padding:10px;border-radius:8px;border:1px solid var(--border);background:rgba(12,23,40,.46);color:var(--text-dim);font:11px var(--sans);text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}.workflow-step:hover{transform:translateY(-2px);border-color:var(--blue);background:var(--blue-dim);color:var(--text)}.workflow-step:focus-visible{outline:3px solid rgba(74,158,255,.45);outline-offset:2px}.workflow-step b{display:block;color:var(--text);font-size:12px;margin-bottom:4px}.workflow-step span{display:block}.workflow-step.active{border-color:var(--green);background:var(--green-dim);color:var(--green);box-shadow:inset 0 0 0 1px rgba(0,229,160,.14)}.workflow-step.active b{color:var(--green)}
 .next-action{border-left:3px solid var(--green)}.overview-action{margin-top:16px;padding:9px 13px;border-radius:7px;border:1px solid var(--green);background:var(--green);font:700 11px var(--sans);cursor:pointer;color:#06251d}.overview-action:hover{filter:brightness(1.08)}
-.source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}
+.source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}.health.blocked{background:var(--red-dim);color:var(--red)}.plan-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:2px 0 18px}.plan-header h1{margin:6px 0;color:#fff;font-size:25px;letter-spacing:-.03em}.plan-header p{max-width:650px;color:var(--text-mid);font-size:13px;line-height:1.55}.plan-summary{display:flex;align-items:center;gap:10px;color:var(--text-mid);font-size:12px;white-space:nowrap}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
-.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
+.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.article-evidence{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 14px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.article-evidence.pass{border-left:3px solid var(--green)}.article-evidence.blocked{border-left:3px solid var(--red)}.article-evidence h2{margin:5px 0;color:#fff;font-size:15px}.article-evidence p{color:var(--text-mid);font-size:12px;line-height:1.5}.evidence-details{display:flex;align-items:flex-end;flex-direction:column;gap:7px;color:var(--text-dim);font:11px var(--mono)}.evidence-alert{grid-column:1/-1;padding:10px 12px;border-radius:7px;background:var(--red-dim);color:var(--text-mid);font-size:11px;line-height:1.55}.evidence-alert b{display:block;color:var(--red);margin-bottom:3px}.evidence-sources{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;color:var(--text-mid);font-size:12px}.evidence-sources summary{cursor:pointer;color:var(--blue)}.evidence-sources>div{margin:11px 0;padding-left:10px;border-left:2px solid var(--border)}.evidence-sources a{color:var(--blue);text-decoration:none}.evidence-sources p{margin-top:4px;font-size:11px}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
 .modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}}
 </style>
 </head>
@@ -1284,15 +1284,21 @@ async function loadBriefs() {
   const ts = data.generated_at ? new Date(data.generated_at).toLocaleString('ru') : '';
   const model = data.model || '?';
 
+  const gate = data.editorial_gate || {};
+  const gateStatus = gate.decision === 'accept' ? 'evidence verified' : gate.decision === 'reject' ? 'evidence blocked' : 'evidence pending';
+  const gateClass = gate.decision === 'accept' ? 'ok' : gate.decision === 'reject' ? 'blocked' : 'watch';
   const toolbar = `
+    <div class="plan-header">
+      <div><div class="overview-eyebrow">Plan</div><h1>Редакционный план</h1><p>Выберите только тему с достаточными evidence. Удалите слабые или нерелевантные темы до Writer.</p></div>
+      <div class="plan-summary"><span class="health ${gateClass}">${escHtml(gateStatus)}</span><span>${data.topics.length} тем</span></div>
+    </div>
     <div class="briefs-toolbar">
-      <span>${data.topics.length} тем найдено</span>
+      <span>Сгенерировано: ${ts || '—'}</span>
       <span>·</span>
       <span>модель: ${escHtml(model)}</span>
-      ${ts ? `<span>·</span><span>${ts}</span>` : ''}
+      ${gate.recommended_format ? `<span>·</span><span>формат: ${escHtml(gate.recommended_format)}</span>` : ''}
       <span style="flex:1"></span>
-      <span style="color:var(--green)">★</span>
-      <span>Нажми «Выбрать» чтобы Writer написал эту тему</span>
+      <span>Выберите одну тему для Writer или удалите неподходящие</span>
     </div>`;
 
   const cards = data.topics.map((t, i) => {
@@ -1372,21 +1378,35 @@ async function loadArticle() {
     scoreHtml += `<div class="article-score ${lcls}" title="Детерминированные проверки без LLM: штампы, ритм, подзаголовки, факты">Lint: ${lsc}/100</div>`;
   }
   if (qc) {
-    const sc = qc.score;
-    const cls = sc >= 80 ? 'good' : sc >= 65 ? 'warn' : 'bad';
-    const imp = qc.improved ? ' (улучшена)' : ' (одобрена)';
-    scoreHtml += `<div class="article-score ${cls}">Quality: ${sc}/100${imp}</div>`;
-    if (qc.issues && qc.issues.length) {
-      scoreHtml += `<div style="margin-top:8px;font-size:11px;color:var(--text-dim)">
-        ${qc.issues.map(i=>`<span style="display:block;margin-bottom:3px">⚠ ${escHtml(i)}</span>`).join('')}
-      </div>`;
-    }
+    const sc = qc.score ?? '—';
+    const factualPass = qc.approved === true && qc.factual_verdict === 'pass';
+    const cls = factualPass ? 'good' : qc.status === 'needs_revision' ? 'warn' : 'bad';
+    const label = factualPass ? 'Factual pass' : qc.status === 'needs_revision' ? 'Needs revision' : 'Publication blocked';
+    scoreHtml += `<div class="article-score ${cls}">Quality: ${sc}/100 · ${label}</div>`;
   }
   if (lint && lint.issues && lint.issues.length) {
     scoreHtml += `<div style="margin-top:8px;font-size:11px;color:var(--text-dim)">
       ${lint.issues.map(i=>`<span style="display:block;margin-bottom:3px">${i.severity==='error'?'✖':'⚠'} ${escHtml(i.message)}</span>`).join('')}
     </div>`;
   }
+
+  const sourceBrief = m.source_topic_brief || {};
+  const sources = sourceBrief.expanded_sources || sourceBrief.sources || [];
+  const unsupported = Array.isArray(qc?.unsupported_claims) ? qc.unsupported_claims : [];
+  const missingEvidence = Array.isArray(qc?.missing_evidence) ? qc.missing_evidence : [];
+  const factualPass = qc?.approved === true && qc?.factual_verdict === 'pass';
+  const evidenceHtml = `
+    <section class="article-evidence ${factualPass ? 'pass' : 'blocked'}">
+      <div><div class="overview-eyebrow">Editorial evidence</div><h2>${factualPass ? 'Factual pass — материал готов к следующему этапу' : 'Проверка фактов не пройдена или ещё не выполнена'}</h2>
+      <p>${factualPass ? 'Все существенные claims прошли Quality Checker. Перед публикацией всё равно проверьте первоисточник.' : 'SEO и публикация должны быть остановлены, пока Quality Checker не вернёт factual pass.'}</p></div>
+      <div class="evidence-details">
+        <span class="health ${factualPass ? 'ok' : 'blocked'}">${factualPass ? 'FACTUAL PASS' : (qc?.status || 'PENDING').toUpperCase()}</span>
+        <span>${sources.length} источник(ов) в brief</span>
+      </div>
+      ${unsupported.length ? `<div class="evidence-alert"><b>Unsupported claims</b>${unsupported.map(c => `<div>• ${escHtml(c.claim || c)}${c.reason ? ` — ${escHtml(c.reason)}` : ''}</div>`).join('')}</div>` : ''}
+      ${missingEvidence.length ? `<div class="evidence-alert"><b>Недостающие доказательства</b><div>${missingEvidence.map(escHtml).join(' · ')}</div></div>` : ''}
+      ${sources.length ? `<details class="evidence-sources"><summary>Показать sources и excerpts</summary>${sources.map(s => `<div><a href="${escHtml(s.url || '#')}" target="_blank" rel="noopener">${escHtml(s.title || s.url || 'Источник')} ↗</a><p>${escHtml((s.excerpt || 'Excerpt не сохранён. Используйте только ссылку, не как доказательство факта.').slice(0, 500))}</p></div>`).join('')}</details>` : ''}
+    </section>`;
 
   // Format article body: treat lines starting with ## or all-caps as headings
   function formatBody(text) {
@@ -1414,6 +1434,7 @@ async function loadArticle() {
       ${m.section_path ? `<span class="badge badge-gray">${escHtml(m.section_path)}</span>` : ''}
       ${(m.tags||[]).map(t=>`<span class="key-tag">${escHtml(t)}</span>`).join('')}
     </div>
+    ${evidenceHtml}
     ${m.summary ? `<div class="article-summary">${escHtml(m.summary)}</div>` : ''}
     <div class="article-body">${bodyHtml}</div>
     ${m.model ? `<p style="font-size:10px;color:var(--text-dim);font-family:var(--mono);margin-top:10px">модель: ${escHtml(m.model)} · ${m.generated_at ? new Date(m.generated_at).toLocaleString('ru') : ''}</p>` : ''}`;
