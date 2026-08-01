@@ -123,7 +123,9 @@ def search_videos(query: str, max_results: int = 5, max_days: int = 30) -> list[
     videos: list[dict[str, Any]] = []
     try:
         with yt_dlp.YoutubeDL(options) as ydl:
-            info = ydl.extract_info(f"ytsearchdate{max_results}:{query}", download=False) or {}
+            # ytsearchdate is not implemented by every yt-dlp build. Use the
+            # universally supported ytsearch and enforce freshness ourselves.
+            info = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False) or {}
         seen: set[str] = set()
         for entry in info.get("entries", []) or []:
             if not isinstance(entry, dict):

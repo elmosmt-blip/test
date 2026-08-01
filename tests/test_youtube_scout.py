@@ -46,7 +46,7 @@ def test_search_uses_flat_metadata_and_skips_irrelevant(monkeypatch):
         def __exit__(self, *args):
             return False
         def extract_info(self, query, download=False):
-            assert query.startswith("ytsearchdate")
+            assert query.startswith("ytsearch")
             return {"entries": [
                 {"id": "good", "title": "AOI inspection for SMT assembly", "channel": "Saki Corporation", "upload_date": "20260801"},
                 {"id": "bad", "title": "Cat video", "channel": "Random", "upload_date": "20260801"},
