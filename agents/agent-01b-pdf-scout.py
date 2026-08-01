@@ -132,6 +132,136 @@ def load_pdf_input(
         )
 
 
+def _segment_magazine_with_llm(
+    doc: PDFDocument,
+    source_url: str,
+    doc_title: str,
+    category: str,
+    format_type: str,
+    editorial_type: str,
+    max_topics: int,
+    now: datetime,
+) -> list[dict[str, Any]]:
+    """Identify real article ranges from page-marked magazine text."""
+    if getattr(llm_client, "LLM_MOCK", False) or "--- PAGE " not in doc.text:
+        return []
+    page_matches = list(re.finditer(r"--- PAGE (\d+) ---\s*", doc.text))
+    if not page_matches:
+        return []
+    pages: dict[int, str] = {}
+    for i, match in enumerate(page_matches):
+        end = page_matches[i + 1].start() if i + 1 < len(page_matches) else len(doc.text)
+        pages[int(match.group(1))] = doc.text[match.end():end].strip()
+    # Preserve sufficient page context while keeping the segmentation request
+    # bounded for a large magazine.
+    outline = "\n\n".join(
+        f"[PAGE {number}]\n{text[:1800]}" for number, text in pages.items() if text
+    )[:70000]
+    try:
+        result = llm_client.ask_json(
+            system=(
+                "Ты — редакционный координатор SMTInsider. Раздели журнал только на "
+                "самостоятельные статьи, используя номера страниц и ТОЛЬКО текст ниже. "
+                "Не создавай тему по случайному упоминанию вендора. Для каждой статьи "
+                "нужны связный текст, named subject и факты на её страницах. Верни JSON "
+                '{"articles":[{"title":"точный заголовок из текста","company":"...",'
+                '"start_page":1,"end_page":2,"recommended_format":"news|review|insight",'
+                '"reason":"коротко"}]}. Не добавляй несуществующие статьи.'
+            ),
+            user=f"MAGAZINE: {doc_title}\n\n{outline}",
+            temperature=0,
+            max_tokens=1800,
+        )
+    except Exception as e:
+        print(f"⚠ Nemotron не смог сегментировать журнал: {e}")
+        return []
+
+    topics: list[dict[str, Any]] = []
+    allowed_formats = {"news", "review", "insight"}
+    for item in result.get("articles", [])[:max_topics]:
+        try:
+            start, end = int(item.get("start_page")), int(item.get("end_page"))
+        except (TypeError, ValueError):
+            continue
+        if start not in pages or end not in pages or end < start:
+            continue
+        segment_text = "\n\n".join(
+            f"--- PAGE {page} ---\n{pages[page]}" for page in range(start, end + 1) if page in pages
+        ).strip()
+        if len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", segment_text)) < 120:
+            continue
+        title = str(item.get("title", "")).strip()
+        company = str(item.get("company", "")).strip()
+        # A title/company emitted by the model must be evidenced literally by
+        # the source segment; otherwise it is not a valid article boundary.
+        if not title or title.lower() not in segment_text.lower():
+            continue
+        if company and company.lower() not in segment_text.lower():
+            company = ""
+        detected_company, products, technologies = pdf_collector.identify_company_and_products(
+            segment_text, title, source_url, {}
+        )
+        company = company or detected_company
+        facts = pdf_collector.extract_technical_facts(segment_text, source_url, title)
+        # The article-level gate runs on the bounded source text, not the whole
+        # magazine. Page markers are removed so the gate cannot confuse this
+        # segment with a multi-article container.
+        segment_doc = PDFDocument(
+            title=title,
+            document_type=PDFDocumentType.ARTICLE,
+            company=company,
+            products=products,
+            technologies=technologies,
+            page_count=end - start + 1,
+            text=re.sub(r"--- PAGE \d+ ---", "", segment_text).strip(),
+            source_url=source_url,
+            key_facts=facts,
+        )
+        segment_error, segment_gate = audit_document_evidence_with_llm(segment_doc)
+        if segment_error:
+            continue
+        recommended = str(segment_gate.get("recommended_format") or item.get("recommended_format", format_type)).lower()
+        if recommended not in allowed_formats:
+            continue
+        section_type = "review" if recommended == "review" else recommended
+        section = section_router.decide_section(
+            title=title,
+            body=segment_text,
+            category=category,
+            tags=[company, *technologies] if company else technologies,
+            explicit=section_type,
+            source_url=source_url,
+        )
+        source_entry = {
+            "title": f"{doc_title}, pp. {start}-{end}: {title}",
+            "url": source_url,
+            "date": doc.publication_date or now.strftime("%Y-%m-%d"),
+            "role": "magazine_article",
+            "excerpt": segment_text[:5000],
+            "page_range": [start, end],
+            "technical_specs": facts,
+            "key_facts": [f"{f['parameter']}: {f['value']} [{f['provenance']}]" for f in facts],
+        }
+        topics.append({
+            "topic": title,
+            "angle": f"Report only the documented engineering and production implications in pages {start}-{end} of {doc_title}.",
+            "format": recommended,
+            "editorial_type": section.editorial_type,
+            "target_section": section.section_path,
+            "section_routing": section.to_dict(),
+            "category": category,
+            "keywords": [value for value in [company, *technologies] if value][:8],
+            "source_count": 1,
+            "urgency": "HIGH",
+            "source_notes": f"Page-bounded magazine article, pp. {start}-{end}. {item.get('reason', '')}",
+            "key_facts": source_entry["key_facts"],
+            "sources": [source_entry],
+            "expanded_sources": [source_entry],
+            "editorial_gate": {**segment_gate, "page_range": [start, end]},
+        })
+    return topics
+
+
 def _build_magazine_topics(
     doc: PDFDocument,
     source_url: str,
@@ -141,8 +271,22 @@ def _build_magazine_topics(
     editorial_type: str,
     max_topics: int,
 ) -> list[dict[str, Any]]:
-    """Segment an industry magazine issue (e.g. SMT Today Issue 80) into distinct technical articles/topics."""
+    """Segment a magazine by page boundaries before constructing any topics.
+
+    The preferred path uses Nemotron only to identify article page ranges. Each
+    resulting topic then receives the *actual page text* as evidence. It never
+    turns a vendor name spotted elsewhere in the issue into a fictional article.
+    """
     now = datetime.now(timezone.utc)
+    llm_topics = _segment_magazine_with_llm(
+        doc, source_url, custom_title, category, format_type, editorial_type, max_topics, now
+    )
+    if llm_topics:
+        return llm_topics
+
+    # Compatibility fallback for local/mock tests without a real LLM. Production
+    # FlipHTML5 processing must use page-aware segmentation above.
+
     official_url = source_url or doc.source_url or "https://www.smtinsider.com"
     doc_title = custom_title or doc.title or "SMT Industry Magazine"
 
@@ -318,10 +462,11 @@ def build_pdf_topic_brief(
         topics = _build_magazine_topics(
             doc, official_url, doc_title, category, format_type, editorial_type, max_topics=max_topics
         )
-        if topics:
+        if topics or "--- PAGE " in doc.text:
             return {
                 "generated_at": now.isoformat(),
                 "source_type": "manual_pdf",
+                "segmentation_error": "No page-bounded article passed evidence gate" if not topics else "",
                 "pdf_metadata": {
                     "title": doc_title,
                     "document_type": doc.document_type,
@@ -695,6 +840,17 @@ def audit_document_evidence_with_llm(doc: PDFDocument) -> tuple[Optional[str], d
         fallback["reason"] = "LLM mock mode"
         return None, fallback
 
+    # A page-marked magazine is not one editorial claim. Its individual
+    # segments are audited below; do not reject a whole issue simply because
+    # its first pages are a cover or table of contents.
+    if "--- PAGE " in (doc.text or ""):
+        return None, {
+            "decision": "accept",
+            "recommended_format": "news",
+            "reason": "Magazine requires page-bounded article segmentation",
+            "allow_segmentation": True,
+        }
+
     excerpt = (doc.text or "")[:12000]
     try:
         result = llm_client.ask_json(
@@ -832,6 +988,13 @@ def main():
         split_articles=args.split_articles and allow_segmentation,
     )
     brief_payload["editorial_gate"] = editorial_gate
+    if not brief_payload.get("topics"):
+        print(
+            "❌ Статьи не созданы: ни один page-bounded сегмент журнала не прошёл "
+            "evidence gate. Нужны самостоятельный заголовок, предмет статьи и "
+            "достаточные подтверждённые факты на его страницах."
+        )
+        sys.exit(2)
 
     brief_path = Path(args.brief)
     brief_path.parent.mkdir(parents=True, exist_ok=True)
