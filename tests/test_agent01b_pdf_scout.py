@@ -136,6 +136,30 @@ class TestPDFScout:
         assert doc.title == "Koh Young Alpha 3D SPI Catalog 2026"
         assert doc.company == "Koh Young"
 
+    def test_reads_fliphtml5_searchable_page_text_layer(self, pdf_scout, monkeypatch):
+        class FakeResponse:
+            def __init__(self, status_code, text):
+                self.status_code = status_code
+                self.text = text
+            def raise_for_status(self):
+                if self.status_code >= 400:
+                    raise pdf_scout.requests.RequestException("HTTP error")
+
+        def fake_get(url, **kwargs):
+            if "text_position[1].js" in url:
+                positions = ",".join('{"w":"Fuji Corporation NXTR placement platform verified production evidence"}' for _ in range(20))
+                return FakeResponse(200, f'positionForPages[0]={{"page":1,"positions":[{positions}]}};')
+            return FakeResponse(404, "")
+
+        monkeypatch.setattr(pdf_scout.requests, "get", fake_get)
+        doc = PDFDocument(title="Viewer shell", document_type=PDFDocumentType.MAGAZINE, company="", source_url="https://online.fliphtml5.com/kwnhb/fakj/")
+        recovered, error = pdf_scout.recover_fliphtml5_text_layer(doc.source_url, doc)
+
+        assert error == ""
+        assert recovered is not None
+        assert "--- PAGE 1 ---" in recovered.text
+        assert "Fuji Corporation" in recovered.text
+
     def test_rejects_pdf_syntax_as_editorial_evidence(self, pdf_scout):
         doc = PDFDocument(
             title="Unknown PDF",

@@ -284,8 +284,11 @@ def _build_magazine_topics(
     if llm_topics:
         return llm_topics
 
-    # Compatibility fallback for local/mock tests without a real LLM. Production
-    # FlipHTML5 processing must use page-aware segmentation above.
+    # Compatibility fallback exists only for local/mock tests. A real
+    # page-marked issue with failed/empty segmentation must fail closed rather
+    # than reverting to "vendor mentioned somewhere" pseudo-articles.
+    if "--- PAGE " in doc.text and not getattr(llm_client, "LLM_MOCK", False):
+        return []
 
     official_url = source_url or doc.source_url or "https://www.smtinsider.com"
     doc_title = custom_title or doc.title or "SMT Industry Magazine"
