@@ -133,7 +133,12 @@ def _channel_type(channel: str) -> str:
 def search_videos(query: str, max_results: int = 5, max_days: int = 30) -> list[dict[str, Any]]:
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=max_days)
-    options, _ = _youtube_ydl_options()
+    options, runtime = _youtube_ydl_options()
+    # A JS runtime lets yt-dlp open result pages and obtain upload_date,
+    # duration and description. Flat search has no reliable date metadata and
+    # therefore made every result look ineligible for a freshness-only scout.
+    if runtime:
+        options["extract_flat"] = False
     videos: list[dict[str, Any]] = []
     try:
         with yt_dlp.YoutubeDL(options) as ydl:

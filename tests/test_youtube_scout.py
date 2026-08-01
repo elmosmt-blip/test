@@ -53,5 +53,6 @@ def test_search_uses_flat_metadata_and_skips_irrelevant(monkeypatch):
             ]}
 
     monkeypatch.setattr(scout.yt_dlp, "YoutubeDL", FakeYDL)
+    monkeypatch.setattr(scout.shutil, "which", lambda name: "node" if name == "node" else None)
     videos = scout.search_videos("AOI inspection", max_results=5, max_days=365)
     assert [video["video_id"] for video in videos] == ["good"]
