@@ -84,6 +84,28 @@ def canonical_url(url: str) -> str:
         return url.strip()
 
 
+def fetch_readable_text(url: str, limit: int = 6000) -> str:
+    """Fetch source prose for evidence, not merely its search-result snippet."""
+    if not url:
+        return ""
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    try:
+        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        response.raise_for_status()
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(response.text, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form"]):
+            tag.decompose()
+        root = soup.select_one("article") or soup.select_one("main") or soup.select_one("[role='main']") or soup.body
+        if not root:
+            return ""
+        text = normalize_title(root.get_text(" ", strip=True))
+        # Navigation-heavy pages should not be used as evidence.
+        return text[:limit] if len(text.split()) >= 80 else ""
+    except requests.RequestException:
+        return ""
+
+
 def page_title_and_date(url: str) -> tuple[str, str]:
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
     try:
@@ -223,6 +245,11 @@ def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]
             signal_by_url[u] = s
 
     def _excerpt_for(url: str, fallback: str = "") -> str:
+        # Search snippets are discovery hints, not enough evidence for a
+        # technical article. Prefer the actual publisher page when reachable.
+        fetched = fetch_readable_text(url)
+        if fetched:
+            return fetched
         s = signal_by_url.get(canonical_url(url))
         if s:
             return s.get("full_text") or s.get("snippet") or fallback
@@ -259,7 +286,7 @@ def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]
             continue
         add_source(
             expanded, seen, s.get("title", ""), s.get("source", ""), s.get("published_at", "unknown"),
-            "related_fresh_signal", excerpt=s.get("full_text") or s.get("snippet", ""),
+            "related_fresh_signal", excerpt=_excerpt_for(s.get("source", ""), s.get("full_text") or s.get("snippet", "")),
             key_facts=s.get("key_facts"), technical_specs=s.get("technical_specs"),
         )
         primary_domains.add(domain)
@@ -269,7 +296,7 @@ def expand_sources_for_topic(topic: dict[str, Any], signals: list[dict[str, Any]
     for score, s in scored:
         add_source(
             expanded, seen, s.get("title", ""), s.get("source", ""), s.get("published_at", "unknown"),
-            "related_fresh_signal", excerpt=s.get("full_text") or s.get("snippet", ""),
+            "related_fresh_signal", excerpt=_excerpt_for(s.get("source", ""), s.get("full_text") or s.get("snippet", "")),
             key_facts=s.get("key_facts"), technical_specs=s.get("technical_specs"),
         )
         if len(expanded) >= max_sources:
