@@ -260,7 +260,7 @@ def print_preview(video: dict[str, Any]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["preview", "scan", "list", "approve", "delete", "cleanup"])
-    parser.add_argument("--days", type=int, default=30)
+    parser.add_argument("--days", type=int, default=int(os.environ.get("YOUTUBE_LOOKBACK_DAYS", "60")))
     parser.add_argument("--limit", type=int, default=5)
     parser.add_argument("--id", type=int)
     args = parser.parse_args()
