@@ -104,6 +104,28 @@ def load_brief(path: str, pick: str = "first") -> dict:
     raise ValueError(f"Неизвестный режим выбора темы: {pick}")
 
 
+def _source_limited_brief(brief: dict) -> bool:
+    """Whether evidence supports only a short attributed update, not a review."""
+    sources = brief.get("sources", []) or []
+    excerpts = [str(source.get("excerpt", "")).strip() for source in sources if str(source.get("excerpt", "")).strip()]
+    return len(excerpts) <= 1 and sum(len(text.split()) for text in excerpts) < 700
+
+
+def prepare_brief_for_evidence(brief: dict) -> dict:
+    """Downgrade sparse single-source reviews to evidence-bounded news.
+
+    Forcing an 800-word review from one short press-release excerpt is an
+    instruction to hallucinate. A concise attributed news item is useful and
+    publishable; unsupported review detail is not.
+    """
+    prepared = dict(brief)
+    if _source_limited_brief(prepared):
+        prepared["format"] = "news"
+        prepared["editorial_type"] = "news"
+        prepared["evidence_limited"] = True
+    return prepared
+
+
 def build_writer_user_prompt(brief: dict) -> str:
     # Build a structured user prompt that highlights the most important signals
     parts = []
@@ -171,6 +193,18 @@ def build_writer_user_prompt(brief: dict) -> str:
             "\"- Название — URL\" (по одному на строку)."
         )
 
+    if brief.get("evidence_limited"):
+        parts.append(
+            "\nРЕЖИМ ОГРАНИЧЕННЫХ ДОКАЗАТЕЛЬСТВ — ОБЯЗАТЕЛЬНО:\n"
+            "Это короткая новость на 350–550 слов, а не review. Каждый факт должен быть "
+            "пересказом конкретного предложения из excerpt/key_facts. НЕЛЬЗЯ добавлять "
+            "типовые требования отрасли, примеры классов, цифры, standards, qualification, "
+            "результаты внедрения, параметры или описание предыдущих версий, если их нет в "
+            "источнике. Не компенсируй нехватку фактов общими инженерными знаниями. Если "
+            "деталь не раскрыта, просто не обсуждай её. Допустим только нейтральный вопрос "
+            "для читателя: «перед внедрением запросите у поставщика подробную документацию»."
+        )
+
     parts.append("\nНапиши статью строго по этому брифу и источникам выше. Используй только факты, которые реально в них есть — не выдумывай спецификации, цифры или события.")
     return "\n".join(parts)
 
@@ -189,7 +223,14 @@ def revise_article(draft: dict, brief: dict) -> dict:
     first draft into something that reads like it was edited by a senior
     technical editor rather than generated in one shot.
     """
+    evidence_rule = (
+        "\nEVIDENCE-LIMITED: delete every unsupported claim; do not expand the article, "
+        "do not add typical industry requirements, numerical examples, standards, or comparisons. "
+        "A concise source-bounded news item is correct.\n"
+        if brief.get("evidence_limited") else ""
+    )
     user_prompt = (
+        evidence_rule +
         f"ИСХОДНЫЙ БРИФ:\n{json.dumps(brief, ensure_ascii=False, indent=2)}\n\n"
         f"ЧЕРНОВИК ДЛЯ ПРАВКИ:\n\n"
         f"ЗАГОЛОВОК: {draft.get('title', '')}\n\n"
@@ -332,11 +373,14 @@ def main():
         brief = {"topic": args.topic, "angle": "", "format": "news",
                   "keywords": [], "category": "SMT Equipment"}
 
+    brief = prepare_brief_for_evidence(brief)
     skip_revision = args.no_revision or os.environ.get("WRITER_SKIP_REVISION", "").lower() in {"1", "true", "yes"}
 
     print(f"\n✍️ Agent #2 — Writer")
     print(f"   Тема: {brief.get('topic')}")
     print(f"   Модель: {llm_client.LLM_MODEL}")
+    if brief.get("evidence_limited"):
+        print("   Evidence: один ограниченный источник → короткая news-статья без неподтверждённых деталей")
     print(f"   Режим: {'один проход (без self-review)' if skip_revision else 'три прохода (черновик → self-review → lint+repair)'}")
     print(f"   Пишу черновик...\n")
 

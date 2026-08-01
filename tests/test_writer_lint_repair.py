@@ -86,6 +86,22 @@ DIRTY_ARTICLE_BODY = (
 )
 
 
+def test_sparse_single_source_is_downgraded_to_source_bounded_news(writer):
+    brief = {
+        "topic": "IPC-A-630A Released",
+        "format": "review",
+        "editorial_type": "review",
+        "sources": [{"title": "IPC release", "excerpt": "IPC-A-630A provides class-coded acceptance criteria for box assemblies.", "url": "https://example.com/ipc"}],
+    }
+
+    prepared = writer.prepare_brief_for_evidence(brief)
+
+    assert prepared["evidence_limited"] is True
+    assert prepared["format"] == "news"
+    assert prepared["editorial_type"] == "news"
+    assert "РЕЖИМ ОГРАНИЧЕННЫХ ДОКАЗАТЕЛЬСТВ" in writer.build_writer_user_prompt(prepared)
+
+
 class TestRepairArticle:
     def test_builds_prompt_with_issues_and_calls_ask_json(self, writer, monkeypatch):
         captured = {}
