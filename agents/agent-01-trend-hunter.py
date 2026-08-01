@@ -1834,6 +1834,19 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
 
         topic["expanded_sources"] = expanded
         topic["source_count"] = len(expanded)
+        evidence_words = sum(len(str(src.get("excerpt", "")).split()) for src in expanded)
+        # A fresh announcement with one short source is news, not a buyer
+        # guide/review. Make the routing truthful before it reaches the UI and
+        # Writer instead of asking a model to stretch sparse evidence.
+        if len(expanded) < 2 or evidence_words < 900:
+            topic["format"] = "news"
+            topic["editorial_type"] = "news"
+            topic["target_section"] = "/news/"
+            topic["section_routing"] = section_router.decide_section(
+                title=topic.get("topic", ""), body=topic.get("angle", ""),
+                category=topic.get("category", ""), tags=topic.get("keywords", []), explicit="news",
+            ).to_dict()
+            topic["evidence_limited"] = True
         if expanded:
             # Keep `sources` backward-compatible but richer for Writer.
             topic["sources"] = expanded
