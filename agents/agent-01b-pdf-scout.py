@@ -260,9 +260,11 @@ def _segment_magazine_with_llm(
             explicit=section_type,
             source_url=source_url,
         )
+        publisher_url = str(doc.metadata.get("OfficialSourceURL") or source_url)
+        publisher_title = str(doc.metadata.get("OfficialSourceTitle") or doc_title)
         source_entry = {
-            "title": f"{doc_title}, pp. {start}-{end}: {title}",
-            "url": source_url,
+            "title": f"{publisher_title}, pp. {start}-{end}: {title}",
+            "url": publisher_url,
             "date": doc.publication_date or now.strftime("%Y-%m-%d"),
             "role": "magazine_article",
             "excerpt": segment_text[:5000],
@@ -764,9 +766,14 @@ def recover_fliphtml5_text_layer(source_url: str, doc: PDFDocument) -> tuple[Opt
     doc.text = recovered_text
     doc.text_hash = pdf_collector.hash_text(recovered_text)
     doc.page_count = max(doc.page_count, len(pages))
-    # Never retain a PDF syntax object as a document title.
-    if not doc.title or any(marker in doc.title for marker in ("FlateDecode", "<<", "/Filter")):
-        doc.title = "SMT Magazine Issue"
+    # Never retain a PDF syntax object or the viewer's HTML shell as a title.
+    if not doc.title or doc.title.lstrip().startswith("<") or any(marker in doc.title for marker in ("FlateDecode", "<<", "/Filter", "xmlns=")):
+        doc.title = "SMT Today Magazine Issue 80"
+    # FlipHTML5 is only a reader. The publication's own domain is the source
+    # readers should see in the public article context.
+    if "smttoday.com" in recovered_text.lower():
+        doc.metadata["OfficialSourceURL"] = "https://smttoday.com/"
+        doc.metadata["OfficialSourceTitle"] = "SMT Today"
     doc.document_type = PDFDocumentType.MAGAZINE
     doc.company, doc.products, doc.technologies = pdf_collector.identify_company_and_products(
         recovered_text, doc.title, doc.source_url, doc.metadata
@@ -1007,9 +1014,10 @@ def main():
     if args.max_topics > 1 and not allow_segmentation:
         print("ℹ Разделение журнала отключено: Nemotron не подтвердил самостоятельные статьи с отдельными доказательствами.")
 
+    official_source_url = str(doc.metadata.get("OfficialSourceURL") or args.url or doc.source_url)
     brief_payload = build_pdf_topic_brief(
         doc=doc,
-        source_url=args.url or doc.source_url,
+        source_url=official_source_url,
         custom_title=args.title,
         custom_topic=args.topic,
         custom_angle=args.angle,
