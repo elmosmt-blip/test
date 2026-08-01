@@ -148,6 +148,17 @@ class TestPDFScout:
         assert error is not None
         assert "служебные PDF-данные" in error
 
+    def test_editorial_gate_requires_a_supported_format(self, pdf_scout, monkeypatch):
+        doc = PDFDocument(title="Aton", document_type=PDFDocumentType.BROCHURE, company="Delvitech", text="Aton " * 100)
+        monkeypatch.setattr(pdf_scout.llm_client, "LLM_MOCK", False)
+        monkeypatch.setattr(pdf_scout.llm_client, "ask_json", lambda **kwargs: {
+            "decision": "accept", "recommended_format": "review", "allow_segmentation": False,
+        })
+
+        error, gate = pdf_scout.audit_document_evidence_with_llm(doc)
+        assert error is None
+        assert gate["recommended_format"] == "review"
+
     def test_cli_requires_file_or_url(self, pdf_scout, monkeypatch, capsys):
         monkeypatch.setattr("sys.argv", ["agent-01b-pdf-scout.py"])
         with pytest.raises(SystemExit):

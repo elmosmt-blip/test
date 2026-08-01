@@ -310,7 +310,10 @@ def build_pdf_topic_brief(
     doc_title = custom_title or doc.title or "SMT Technical Document"
     vendor = doc.company or "SMT Equipment Vendor"
 
-    if doc.document_type == PDFDocumentType.MAGAZINE or split_articles or max_topics > 1:
+    # A magazine container is not itself evidence that every vendor mention is
+    # an article. Segmentation is allowed only when explicitly requested by the
+    # caller after the editorial evidence gate has approved it.
+    if split_articles or max_topics > 1:
         topics = _build_magazine_topics(
             doc, official_url, doc_title, category, format_type, editorial_type, max_topics=max_topics
         )
@@ -561,46 +564,58 @@ def validate_document_for_editorial_use(doc: PDFDocument) -> Optional[str]:
     return None
 
 
-def audit_document_evidence_with_llm(doc: PDFDocument) -> Optional[str]:
-    """Use the configured LLM as a *gatekeeper*, never as an extractor.
+def audit_document_evidence_with_llm(doc: PDFDocument) -> tuple[Optional[str], dict[str, Any]]:
+    """Classify editorial evidence with Nemotron before Writer can use it.
 
-    Nemotron can judge whether a clean extraction has a named subject and
-    enough attributable engineering evidence. It must not repair binary PDF
-    data, invent a vendor/model, or write an article at this stage. Deterministic
-    checks run first; a failed LLM call is non-blocking so local operation stays
-    reliable.
+    The model is a constrained gatekeeper, never an extractor or fact source.
+    It chooses a format only when the extracted text itself supports that
+    format; otherwise it rejects the document. This prevents a magazine
+    fragment from becoming a fake product review or news report.
     """
+    fallback = {"decision": "deterministic_only", "recommended_format": "", "reason": "LLM audit disabled"}
     if os.environ.get("PDF_SCOUT_LLM_AUDIT", "1").lower() in {"0", "false", "no", "off"}:
-        return None
+        return None, fallback
     if getattr(llm_client, "LLM_MOCK", False):
-        return None
+        fallback["reason"] = "LLM mock mode"
+        return None, fallback
 
     excerpt = (doc.text or "")[:12000]
     try:
         result = llm_client.ask_json(
             system=(
-                "Ты — строгий редактор по SMT-инженерии. Проверяешь только качество "
-                "доказательств в извлечённом документе. Не добавляй фактов из своих знаний, "
-                "не угадывай производителя, модель, характеристики или контекст. Ответь JSON: "
-                '{"decision":"accept|reject","reason":"...","named_subject":true|false,'
-                '"attributable_facts":0}. Reject, если нет названного предмета/компании либо '
-                "если меньше двух конкретных, связанных с ним фактов."
+                "Ты — строгий редактор SMTInsider. Оцениваешь ТОЛЬКО доказательства "
+                "в переданном извлечённом тексте. Никогда не добавляй знания, не угадывай "
+                "vendor/model/specifications и не пиши статью. Верни только JSON: "
+                '{"decision":"accept|reject","recommended_format":"news|review|buyer_guide|insight|reject",'
+                '"reason":"...","missing_evidence":["..."],"named_subject":true|false,'
+                '"attributable_facts":0,"allow_segmentation":true|false}.\n'
+                "Форматы: news требует named company/product/event и >=2 связанных факта; "
+                "review требует vendor+named product/model и >=3 подтверждённых specs/features; "
+                "buyer_guide требует >=3 названных кандидата ИЛИ >=5 практических критериев выбора; "
+                "insight требует >=300 слов связного process text и не должен делать claims о конкретном продукте. "
+                "Reject во всех остальных случаях, особенно для metadata, OCR-мусора, изолированных чисел "
+                "и журнальных фрагментов без атрибуции. allow_segmentation=true только когда текст явно "
+                "разделён на самостоятельные статьи с отдельными vendor/product evidence."
             ),
             user=(
                 f"TITLE: {doc.title}\nCOMPANY: {doc.company or 'unknown'}\n"
                 f"EXTRACTED TEXT:\n{excerpt}"
             ),
             temperature=0,
-            max_tokens=300,
+            max_tokens=450,
         )
     except Exception as e:
         print(f"⚠ LLM-проверка доказательств недоступна, использую детерминированную проверку: {e}")
-        return None
+        fallback["reason"] = "LLM audit unavailable"
+        return None, fallback
 
-    if str(result.get("decision", "")).lower() != "accept":
+    allowed_formats = {"news", "review", "buyer_guide", "insight"}
+    decision = str(result.get("decision", "")).lower()
+    recommended = str(result.get("recommended_format", "")).lower()
+    if decision != "accept" or recommended not in allowed_formats:
         reason = str(result.get("reason", "недостаточно связанного с темой проверяемого содержания"))
-        return f"LLM-проверка отклонила материал: {reason}"
-    return None
+        return f"LLM-проверка отклонила материал: {reason}", result
+    return None, result
 
 
 def main():
@@ -639,9 +654,10 @@ def main():
         sys.exit(1)
 
     editorial_error = validate_document_for_editorial_use(doc)
+    editorial_gate: dict[str, Any] = {"decision": "not_run", "recommended_format": ""}
     if not editorial_error:
-        print("🧠 Nemotron проверяет, достаточно ли доказательств для статьи…", flush=True)
-        editorial_error = audit_document_evidence_with_llm(doc)
+        print("🧠 Nemotron выбирает допустимый editorial format по доказательствам…", flush=True)
+        editorial_error, editorial_gate = audit_document_evidence_with_llm(doc)
     if editorial_error:
         print(
             "❌ Статья не создана: " + editorial_error + ". "
@@ -650,6 +666,17 @@ def main():
         )
         sys.exit(2)
 
+    recommended_format = editorial_gate.get("recommended_format") or args.format_type
+    # Buyer guides live in the Reviews section, while the other approved
+    # formats map 1:1 to the site's editorial sections.
+    effective_editorial_type = "review" if recommended_format == "buyer_guide" else recommended_format
+    allow_segmentation = bool(editorial_gate.get("allow_segmentation", False))
+    effective_max_topics = args.max_topics if allow_segmentation else 1
+    if recommended_format != args.format_type:
+        print(f"ℹ Формат изменён evidence gate: {args.format_type} → {recommended_format}")
+    if args.max_topics > 1 and not allow_segmentation:
+        print("ℹ Разделение журнала отключено: Nemotron не подтвердил самостоятельные статьи с отдельными доказательствами.")
+
     brief_payload = build_pdf_topic_brief(
         doc=doc,
         source_url=args.url or doc.source_url,
@@ -657,11 +684,12 @@ def main():
         custom_topic=args.topic,
         custom_angle=args.angle,
         category=args.category,
-        format_type=args.format_type,
-        editorial_type=args.editorial_type,
-        max_topics=args.max_topics,
-        split_articles=args.split_articles,
+        format_type=recommended_format,
+        editorial_type=effective_editorial_type,
+        max_topics=effective_max_topics,
+        split_articles=args.split_articles and allow_segmentation,
     )
+    brief_payload["editorial_gate"] = editorial_gate
 
     brief_path = Path(args.brief)
     brief_path.parent.mkdir(parents=True, exist_ok=True)
