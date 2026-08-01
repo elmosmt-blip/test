@@ -926,18 +926,19 @@ def main():
         sys.exit(1)
 
     editorial_error = validate_document_for_editorial_use(doc)
-    # For FlipHTML5, use the platform's own searchable per-page text layer
-    # before considering any local image OCR. It is faster, keeps page
-    # boundaries, and gives the article segmenter actual publisher text.
-    if editorial_error and args.url:
-        print(f"⚠ Обычное извлечение не пригодно: {editorial_error}. Проверяю text layer источника…", flush=True)
+    # A FlipHTML5 URL returns a viewer HTML shell, which can accidentally pass
+    # a simple word-count check. Always replace that shell with the platform's
+    # own searchable page text before any evidence/LLM decision.
+    is_fliphtml5 = "fliphtml5.com" in urllib.parse.urlparse(args.url).netloc.lower()
+    if args.url and is_fliphtml5:
+        print("📖 Получаю постраничный searchable text layer FlipHTML5…", flush=True)
         recovered_doc, layer_error = recover_fliphtml5_text_layer(args.url, doc)
         if recovered_doc is not None:
             doc = recovered_doc
             editorial_error = validate_document_for_editorial_use(doc)
             if not editorial_error:
                 layer_word_count = len(re.findall(r"[A-Za-z][A-Za-z'-]{1,}", doc.text))
-                print(f"✅ Получено {layer_word_count} слов из text layer FlipHTML5; запускаю evidence gate.", flush=True)
+                print(f"✅ Получено {layer_word_count} слов из text layer FlipHTML5; запускаю page-aware segmentation.", flush=True)
         else:
             print(f"⚠ Text layer недоступен: {layer_error}", flush=True)
 
