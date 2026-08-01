@@ -466,7 +466,17 @@ def parse_pdf_bytes(
     if not title:
         for line in text_content.splitlines():
             line_clean = line.strip()
-            if len(line_clean) >= 8 and len(line_clean) <= 120 and not line_clean.startswith(("http", "www.")):
+            is_pdf_syntax = (
+                line_clean.startswith("<<")
+                or bool(re.search(r"/(?:Filter|Length|Type|Subtype)\b|\bFlateDecode\b", line_clean))
+                or bool(re.match(r"^\d{10}\s+\d{5}\s+[nf]$", line_clean))
+            )
+            if (
+                len(line_clean) >= 8
+                and len(line_clean) <= 120
+                and not line_clean.startswith(("http", "www."))
+                and not is_pdf_syntax
+            ):
                 title = line_clean
                 break
     if not title:
@@ -504,7 +514,13 @@ def parse_pdf_bytes(
 
 
 def _fallback_ascii_extract(content: bytes) -> str:
-    """Best-effort printable ASCII/UTF-8 extraction for PDF test stubs or when pypdf fails."""
+    """Extract only safe literal text from an uncompressed PDF fallback.
+
+    This is deliberately conservative. Raw PDF object dictionaries, stream
+    descriptors and offsets are *not* document prose; treating them as prose
+    creates fictional titles and technical specifications when a real parser
+    (pypdf/OCR) is unavailable.
+    """
     try:
         raw_str = content.decode("utf-8", errors="ignore")
         lines = []
@@ -517,11 +533,12 @@ def _fallback_ascii_extract(content: bytes) -> str:
                 clean,
             ):
                 continue
-            m_title = re.search(r"/Title\s*\(([^)]+)\)", clean)
-            if m_title:
-                lines.append(m_title.group(1).strip())
-                continue
-            if clean.startswith("<<") and clean.endswith(">>"):
+            # A dictionary may be followed immediately by `stream`, or carry
+            # filters/lengths on one line. None of those values are content.
+            if clean.startswith("<<") or re.search(r"/(?:Filter|Length|Type|Subtype)\b|\bFlateDecode\b", clean):
+                m_title = re.search(r"/Title\s*\(([^)]+)\)", clean)
+                if m_title:
+                    lines.append(m_title.group(1).strip())
                 continue
             lines.append(clean)
         return "\n".join(lines)

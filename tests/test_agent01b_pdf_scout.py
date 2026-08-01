@@ -136,6 +136,18 @@ class TestPDFScout:
         assert doc.title == "Koh Young Alpha 3D SPI Catalog 2026"
         assert doc.company == "Koh Young"
 
+    def test_rejects_pdf_syntax_as_editorial_evidence(self, pdf_scout):
+        doc = PDFDocument(
+            title="Unknown PDF",
+            document_type=PDFDocumentType.MAGAZINE,
+            company="",
+            text="<< /Filter /FlateDecode /Length 2277 >>stream\nresolution: 8nM",
+        )
+
+        error = pdf_scout.validate_document_for_editorial_use(doc)
+        assert error is not None
+        assert "служебные PDF-данные" in error
+
     def test_cli_requires_file_or_url(self, pdf_scout, monkeypatch, capsys):
         monkeypatch.setattr("sys.argv", ["agent-01b-pdf-scout.py"])
         with pytest.raises(SystemExit):

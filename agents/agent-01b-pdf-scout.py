@@ -538,6 +538,29 @@ def run_pipeline(
     return results
 
 
+def validate_document_for_editorial_use(doc: PDFDocument) -> Optional[str]:
+    """Return an error when extraction cannot support a factual article.
+
+    A title or a few numbers from a malformed PDF are not enough evidence for
+    a publishable SMTInsider article. Stop before Writer can turn PDF syntax
+    or isolated OCR fragments into invented engineering analysis.
+    """
+    text = (doc.text or "").strip()
+    syntax_markers = ("FlateDecode", "startxref", "<<", "/Filter", "/Length")
+    if any(marker in text for marker in syntax_markers):
+        return "извлечённый текст содержит служебные PDF-данные, а не текст статьи"
+    words = re.findall(r"[A-Za-z][A-Za-z'-]{1,}", text)
+    if len(words) < 80:
+        return (
+            "в документе недостаточно читаемого текста для проверяемой статьи "
+            f"({len(words)} слов; требуется не менее 80)"
+        )
+    alpha_chars = sum(ch.isalpha() for ch in text)
+    if alpha_chars / max(len(text), 1) < 0.45:
+        return "извлечение похоже на повреждённый текстовый слой или OCR-мусор"
+    return None
+
+
 def main():
     p = argparse.ArgumentParser(
         prog="agent-01b-pdf-scout",
@@ -572,6 +595,15 @@ def main():
     except Exception as e:
         print(f"❌ Ошибка обработки документа: {e}")
         sys.exit(1)
+
+    editorial_error = validate_document_for_editorial_use(doc)
+    if editorial_error:
+        print(
+            "❌ Статья не создана: " + editorial_error + ". "
+            "Загрузите исходный PDF с текстовым слоем, выполните OCR или укажите "
+            "официальную HTML-страницу/пресс-релиз с полным текстом."
+        )
+        sys.exit(2)
 
     brief_payload = build_pdf_topic_brief(
         doc=doc,

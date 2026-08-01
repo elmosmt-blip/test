@@ -232,6 +232,7 @@ class TestFallbackPDFExtraction:
             b"1 0 obj\n"
             b"<< /Title (SMT Today Issue 80) >>\n"
             b"endobj\n"
+            b"<< /Filter /FlateDecode /Length 2277 >>stream\n"
             b"xref\n"
             b"0000000016 00000 n\n"
             b"trailer\n"
