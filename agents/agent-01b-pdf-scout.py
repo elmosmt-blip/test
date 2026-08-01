@@ -157,24 +157,43 @@ def _segment_magazine_with_llm(
     outline = "\n\n".join(
         f"[PAGE {number}]\n{text[:1800]}" for number, text in pages.items() if text
     )[:70000]
+    raw_fallback = ""
     try:
         result = llm_client.ask_json(
             system=(
-                "Ты — редакционный координатор SMTInsider. Раздели журнал только на "
-                "самостоятельные статьи, используя номера страниц и ТОЛЬКО текст ниже. "
-                "Не создавай тему по случайному упоминанию вендора. Для каждой статьи "
-                "нужны связный текст, named subject и факты на её страницах. Верни JSON "
-                '{"articles":[{"title":"точный заголовок из текста","company":"...",'
-                '"start_page":1,"end_page":2,"recommended_format":"news|review|insight",'
-                '"reason":"коротко"}]}. Не добавляй несуществующие статьи.'
+                "Return JSON only. No analysis, no preamble. You are an SMT magazine "
+                "table-of-contents parser. Identify only real, page-bounded articles. "
+                'Schema: {"articles":[{"title":"verbatim or near-verbatim headline","company":"",'
+                '"start_page":1,"end_page":2,"recommended_format":"news|review|insight"}]}. '
+                "Do not invent articles from vendor mentions."
             ),
             user=f"MAGAZINE: {doc_title}\n\n{outline}",
             temperature=0,
-            max_tokens=1800,
+            max_tokens=2400,
         )
     except Exception as e:
-        print(f"⚠ Nemotron не смог сегментировать журнал: {e}")
-        return []
+        # Some reasoning-capable endpoints occasionally emit a useful numbered
+        # outline before JSON. Recover only explicit `Page N: title` lines;
+        # never infer a segment from arbitrary prose.
+        raw_fallback = str(e)
+        page_lines = re.findall(r"(?:^|\n)\s*[-•]?\s*Page\s+(\d+)\s*:\s*([^\n]+)", raw_fallback, re.I)
+        if not page_lines:
+            print(f"⚠ Nemotron не смог сегментировать журнал: {e}")
+            return []
+        starts = [(int(page), title.strip()) for page, title in page_lines if int(page) in pages]
+        starts = sorted(dict.fromkeys(starts))[:max_topics]
+        result = {"articles": [
+            {
+                "title": title,
+                "company": "",
+                "start_page": page,
+                "end_page": (starts[i + 1][0] - 1 if i + 1 < len(starts) else max(pages)),
+                "recommended_format": "news",
+                "reason": "Page range recovered from the model's explicit magazine outline",
+            }
+            for i, (page, title) in enumerate(starts)
+        ]}
+        print("⚠ Nemotron вернул outline вместо JSON; использую только явно указанные им page ranges.")
 
     topics: list[dict[str, Any]] = []
     allowed_formats = {"news", "review", "insight"}
@@ -194,7 +213,12 @@ def _segment_magazine_with_llm(
         company = str(item.get("company", "")).strip()
         # A title/company emitted by the model must be evidenced literally by
         # the source segment; otherwise it is not a valid article boundary.
-        if not title or title.lower() not in segment_text.lower():
+        title_tokens = set(re.findall(r"[a-z]{4,}", title.lower()))
+        segment_tokens = set(re.findall(r"[a-z]{4,}", segment_text.lower()))
+        # Viewer headings are often split across text-position records, so
+        # require meaningful lexical overlap instead of a brittle byte-exact
+        # match while still rejecting invented titles.
+        if not title or len(title_tokens & segment_tokens) < min(2, len(title_tokens)):
             continue
         if company and company.lower() not in segment_text.lower():
             company = ""
