@@ -64,7 +64,7 @@ import sys
 PYTHON_CMD = "python" if sys.platform == "win32" else "python3"
 
 AGENT_CMDS = {
-    "1": [PYTHON_CMD, str(AGENTS_DIR / "agent-01-trend-hunter.py"), "scan", "--days", os.environ.get("NEWS_LOOKBACK_DAYS", "30"), "--strict-fresh", "--verify-pages", "--output", str(BRIEFS_FILE)],
+    "1": [PYTHON_CMD, str(AGENTS_DIR / "agent-01-trend-hunter.py"), "scan", "--days", os.environ.get("NEWS_LOOKBACK_DAYS", "30"), "--strict-fresh", "--verify-pages", "--max-topics", os.environ.get("NEWS_MAX_TOPICS", "20"), "--output", str(BRIEFS_FILE)],
     "1b": [PYTHON_CMD, str(AGENTS_DIR / "agent-01b-pdf-scout.py"), "--url", "https://online.fliphtml5.com/kwnhb/fakj/", "--format", "magazine", "--max-topics", "3", "--brief", str(BRIEFS_FILE)],
     "2": [PYTHON_CMD, str(AGENTS_DIR / "agent-02-writer.py"),
           "--brief", str(BRIEFS_FILE), "--output", str(ARTICLE_FILE)],
@@ -487,6 +487,48 @@ async def select_topic(index: int):
     BRIEFS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     _selected_topic_index = 0
     return {"ok": True, "selected_topic": selected.get("topic", ""), "index": 0}
+
+
+@app.post("/briefs/run-selected")
+async def run_selected_briefs(req: Request):
+    """Continue all selected topics through Writer, QC, SEO and distribution."""
+    data = await req.json()
+    indices = data.get("indices", [])
+    if not isinstance(indices, list) or not indices or not all(isinstance(i, int) for i in indices):
+        return JSONResponse({"error": "Выберите хотя бы одну тему"}, status_code=400)
+    if not BRIEFS_FILE.exists():
+        return JSONResponse({"error": "briefs.json не найден"}, status_code=404)
+    topics = json.loads(BRIEFS_FILE.read_text("utf-8")).get("topics", [])
+    if any(i < 0 or i >= len(topics) for i in indices):
+        return JSONResponse({"error": "Выбранная тема больше не существует"}, status_code=400)
+    run_id = str(uuid.uuid4())
+    _runs[run_id] = asyncio.Queue(maxsize=5000)
+    command = [
+        PYTHON_CMD, str(AGENTS_DIR / "run-selected-topics.py"),
+        "--brief", str(BRIEFS_FILE),
+        "--indices", ",".join(str(i) for i in sorted(set(indices))),
+        "--output-dir", str(_TMP / "smtinsider_selected_articles"),
+    ]
+
+    async def task():
+        q = _runs[run_id]
+        _agent_status["2"] = "running"
+        _send(q, "status", {"agent": "2", "state": "running"})
+        _send(q, "log", {"agent": "2", "line": f"▶ {' '.join(command)}"})
+        proc = await asyncio.create_subprocess_exec(*command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, cwd=str(ROOT), env={**os.environ, "PYTHONUNBUFFERED": "1"})
+        while True:
+            line = await proc.stdout.readline()
+            if not line:
+                break
+            _send(q, "log", {"agent": "2", "line": line.decode("utf-8", errors="replace").rstrip()})
+        await proc.wait()
+        state = "done" if proc.returncode == 0 else "error"
+        _agent_status["2"] = state
+        _send(q, "status", {"agent": "2", "state": state, "code": proc.returncode})
+        _send(q, "done", {})
+
+    asyncio.create_task(task())
+    return {"run_id": run_id, "count": len(set(indices))}
 
 
 @app.delete("/briefs/{index}")
@@ -941,7 +983,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
         </select>
       </label>
       <label class="pdf-field"><span>Максимум тем</span>
-        <input id="pdf-topics-input" type="number" value="3" min="1" max="10">
+        <input id="pdf-topics-input" type="number" value="7" min="1" max="50">
         <small>Фактическое разделение доступно только при подтверждённых самостоятельных статьях.</small>
       </label>
     </div>
@@ -982,6 +1024,7 @@ let agentStatus = {};
 let pipelineRunning = false;
 let logEmpty = true;
 let selectedTopicIndex = null;
+let selectedTopicIndices = new Set();
 let briefsData = null;
 
 // ── Clock ──────────────────────────────────────────────────────────
@@ -1194,6 +1237,9 @@ async function deleteTopic(index) {
   if (!confirm(`Удалить «${topic}»? Writer не сможет использовать её.`)) return;
   const r = await fetch(`/briefs/${index}`, {method:'DELETE'}).then(res => res.json()).catch(() => null);
   if (!r || r.error) { toast(r?.error || 'Не удалось удалить тему', 'err'); return; }
+  selectedTopicIndices = new Set([...selectedTopicIndices]
+    .filter(value => value !== index)
+    .map(value => value > index ? value - 1 : value));
   if (index === selectedTopicIndex) {
     selectedTopicIndex = null;
     document.getElementById('selected-topic-pill').style.display = 'none';
@@ -1340,13 +1386,14 @@ async function loadBriefs() {
       <span>модель: ${escHtml(model)}</span>
       ${gate.recommended_format ? `<span>·</span><span>формат: ${escHtml(gate.recommended_format)}</span>` : ''}
       <span style="flex:1"></span>
-      <span>Выберите одну тему для Writer или удалите неподходящие</span>
+      <span id="selected-topics-count">Выберите статьи для Writer</span>
+      <button class="select-topic-btn" id="run-selected-topics" onclick="runSelectedTopics()" disabled>Продолжить цикл →</button>
     </div>`;
 
   const cards = data.topics.map((t, i) => {
     const urgency = (t.urgency || 'low').toLowerCase();
-    const isPriority = i === 0 && selectedTopicIndex !== null;
-    const isSelected = i === selectedTopicIndex;
+    const isSelected = selectedTopicIndices.has(i);
+    const isPriority = isSelected;
 
     const factsHtml = t.key_facts && t.key_facts.length
       ? `<div class="brief-facts">
@@ -1363,7 +1410,7 @@ async function loadBriefs() {
              </a>`).join('<br>')}
          </div>` : '';
 
-    const isCurrentPriority = isPriority && i === 0;
+    const isCurrentPriority = isSelected;
     return `
     <div class="brief-card ${isCurrentPriority ? 'priority-selected' : ''}">
       <div class="brief-header">
@@ -1387,18 +1434,42 @@ async function loadBriefs() {
         <button class="delete-topic-btn" onclick="deleteTopic(${i})" title="Удалить тему до запуска Writer">
           ✕ Удалить
         </button>
-        ${!isCurrentPriority ? `
-          <button class="select-topic-btn" onclick="selectTopic(${i})">
-            ★ Выбрать для Writer
-          </button>` : `
-          <button class="select-topic-btn active" disabled>
-            ★ Выбрана (активна)
-          </button>`}
+        <button class="select-topic-btn ${isCurrentPriority ? 'active' : ''}" onclick="toggleTopic(${i})">
+          ${isCurrentPriority ? '✓ Выбрана' : '＋ Выбрать'}
+        </button>
       </div>
     </div>`;
   }).join('');
 
   el.innerHTML = toolbar + cards;
+  updateSelectedTopicsUI();
+}
+
+function updateSelectedTopicsUI() {
+  const count = selectedTopicIndices.size;
+  const label = document.getElementById('selected-topics-count');
+  const button = document.getElementById('run-selected-topics');
+  if (label) label.textContent = count ? `Выбрано статей: ${count}` : 'Выберите статьи для Writer';
+  if (button) button.disabled = !count;
+}
+
+function toggleTopic(index) {
+  if (selectedTopicIndices.has(index)) selectedTopicIndices.delete(index);
+  else selectedTopicIndices.add(index);
+  selectedTopicIndex = selectedTopicIndices.size ? [...selectedTopicIndices][0] : null;
+  loadBriefs();
+}
+
+async function runSelectedTopics() {
+  const indices = [...selectedTopicIndices].sort((a, b) => a - b);
+  if (!indices.length) { toast('Выберите хотя бы одну тему', 'err'); return; }
+  showTab('log');
+  const result = await fetch('/briefs/run-selected', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({indices})
+  }).then(r => r.json()).catch(() => null);
+  if (!result || result.error) { toast(result?.error || 'Не удалось запустить цикл', 'err'); return; }
+  toast(`Запущен полный редакционный цикл для ${result.count} статей`, 'info');
+  subscribeRun(result.run_id, 'publish');
 }
 
 // ── Article ────────────────────────────────────────────────────────
