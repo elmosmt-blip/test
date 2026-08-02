@@ -22,6 +22,30 @@ import requests
 sys.path.insert(0, os.path.dirname(__file__))
 import source_expander
 
+ROOT = Path(__file__).resolve().parent.parent
+LINKEDIN_SIGNALS_FILE = ROOT / "cache" / "linkedin_signals.json"
+
+
+def _linkedin_official_urls(topic_text: str) -> list[str]:
+    """Use only corroborated LinkedIn discoveries, never post URLs themselves."""
+    try:
+        signals = json.loads(LINKEDIN_SIGNALS_FILE.read_text(encoding="utf-8")).get("signals", [])
+    except Exception:
+        return []
+    tokens = set(re.findall(r"[a-z0-9]{3,}", topic_text.lower()))
+    urls: list[str] = []
+    for signal in signals:
+        if not signal.get("writer_allowed"):
+            continue
+        if not (tokens & set(re.findall(r"[a-z0-9]{3,}", str(signal.get("matched_topic", "")).lower()))):
+            continue
+        official = signal.get("official_source") or {}
+        url = str(official.get("url", ""))
+        if url and url not in urls:
+            urls.append(url)
+    return urls
+
+
 OFFICIAL_DOMAINS = {
     "fuji": "fuji.co.jp", "koh young": "kohyoung.com", "asmpt": "asmpt.com",
     "yamaha": "yamaha-motor.com", "saki": "sakicorp.com", "tri": "tri.com.tw",
@@ -134,7 +158,11 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
     # If primary coverage is a trade-media release, automatically search the
     # matching vendor's official domain for a product page, TDS or newsroom
     # entry. This is a research retry, not a manual task for the operator.
-    for official_url in _search_official_pages(topic_text, _official_domains(topic_text)):
+    research_urls = [
+        *_search_official_pages(topic_text, _official_domains(topic_text)),
+        *_linkedin_official_urls(topic_text),
+    ]
+    for official_url in research_urls:
         canonical = source_expander.canonical_url(official_url)
         if not canonical or canonical in seen or len(researched) >= 4:
             continue

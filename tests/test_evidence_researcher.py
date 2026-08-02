@@ -29,6 +29,15 @@ def test_routes_single_authoritative_source_to_news(monkeypatch):
     assert result["evidence_status"] == "ready_news"
 
 
+def test_uses_only_corroborated_linkedin_official_url(tmp_path, monkeypatch):
+    researcher = load_module()
+    signals = tmp_path / "linkedin_signals.json"
+    signals.write_text('{"signals":[{"matched_topic":"Dymax 9310 launch","writer_allowed":true,"official_source":{"url":"https://www.dymax.com/news/9310"}}]}', encoding="utf-8")
+    monkeypatch.setattr(researcher, "LINKEDIN_SIGNALS_FILE", signals)
+    urls = researcher._linkedin_official_urls("Dymax 9310 Adhesive Launch")
+    assert urls == ["https://www.dymax.com/news/9310"]
+
+
 def test_discards_insufficient_evidence(monkeypatch):
     researcher = load_module()
     monkeypatch.setattr(researcher.source_expander, "fetch_readable_text", lambda url: "Too short")

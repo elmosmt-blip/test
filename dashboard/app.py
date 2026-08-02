@@ -66,6 +66,7 @@ PYTHON_CMD = "python" if sys.platform == "win32" else "python3"
 AGENT_CMDS = {
     "1": [PYTHON_CMD, str(AGENTS_DIR / "agent-01-trend-hunter.py"), "scan", "--days", os.environ.get("NEWS_LOOKBACK_DAYS", "30"), "--strict-fresh", "--verify-pages", "--max-topics", os.environ.get("NEWS_MAX_TOPICS", "20"), "--output", str(BRIEFS_FILE)],
     "1b": [PYTHON_CMD, str(AGENTS_DIR / "agent-01b-pdf-scout.py"), "--url", "https://online.fliphtml5.com/kwnhb/fakj/", "--format", "magazine", "--max-topics", "3", "--brief", str(BRIEFS_FILE)],
+    "1c": [PYTHON_CMD, str(AGENTS_DIR / "agent-01c-linkedin-signals.py"), "scan", "--brief", str(BRIEFS_FILE), "--output", str(ROOT / "cache" / "linkedin_signals.json")],
     "1d": [PYTHON_CMD, str(AGENTS_DIR / "agent-01d-evidence-researcher.py"), "--brief", str(BRIEFS_FILE), "--output", str(BRIEFS_FILE)],
     "2": [PYTHON_CMD, str(AGENTS_DIR / "agent-02-writer.py"),
           "--brief", str(BRIEFS_FILE), "--output", str(ARTICLE_FILE)],
@@ -137,7 +138,7 @@ async def _run_pipeline(run_id: str):
     q = _runs[run_id]
     _send(q, "pipeline", {"state": "running"})
 
-    steps = ["1", "1d", "2", "2b", "3", "4", "5"]
+    steps = ["1", "1c", "1d", "2", "2b", "3", "4", "5"]
     if os.environ.get("NEON_DATABASE_URL") and _env_truthy("ALLOW_DB_WRITES"):
         steps += ["6", "7"]
     else:
@@ -1184,6 +1185,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 const AGENTS = [
   {id:"1", name:"Trend Hunter",     desc:"Собирает новости, выбирает темы", needs:""},
   {id:"1b", name:"PDF Scout",       desc:"Ручная подача PDF / журнала",     needs:"URL или файл"},
+  {id:"1c",name:"LinkedIn Signals", desc:"Ищет public signals и official corroboration", needs:"briefs.json"},
   {id:"1d",name:"Evidence Research", desc:"Ищет official sources и source pack", needs:"briefs.json"},
   {id:"2", name:"Writer",           desc:"Пишет статью по выбранной теме",  needs:"briefs.json"},
   {id:"2b",name:"Quality Checker",  desc:"Проверяет и улучшает текст",      needs:"meta.json"},
