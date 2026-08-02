@@ -500,6 +500,67 @@ async def continue_review_item(item_id: str):
     return {"run_id": run_id}
 
 
+@app.get("/linkedin-signals")
+async def get_linkedin_signals():
+    path = ROOT / "cache" / "linkedin_signals.json"
+    if not path.exists():
+        return {"signals": []}
+    try:
+        return json.loads(path.read_text("utf-8"))
+    except Exception as e:
+        return {"signals": [], "error": str(e)}
+
+
+@app.get("/videos")
+async def get_video_drafts():
+    db_url = os.environ.get("NEON_DATABASE_URL")
+    if not db_url:
+        return {"videos": [], "error": "NEON_DATABASE_URL не задан"}
+    try:
+        import psycopg2, psycopg2.extras
+        conn = psycopg2.connect(db_url)
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT id, title, youtube_url, thumbnail_url, channel, description, published_at FROM videoitem WHERE is_published=false ORDER BY published_at DESC LIMIT 50")
+            videos = [dict(row) for row in cur.fetchall()]
+        conn.close()
+        for video in videos:
+            if video.get("published_at"):
+                video["published_at"] = video["published_at"].isoformat()
+        return {"videos": videos}
+    except Exception as e:
+        return {"videos": [], "error": str(e)}
+
+
+@app.post("/videos/{video_id}/approve")
+async def approve_video(video_id: int):
+    if not _env_truthy("ALLOW_DB_WRITES"):
+        return JSONResponse({"error": "ALLOW_DB_WRITES=0"}, status_code=403)
+    try:
+        import psycopg2
+        conn = psycopg2.connect(os.environ["NEON_DATABASE_URL"])
+        with conn.cursor() as cur:
+            cur.execute("UPDATE videoitem SET is_published=true WHERE id=%s", (video_id,))
+        conn.commit(); conn.close()
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.delete("/videos/{video_id}")
+async def delete_video(video_id: int):
+    if not _env_truthy("ALLOW_DB_WRITES"):
+        return JSONResponse({"error": "ALLOW_DB_WRITES=0"}, status_code=403)
+    try:
+        import psycopg2
+        conn = psycopg2.connect(os.environ["NEON_DATABASE_URL"])
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM videoitem WHERE id=%s AND is_published=false", (video_id,))
+        conn.commit(); conn.close()
+        return {"ok": True}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.get("/drafts")
 async def get_drafts():
     db_url = os.environ.get("NEON_DATABASE_URL")
@@ -1045,8 +1106,8 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
 .source-summary{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(38,59,91,.7);font-size:12px}.source-summary:last-child{border:0}.health{font:600 10px var(--mono);padding:3px 7px;border-radius:99px}.health.ok{background:var(--green-dim);color:var(--green)}.health.watch{background:var(--orange-dim);color:var(--orange)}.health.blocked{background:var(--red-dim);color:var(--red)}.plan-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:2px 0 18px}.plan-header h1{margin:6px 0;color:#fff;font-size:25px;letter-spacing:-.03em}.plan-header p{max-width:650px;color:var(--text-mid);font-size:13px;line-height:1.55}.plan-summary{display:flex;align-items:center;gap:10px;color:var(--text-mid);font-size:12px;white-space:nowrap}
 @media(max-width:1100px){.shell{grid-template-columns:230px minmax(0,1fr)}.panel-drafts{display:none}.overview-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){html,body{overflow:auto}.shell{height:auto;min-height:100vh;display:block}.panel-agents{border-right:0}.agent-list{max-height:260px}.panel-main{min-height:70vh}.overview-layout{grid-template-columns:1fr}.workflow-steps{grid-template-columns:repeat(2,1fr)}.header-meta .pill:not(:first-child),#hdr-time{display:none}.content-pane{padding:14px}#pane-log{margin:0 14px 14px}.main-tabs{padding:0 14px;overflow:auto}.tab{padding-left:9px;padding-right:9px}}
-.preview-toolbar{align-items:center;justify-content:space-between}.preview-label{display:block;color:var(--green);font:700 10px var(--mono);letter-spacing:.12em}.preview-note{display:block;margin-top:4px;color:var(--text-dim);font-size:11px}.preview-actions{display:flex;align-items:center;gap:8px}.site-preview{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--bg);color:#d9e1ed}.site-preview-hero{display:grid;grid-template-columns:minmax(0,1fr) 278px;gap:58px;max-width:920px;margin:0 auto;padding:54px 36px 38px}.preview-back{color:#8998ad;text-decoration:none;font-size:13px}.preview-kicker{margin-top:40px;color:#7c899e;font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase}.site-preview h1{max-width:590px;margin:22px 0 15px;color:#f5f2ed;font:400 clamp(37px,4.2vw,58px)/1.02 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.preview-dek{max-width:590px;color:#aeb9ca;font-size:16px;line-height:1.55}.preview-context{align-self:start;margin-top:60px;padding:24px 20px;border:1px solid rgba(66,81,104,.6);border-radius:16px;background:rgba(17,23,34,.9)}.preview-context>div{color:var(--green);font:700 9px var(--mono);letter-spacing:.15em}.preview-context dl{margin:20px 0 0}.preview-context dt{margin-top:17px;color:#6f7d92;font:9px var(--mono);letter-spacing:.12em}.preview-context dd{margin:7px 0 0;color:#e1e6ee;font-size:12px;font-weight:600;line-height:1.4}.preview-context dd a{color:var(--blue);text-decoration:none}.preview-context dd a:hover{text-decoration:underline}.preview-decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:920px;margin:0 auto 32px;padding:0 36px}.preview-decision-grid>div{min-height:160px;padding:22px 18px;border:1px solid rgba(53,69,91,.6);border-radius:12px;background:rgba(15,21,31,.82)}.preview-decision-grid b{color:var(--green);font:700 9px var(--mono);letter-spacing:.16em}.preview-decision-grid p,.preview-decision-grid li{margin-top:15px;color:#c7d0de;font-size:12px;line-height:1.55}.preview-decision-grid ul{margin:12px 0 0;padding-left:15px}.preview-decision-grid li{margin:6px 0}.preview-body{max-width:760px;margin:0 auto;padding:38px 44px 58px;border:1px solid rgba(53,69,91,.6);border-radius:14px 14px 0 0;background:rgba(14,19,29,.92);font-size:15px;line-height:1.8;color:#d0d7e2}.preview-body p{margin:0 0 18px}.preview-body .article-section-heading{margin:34px 0 11px;color:#f2f4f8;font-size:22px}.preview-qa{margin:16px 0;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-mid);font-size:12px}.preview-qa summary{cursor:pointer;color:var(--blue);font-weight:600}.preview-qa .article-evidence{margin:15px 0 0}.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.review-queue{display:grid;gap:12px}.review-card{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.review-card h2{margin:10px 0 6px;color:#fff;font-size:16px}.review-card p,.review-card small{display:block;color:var(--text-mid);font-size:12px;line-height:1.45}.review-card-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.article-evidence{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 14px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.article-evidence.pass{border-left:3px solid var(--green)}.article-evidence.blocked{border-left:3px solid var(--red)}.article-evidence h2{margin:5px 0;color:#fff;font-size:15px}.article-evidence p{color:var(--text-mid);font-size:12px;line-height:1.5}.evidence-details{display:flex;align-items:flex-end;flex-direction:column;gap:7px;color:var(--text-dim);font:11px var(--mono)}.evidence-alert{grid-column:1/-1;padding:10px 12px;border-radius:7px;background:var(--red-dim);color:var(--text-mid);font-size:11px;line-height:1.55}.evidence-alert b{display:block;color:var(--red);margin-bottom:3px}.evidence-sources{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;color:var(--text-mid);font-size:12px}.evidence-sources summary{cursor:pointer;color:var(--blue)}.evidence-sources>div{margin:11px 0;padding-left:10px;border-left:2px solid var(--border)}.evidence-sources a{color:var(--blue);text-decoration:none}.evidence-sources p{margin-top:4px;font-size:11px}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
-.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}.review-card{flex-direction:column}.review-card-actions{justify-content:flex-start}.site-preview-hero{grid-template-columns:1fr;gap:20px;padding:30px 22px}.preview-context{margin-top:0}.preview-decision-grid{grid-template-columns:1fr;padding:0 22px}.preview-body{margin:0 22px;padding:28px 22px}.preview-actions{margin-top:10px;flex-wrap:wrap}.article-evidence{grid-template-columns:1fr}.evidence-details{align-items:flex-start}}.draft-reader-dialog{width:min(960px,100%);max-height:calc(100vh - 42px);overflow:auto;padding:22px 28px 46px;border:1px solid var(--border2);border-radius:16px;background:#0d1522;box-shadow:0 30px 90px rgba(0,0,0,.55)}.draft-reader-topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--border)}.draft-reader-topbar>div{display:flex;align-items:center;gap:8px}.draft-reader-content{max-width:720px;margin:45px auto 0}.draft-reader-meta{color:var(--green);font:700 10px var(--mono);letter-spacing:.13em;text-transform:uppercase}.draft-reader-content h1{margin:18px 0;color:#f5f2ed;font:400 clamp(35px,5vw,58px)/1.04 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.draft-reader-summary{margin:0 0 24px;color:var(--text-mid);font-size:17px;line-height:1.55}.draft-reader-context{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text-dim);font-size:11px}.draft-reader-context a{color:var(--blue);text-decoration:none}.draft-reader-body{padding-top:28px;color:#d6deea;font-size:15px;line-height:1.8}.draft-reader-body p{margin:0 0 18px}.draft-reader-body h2{margin:34px 0 12px;color:#fff;font-size:23px}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog,.draft-reader-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}.draft-reader-context{flex-direction:column}.draft-reader-topbar{align-items:flex-start}.draft-reader-topbar>div{flex-wrap:wrap;justify-content:flex-end}}
+.preview-toolbar{align-items:center;justify-content:space-between}.preview-label{display:block;color:var(--green);font:700 10px var(--mono);letter-spacing:.12em}.preview-note{display:block;margin-top:4px;color:var(--text-dim);font-size:11px}.preview-actions{display:flex;align-items:center;gap:8px}.site-preview{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--bg);color:#d9e1ed}.site-preview-hero{display:grid;grid-template-columns:minmax(0,1fr) 278px;gap:58px;max-width:920px;margin:0 auto;padding:54px 36px 38px}.preview-back{color:#8998ad;text-decoration:none;font-size:13px}.preview-kicker{margin-top:40px;color:#7c899e;font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase}.site-preview h1{max-width:590px;margin:22px 0 15px;color:#f5f2ed;font:400 clamp(37px,4.2vw,58px)/1.02 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.preview-dek{max-width:590px;color:#aeb9ca;font-size:16px;line-height:1.55}.preview-context{align-self:start;margin-top:60px;padding:24px 20px;border:1px solid rgba(66,81,104,.6);border-radius:16px;background:rgba(17,23,34,.9)}.preview-context>div{color:var(--green);font:700 9px var(--mono);letter-spacing:.15em}.preview-context dl{margin:20px 0 0}.preview-context dt{margin-top:17px;color:#6f7d92;font:9px var(--mono);letter-spacing:.12em}.preview-context dd{margin:7px 0 0;color:#e1e6ee;font-size:12px;font-weight:600;line-height:1.4}.preview-context dd a{color:var(--blue);text-decoration:none}.preview-context dd a:hover{text-decoration:underline}.preview-decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:920px;margin:0 auto 32px;padding:0 36px}.preview-decision-grid>div{min-height:160px;padding:22px 18px;border:1px solid rgba(53,69,91,.6);border-radius:12px;background:rgba(15,21,31,.82)}.preview-decision-grid b{color:var(--green);font:700 9px var(--mono);letter-spacing:.16em}.preview-decision-grid p,.preview-decision-grid li{margin-top:15px;color:#c7d0de;font-size:12px;line-height:1.55}.preview-decision-grid ul{margin:12px 0 0;padding-left:15px}.preview-decision-grid li{margin:6px 0}.preview-body{max-width:760px;margin:0 auto;padding:38px 44px 58px;border:1px solid rgba(53,69,91,.6);border-radius:14px 14px 0 0;background:rgba(14,19,29,.92);font-size:15px;line-height:1.8;color:#d0d7e2}.preview-body p{margin:0 0 18px}.preview-body .article-section-heading{margin:34px 0 11px;color:#f2f4f8;font-size:22px}.preview-qa{margin:16px 0;padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-mid);font-size:12px}.preview-qa summary{cursor:pointer;color:var(--blue);font-weight:600}.preview-qa .article-evidence{margin:15px 0 0}.workspace-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:28px;margin-bottom:18px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(115deg,rgba(22,47,78,.98),rgba(15,27,46,.95))}.workspace-hero h1{margin:7px 0 9px;color:#fff;font-size:26px;letter-spacing:-.03em}.workspace-hero p{max-width:690px;color:var(--text-mid);font-size:13px;line-height:1.6}.workspace-hero.compact{padding:22px}.workspace-hero.compact h1{font-size:22px}.workspace-actions{display:flex;gap:9px;flex-shrink:0}.collect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.collect-grid h2{margin:8px 0;color:#fff;font-size:18px}.publish-drafts{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));align-content:start;gap:12px;padding:0}.publish-drafts .draft-card{margin:0;min-height:160px}.publish-drafts .empty-state{grid-column:1/-1}.signal-grid,.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}.signal-card,.video-card{padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.signal-card h2,.video-card h2{margin:10px 0 7px;color:#fff;font-size:15px;line-height:1.35}.signal-card p,.video-card p{color:var(--text-mid);font-size:12px;line-height:1.5}.signal-card a{display:block;margin-top:9px;color:var(--blue);font-size:12px;text-decoration:none}.signal-meta{margin-top:10px;color:var(--text-dim);font:11px var(--mono)}.video-card{display:grid;grid-template-columns:130px 1fr;gap:14px}.video-card img{width:130px;aspect-ratio:16/9;object-fit:cover;border-radius:7px;background:var(--surface2)}.video-actions{display:flex;gap:7px;align-items:center;margin-top:12px}.review-queue{display:grid;gap:12px}.review-card{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}.review-card h2{margin:10px 0 6px;color:#fff;font-size:16px}.review-card p,.review-card small{display:block;color:var(--text-mid);font-size:12px;line-height:1.45}.review-card-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.article-evidence{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 0 14px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.article-evidence.pass{border-left:3px solid var(--green)}.article-evidence.blocked{border-left:3px solid var(--red)}.article-evidence h2{margin:5px 0;color:#fff;font-size:15px}.article-evidence p{color:var(--text-mid);font-size:12px;line-height:1.5}.evidence-details{display:flex;align-items:flex-end;flex-direction:column;gap:7px;color:var(--text-dim);font:11px var(--mono)}.evidence-alert{grid-column:1/-1;padding:10px 12px;border-radius:7px;background:var(--red-dim);color:var(--text-mid);font-size:11px;line-height:1.55}.evidence-alert b{display:block;color:var(--red);margin-bottom:3px}.evidence-sources{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;color:var(--text-mid);font-size:12px}.evidence-sources summary{cursor:pointer;color:var(--blue)}.evidence-sources>div{margin:11px 0;padding-left:10px;border-left:2px solid var(--border)}.evidence-sources a{color:var(--blue);text-decoration:none}.evidence-sources p{margin-top:4px;font-size:11px}.pdf-launch-btn{margin:0 12px 14px;padding:10px;border:1px solid var(--border2);border-radius:9px;background:var(--surface2);color:var(--text);font:700 10px var(--mono);letter-spacing:.05em;cursor:pointer}.pdf-launch-btn:hover{border-color:var(--blue);color:var(--blue)}
+.modal-backdrop{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,9,18,.72);backdrop-filter:blur(7px)}.modal-backdrop.open{display:flex}.pdf-scout-dialog{width:min(720px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid var(--border2);border-radius:16px;background:linear-gradient(145deg,#14243b,#0e192a);box-shadow:0 30px 90px rgba(0,0,0,.55)}.pdf-dialog-header{display:flex;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid var(--border)}.pdf-dialog-header h2{margin:6px 0 7px;color:#fff;font-size:22px}.pdf-dialog-header p{max-width:540px;color:var(--text-mid);font-size:13px;line-height:1.5}.modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-mid);font-size:25px;line-height:1;cursor:pointer}.modal-close:hover{color:var(--red);border-color:var(--red)}.pdf-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.pdf-field{display:flex;flex-direction:column;gap:7px;color:var(--text);font-size:12px;font-weight:600}.pdf-field-wide{grid-column:1/-1}.pdf-field span em{font-style:normal;font-weight:400;color:var(--text-dim)}.pdf-field input,.pdf-field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0a1424;color:var(--text);font:12px var(--sans)}.pdf-field input:focus,.pdf-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}.pdf-field small{color:var(--text-dim);font-size:10px;font-weight:400;line-height:1.4}.pdf-evidence-note{padding:12px 14px;border:1px solid rgba(74,158,255,.32);border-radius:8px;background:var(--blue-dim);color:var(--text-mid);font-size:12px;line-height:1.5}.pdf-evidence-note b{color:var(--blue)}.pdf-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.modal-secondary,.modal-primary{padding:10px 14px;border-radius:8px;font:600 12px var(--sans);cursor:pointer}.modal-secondary{border:1px solid var(--border);background:var(--surface2);color:var(--text)}.modal-primary{border:1px solid var(--green);background:var(--green);color:#06251d}.modal-secondary:hover{border-color:var(--text-mid)}.modal-primary:hover{filter:brightness(1.08)}@media(max-width:760px){.workspace-hero{align-items:flex-start;flex-direction:column;padding:20px}.workspace-actions{width:100%;flex-wrap:wrap}.collect-grid{grid-template-columns:1fr}.video-card{grid-template-columns:1fr}.video-card img{width:100%;max-width:320px}.review-card{flex-direction:column}.review-card-actions{justify-content:flex-start}.site-preview-hero{grid-template-columns:1fr;gap:20px;padding:30px 22px}.preview-context{margin-top:0}.preview-decision-grid{grid-template-columns:1fr;padding:0 22px}.preview-body{margin:0 22px;padding:28px 22px}.preview-actions{margin-top:10px;flex-wrap:wrap}.article-evidence{grid-template-columns:1fr}.evidence-details{align-items:flex-start}}.draft-reader-dialog{width:min(960px,100%);max-height:calc(100vh - 42px);overflow:auto;padding:22px 28px 46px;border:1px solid var(--border2);border-radius:16px;background:#0d1522;box-shadow:0 30px 90px rgba(0,0,0,.55)}.draft-reader-topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:15px;border-bottom:1px solid var(--border)}.draft-reader-topbar>div{display:flex;align-items:center;gap:8px}.draft-reader-content{max-width:720px;margin:45px auto 0}.draft-reader-meta{color:var(--green);font:700 10px var(--mono);letter-spacing:.13em;text-transform:uppercase}.draft-reader-content h1{margin:18px 0;color:#f5f2ed;font:400 clamp(35px,5vw,58px)/1.04 Georgia,'Times New Roman',serif;letter-spacing:-.035em}.draft-reader-summary{margin:0 0 24px;color:var(--text-mid);font-size:17px;line-height:1.55}.draft-reader-context{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);color:var(--text-dim);font-size:11px}.draft-reader-context a{color:var(--blue);text-decoration:none}.draft-reader-body{padding-top:28px;color:#d6deea;font-size:15px;line-height:1.8}.draft-reader-body p{margin:0 0 18px}.draft-reader-body h2{margin:34px 0 12px;color:#fff;font-size:23px}@media(max-width:600px){.modal-backdrop{padding:10px}.pdf-scout-dialog,.draft-reader-dialog{padding:20px}.pdf-form-grid{grid-template-columns:1fr}.pdf-field-wide{grid-column:auto}.pdf-dialog-actions{flex-wrap:wrap}.pdf-dialog-actions button{flex:1}.draft-reader-context{flex-direction:column}.draft-reader-topbar{align-items:flex-start}.draft-reader-topbar>div{flex-wrap:wrap;justify-content:flex-end}}
 </style>
 </head>
 <body>
@@ -1079,10 +1140,12 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
     <div class="main-tabs">
       <div class="tab active" onclick="showTab('overview')">Обзор</div>
       <div class="tab" onclick="showTab('collect')">Сбор</div>
+      <div class="tab" onclick="showTab('signals')">Signals</div>
       <div class="tab" onclick="showTab('briefs')">План <span id="briefs-count" style="font-size:10px;color:var(--text-dim)"></span></div>
       <div class="tab" onclick="showTab('article')">Создание</div>
       <div class="tab" onclick="showTab('review')">Review</div>
       <div class="tab" onclick="showTab('publish')">Публикация</div>
+      <div class="tab" onclick="showTab('videos')">Видео</div>
       <div class="tab" onclick="showTab('log')">Активность</div>
       <div class="tab-spacer"></div>
       <button class="clear-btn" id="clear-btn" onclick="clearLog()" style="display:none">✕ очистить лог</button>
@@ -1105,11 +1168,23 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
       </div>
     </div>
 
+    <!-- Video review workspace -->
+    <div id="pane-videos" class="content-pane">
+      <div class="workspace-hero compact"><div><div class="overview-eyebrow">Video review</div><h1>Видео, найденные YouTube Scout</h1><p>Проверьте channel, preview и дату. Публикация остаётся ручным действием.</p></div><button class="modal-secondary" onclick="loadVideos()">↻ Обновить</button></div>
+      <div id="video-drafts" class="video-grid"><div class="empty-state">Загружаю video drafts…</div></div>
+    </div>
+
     <!-- Log pane -->
     <div id="pane-log" class="content-pane">
       <div class="log-stream" id="log-stream">
         <div class="empty-state"><div class="empty-icon">⬡</div>Лог пуст — запусти агента или пайплайн</div>
       </div>
+    </div>
+
+    <!-- LinkedIn/public signals workspace -->
+    <div id="pane-signals" class="content-pane">
+      <div class="workspace-hero compact"><div><div class="overview-eyebrow">Signals</div><h1>Public LinkedIn discovery</h1><p>LinkedIn posts are discovery signals only. Writer receives a signal only after official corroboration is found.</p></div><button class="modal-secondary" onclick="loadLinkedInSignals()">↻ Обновить</button></div>
+      <div id="linkedin-signals" class="signal-grid"><div class="empty-state">Загружаю signals…</div></div>
     </div>
 
     <!-- Briefs pane -->
@@ -1447,15 +1522,17 @@ async function deleteTopic(index) {
 
 // ── Tabs ───────────────────────────────────────────────────────────
 function showTab(name) {
-  const tabs = ['overview', 'collect', 'briefs', 'article', 'review', 'publish', 'log'];
+  const tabs = ['overview', 'collect', 'signals', 'briefs', 'article', 'review', 'publish', 'videos', 'log'];
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', tabs[i] === name));
   tabs.forEach(n => document.getElementById(`pane-${n}`).classList.toggle('active', n === name));
   document.getElementById('clear-btn').style.display = name === 'log' ? '' : 'none';
   if (name === 'overview') loadOverview();
+  if (name === 'signals') loadLinkedInSignals();
   if (name === 'briefs') loadBriefs();
   if (name === 'article') loadArticle();
   if (name === 'review') loadReviewQueue();
   if (name === 'publish') loadDrafts();
+  if (name === 'videos') loadVideos();
 }
 
 // ── Overview: concise operating state, not a raw diagnostic log ─────
@@ -1831,6 +1908,29 @@ async function continueReviewItem(itemId) {
   toast('Запущены SEO, Distributor и создание непубличного draft. Публикация остаётся ручным действием.', 'info');
   subscribeRun(result.run_id, 'publish');
 }
+
+// ── LinkedIn signals / video review ─────────────────────────────────
+async function loadLinkedInSignals() {
+  const data = await fetch('/linkedin-signals').then(r => r.json()).catch(() => null);
+  const el = document.getElementById('linkedin-signals');
+  if (!data || data.error) { el.innerHTML = '<div class="empty-state">Signals недоступны</div>'; return; }
+  if (!data.signals?.length) { el.innerHTML = '<div class="empty-state">Подтверждённых LinkedIn signals пока нет</div>'; return; }
+  el.innerHTML = data.signals.map(signal => {
+    const official = signal.official_source || {};
+    const ready = signal.writer_allowed;
+    return `<article class="signal-card"><span class="health ${ready ? 'ok' : 'watch'}">${ready ? 'corroborated' : escHtml(signal.status || 'needs corroboration')}</span><h2>${escHtml(signal.linkedin_title || signal.matched_topic)}</h2><p>${escHtml(signal.linkedin_excerpt || '')}</p><div class="signal-meta">${escHtml(signal.company || 'Unknown author')} · ${escHtml(signal.trust_level || '')}</div><a href="${escHtml(signal.linkedin_url)}" target="_blank" rel="noopener">Public LinkedIn signal ↗</a>${official.url ? `<a href="${escHtml(official.url)}" target="_blank" rel="noopener">Official corroboration ↗</a>` : ''}</article>`;
+  }).join('');
+}
+
+async function loadVideos() {
+  const data = await fetch('/videos').then(r => r.json()).catch(() => null);
+  const el = document.getElementById('video-drafts');
+  if (!data || data.error) { el.innerHTML = `<div class="empty-state">${escHtml(data?.error || 'Video drafts недоступны')}</div>`; return; }
+  if (!data.videos?.length) { el.innerHTML = '<div class="empty-state">YouTube Scout пока не нашёл video drafts</div>'; return; }
+  el.innerHTML = data.videos.map(video => `<article class="video-card"><a href="${escHtml(video.youtube_url)}" target="_blank" rel="noopener"><img src="${escHtml(video.thumbnail_url)}" alt=""></a><div><span class="health watch">needs review</span><h2>${escHtml(video.title)}</h2><p>${escHtml(video.channel || 'Unknown channel')} · ${video.published_at ? new Date(video.published_at).toLocaleDateString('ru') : ''}</p><p>${escHtml((video.description || '').slice(0, 260))}</p><div class="video-actions"><a class="btn-read" href="${escHtml(video.youtube_url)}" target="_blank" rel="noopener">Открыть видео</a><button class="btn-approve" onclick="approveVideo(${video.id})">✓ Опубликовать</button><button class="btn-del" onclick="deleteVideo(${video.id})">✕</button></div></div></article>`).join('');
+}
+async function approveVideo(id) { const r = await fetch(`/videos/${id}/approve`, {method:'POST'}).then(x=>x.json()); if (r.ok) { toast('Видео опубликовано', 'ok'); loadVideos(); } else toast(r.error || 'Ошибка', 'err'); }
+async function deleteVideo(id) { if (!confirm('Удалить video draft?')) return; const r = await fetch(`/videos/${id}`, {method:'DELETE'}).then(x=>x.json()); if (r.ok) { toast('Видео удалено', 'ok'); loadVideos(); } else toast(r.error || 'Ошибка', 'err'); }
 
 // ── Drafts ─────────────────────────────────────────────────────────
 async function loadDrafts() {
