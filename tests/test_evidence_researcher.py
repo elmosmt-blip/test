@@ -38,6 +38,17 @@ def test_uses_only_corroborated_linkedin_official_url(tmp_path, monkeypatch):
     assert urls == ["https://www.dymax.com/news/9310"]
 
 
+def test_expired_event_stays_blocked_even_with_source_text(monkeypatch):
+    researcher = load_module()
+    text = "Kurtz Ersa will exhibit at an expo on July 16, 2026 with HOTFLOW THREE. " * 30
+    monkeypatch.setattr(researcher.source_expander, "fetch_readable_text", lambda url: text)
+    monkeypatch.setattr(researcher.source_expander, "extract_candidate_links", lambda *args, **kwargs: [])
+    monkeypatch.setattr(researcher, "_search_official_pages", lambda *args, **kwargs: [])
+    result = researcher.research_topic({"topic": "Kurtz Ersa at expo", "evidence_status": "event_expired", "sources": [{"url": "https://ersa.com", "role": "fresh_primary"}]})
+    assert result["writer_allowed"] is False
+    assert result["evidence_status"] == "awaiting_post_event_evidence"
+
+
 def test_discards_insufficient_evidence(monkeypatch):
     researcher = load_module()
     monkeypatch.setattr(researcher.source_expander, "fetch_readable_text", lambda url: "Too short")

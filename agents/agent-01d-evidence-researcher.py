@@ -194,7 +194,13 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
         for source in authoritative
     ]
 
-    if len(authoritative) >= 2 and evidence_words >= 1000 and claim_count >= 6:
+    # A pre-event announcement remains stale even if it has plenty of prose.
+    # It may only return through a new post-event signal/coverage item.
+    if topic.get("evidence_status") == "event_expired":
+        route = ""
+        status = "awaiting_post_event_evidence"
+        allowed = False
+    elif len(authoritative) >= 2 and evidence_words >= 1000 and claim_count >= 6:
         route = "review"
         status = "ready_review"
         allowed = True
