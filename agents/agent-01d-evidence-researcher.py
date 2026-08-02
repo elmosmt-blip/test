@@ -20,7 +20,9 @@ from typing import Any
 import requests
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import source_expander
+from src.collectors import pdf_collector
 
 ROOT = Path(__file__).resolve().parent.parent
 LINKEDIN_SIGNALS_FILE = ROOT / "cache" / "linkedin_signals.json"
@@ -88,6 +90,17 @@ def _search_official_pages(topic_text: str, domains: list[str], limit: int = 3) 
     return urls
 
 
+def _evidence_text(url: str) -> tuple[str, str, list[dict[str, Any]]]:
+    """Retrieve page prose or parse an official PDF/TDS into source evidence."""
+    path = urllib.parse.urlparse(url).path.lower()
+    if path.endswith(".pdf"):
+        document = pdf_collector.fetch_and_parse_pdf(url, timeout=20)
+        if document and document.text:
+            return document.text[:12000], "official_pdf", document.key_facts
+        return "", "official_pdf", []
+    return source_expander.fetch_readable_text(url), "retrieved_page", []
+
+
 def _sentences(text: str) -> list[str]:
     return [re.sub(r"\s+", " ", sentence).strip() for sentence in re.split(r"(?<=[.!?])\s+", text or "") if len(sentence.split()) >= 8]
 
@@ -123,10 +136,12 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
         if not canonical or canonical in seen:
             continue
         seen.add(canonical)
-        full_text = source_expander.fetch_readable_text(canonical)
+        full_text, evidence_type, technical_specs = _evidence_text(canonical)
         if full_text:
             source["excerpt"] = full_text
-            source["evidence_type"] = "retrieved_page"
+            source["evidence_type"] = evidence_type
+        if technical_specs:
+            source["technical_specs"] = technical_specs
         source["authoritative"] = _is_authoritative(source)
         source["claim_candidates"] = _claim_candidates(source.get("excerpt", ""))
         researched.append(source)
@@ -139,7 +154,7 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
                 if not linked_url or linked_url in seen:
                     continue
                 seen.add(linked_url)
-                linked_text = source_expander.fetch_readable_text(linked_url)
+                linked_text, evidence_type, technical_specs = _evidence_text(linked_url)
                 if len(linked_text.split()) < 120:
                     continue
                 researched.append({
@@ -148,7 +163,8 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
                     "date": link.get("date", "unknown"),
                     "role": "research_context",
                     "excerpt": linked_text,
-                    "evidence_type": "retrieved_page",
+                    "evidence_type": evidence_type,
+                    "technical_specs": technical_specs,
                     "authoritative": _is_authoritative(link),
                     "claim_candidates": _claim_candidates(linked_text),
                 })
@@ -167,7 +183,7 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
         if not canonical or canonical in seen or len(researched) >= 4:
             continue
         seen.add(canonical)
-        official_text = source_expander.fetch_readable_text(canonical)
+        official_text, evidence_type, technical_specs = _evidence_text(canonical)
         if len(official_text.split()) < 120:
             continue
         researched.append({
@@ -176,7 +192,8 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
             "date": "unknown",
             "role": "official_research",
             "excerpt": official_text,
-            "evidence_type": "official_search",
+            "evidence_type": f"official_search_{evidence_type}",
+            "technical_specs": technical_specs,
             "authoritative": True,
             "claim_candidates": _claim_candidates(official_text),
         })
