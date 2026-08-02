@@ -1866,7 +1866,7 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
                 f"{topic.get('source_notes', '')} Scheduled event date {expired_event} has passed; "
                 "requires post-event coverage before writing."
             ).strip()
-        elif not expanded or evidence_words < 250:
+        elif not expanded or evidence_words < 800:
             topic["writer_allowed"] = False
             topic["evidence_status"] = "needs_research"
             topic["source_notes"] = (

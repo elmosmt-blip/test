@@ -332,7 +332,10 @@ def write_article_with_revision(brief: dict, skip_revision: bool = False) -> dic
     # A sparse primary source must never be expanded just to satisfy a word
     # count or stylistic lint rule. That was the path that reintroduced
     # invented implementation details after a careful evidence-limited draft.
-    repair_issues = [issue for issue in report.issues if issue.code not in {"too_short", "rule_of_three", "missing_headings"}] if brief.get("evidence_limited") else report.issues
+    repair_issues = [
+        issue for issue in report.issues
+        if issue.code not in {"too_short", "rule_of_three", "missing_headings", "no_fact_grounding"}
+    ] if brief.get("evidence_limited") else report.issues
     if repair_issues and _env_bool("WRITER_LINT_REPAIR", "1"):
         try:
             repaired = repair_article(revised, repair_issues, brief)
