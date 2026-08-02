@@ -14,9 +14,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import shutil
 import sys
+from pathlib import Path
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterator
@@ -38,9 +41,10 @@ except ImportError as exc:  # pragma: no cover - deployment dependency
 DATABASE_URL = os.environ.get("NEON_DATABASE_URL", "")
 
 DEFAULT_SEARCH_QUERIES = [
-    "SMT pick and place machine", "AOI inspection system", "BGA soldering rework",
-    "reflow oven SMT", "SMT assembly line tour", "Koh Young AOI", "ASMPT SIPLACE",
-    "Yamaha YRM20", "Fuji NXTR placement", "SMT smart factory",
+    "SMT equipment launch 2026", "SMT placement machine demonstration 2026",
+    "AOI SPI AXI inspection demo 2026", "SMT smart factory MES traceability",
+    "electronics manufacturing factory tour", "reflow soldering process webinar",
+    "SMT trade show product demonstration", "PCB assembly automation video",
 ]
 
 SMT_TERMS = {
@@ -59,11 +63,40 @@ def _env_truthy(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-def configured_queries() -> list[str]:
+def _brief_video_queries(brief_path: str) -> list[str]:
+    """Turn fresh Agent #1 briefs into targeted video discovery queries."""
+    if not brief_path:
+        return []
+    try:
+        topics = json.loads(Path(brief_path).read_text(encoding="utf-8")).get("topics", [])
+    except Exception:
+        return []
+    limit = max(0, int(os.environ.get("YOUTUBE_MAX_DYNAMIC_QUERIES", "8")))
+    queries: list[str] = []
+    for topic in topics:
+        title = re.sub(r"\s+", " ", str(topic.get("topic", ""))).strip()
+        # Full editorial headlines can be too long/noisy for YouTube. Keep
+        # the named subject and first meaningful terms, then bias to video.
+        words = re.findall(r"[A-Za-z0-9][A-Za-z0-9+&.-]*", title)
+        if len(words) < 2:
+            continue
+        query = " ".join(words[:12]) + " video"
+        if query.lower() not in {item.lower() for item in queries}:
+            queries.append(query)
+        if len(queries) >= limit:
+            break
+    return queries
+
+
+def configured_queries(brief_path: str = "") -> list[str]:
     raw = os.environ.get("YOUTUBE_SEARCH_QUERIES", "").strip()
-    if raw:
-        return [query.strip() for query in raw.split(";") if query.strip()]
-    return DEFAULT_SEARCH_QUERIES
+    base = [query.strip() for query in raw.split(";") if query.strip()] if raw else DEFAULT_SEARCH_QUERIES
+    dynamic = _brief_video_queries(brief_path)
+    deduped: list[str] = []
+    for query in [*dynamic, *base]:
+        if query.lower() not in {item.lower() for item in deduped}:
+            deduped.append(query)
+    return deduped
 
 
 class _ScoutYDLLogger:
@@ -267,14 +300,18 @@ def main() -> int:
     parser.add_argument("action", choices=["preview", "scan", "list", "approve", "delete", "cleanup"])
     parser.add_argument("--days", type=int, default=int(os.environ.get("YOUTUBE_LOOKBACK_DAYS", "60")))
     parser.add_argument("--limit", type=int, default=5)
+    parser.add_argument("--brief", default=os.environ.get("YOUTUBE_BRIEF_PATH", ""), help="briefs.json from Agent #1 for dynamic video queries")
     parser.add_argument("--id", type=int)
     args = parser.parse_args()
 
     if args.action in {"preview", "scan"}:
         _SEARCH_FAILURES.clear()
-        queries = configured_queries()
+        queries = configured_queries(args.brief)
+        dynamic_count = len(_brief_video_queries(args.brief))
         _, runtime = _youtube_ydl_options()
         print(f"\n🎯 YouTube Scout — {len(queries)} запросов, свежесть {args.days} дней")
+        if dynamic_count:
+            print(f"   Динамических запросов из свежего editorial plan: {dynamic_count}")
         print(f"   JS runtime: {runtime}" if runtime else "   JS runtime не найден: тихий metadata-only поиск")
         candidates: dict[str, dict[str, Any]] = {}
         for query in queries:

@@ -28,6 +28,18 @@ def test_relevance_prefers_official_smt_channel():
     assert scout._channel_type("Fuji Corporation") == "official_vendor"
 
 
+def test_adds_dynamic_queries_from_editorial_brief(tmp_path):
+    scout = _load_scout()
+    brief = tmp_path / "briefs.json"
+    brief.write_text('{"topics":[{"topic":"Dymax 9310 Adhesive Launch"},{"topic":"IPC-A-630A Released"}]}', encoding="utf-8")
+
+    queries = scout.configured_queries(str(brief))
+
+    assert queries[0] == "Dymax 9310 Adhesive Launch video"
+    assert queries[1] == "IPC-A-630A Released video"
+    assert "Yamaha YRM20" not in queries
+
+
 def test_video_date_accepts_timestamp():
     scout = _load_scout()
     date = scout._video_date({"timestamp": 1785504000})

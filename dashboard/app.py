@@ -78,7 +78,7 @@ AGENT_CMDS = {
     "6": [PYTHON_CMD, str(AGENTS_DIR / "agent-06-publisher.py"),
           "submit", "--meta", str(META_FILE)],
     "7": [PYTHON_CMD, str(AGENTS_DIR / "agent-07-youtube-scout.py"),
-          "scan", "--days", os.environ.get("YOUTUBE_LOOKBACK_DAYS", "60")],
+          "scan", "--days", os.environ.get("YOUTUBE_LOOKBACK_DAYS", "60"), "--brief", str(BRIEFS_FILE)],
 }
 
 
