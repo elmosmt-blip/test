@@ -13,11 +13,20 @@ Usage:
 """
 from __future__ import annotations
 
+import sys
+# Windows console can default to cp1251; logs contain UTF-8 arrows/symbols.
+for _name in ("stdout", "stderr"):
+    _stream = getattr(sys, _name, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 import argparse
 import json
 import os
 import re
-import sys
 import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path

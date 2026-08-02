@@ -313,7 +313,7 @@ if os.path.exists(_TH_PROMPT_FILE):
     with open(_TH_PROMPT_FILE, encoding="utf-8") as _f:
         SYSTEM_PROMPT = _f.read()
 else:
-    SYSTEM_PROMPT = """Ты — редакционный аналитик SMTInsider. Выбери 1-3 темы из сигналов.
+    SYSTEM_PROMPT = """Ты — редакционный аналитик SMTInsider. Выбери столько source-backed тем из сигналов, сколько разрешено в запросе; не ограничивайся тремя.
 Ответь СТРОГО в формате JSON: {"topics": [{"topic":"...","angle":"...","format":"news","editorial_type":"news","target_section":"/news/","keywords":[],"category":"SMT Equipment","urgency":"MEDIUM","source_count":1,"source_notes":"","key_facts":[],"sources":[]}]}
 """
 
