@@ -1593,7 +1593,7 @@ async function loadBriefs() {
         <span class="badge badge-gray">${escHtml(t.editorial_type || t.format || '')}</span>
         <span class="badge badge-gray">${escHtml(t.category || '')}</span>
         <span class="badge badge-gray">${t.source_count || t.sources?.length || 0} источн.</span>
-        <span class="badge ${t.writer_allowed === false ? 'badge-high' : 'badge-low'}">${t.writer_allowed === false ? 'needs research' : `${t.evidence_word_count || '?'} evidence words`}</span>
+        <span class="badge ${t.writer_allowed === false ? 'badge-high' : 'badge-low'}">${t.writer_allowed === false ? (t.evidence_status === 'event_expired' ? 'event passed' : 'needs research') : `${t.evidence_word_count || '?'} evidence words`}</span>
         ${t.target_section ? `<span class="badge badge-gray">${escHtml(t.target_section)}</span>` : ''}
       </div>
       ${t.angle ? `<div class="brief-angle">${escHtml(t.angle)}</div>` : ''}

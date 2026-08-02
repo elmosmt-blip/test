@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -94,6 +95,12 @@ class TestDuckDuckGoSearch:
         assert calls[0][1]["params"]["q"] == "SMT AOI"
         assert results[0]["title"] == "SMT launch"
         assert results[0]["source"] == "https://example.com/news"
+
+
+def test_expired_pre_event_announcement_is_detected(agent01):
+    now = datetime(2026, 8, 2, tzinfo=timezone.utc)
+    text = "Kurtz Ersa will exhibit at the SMTA Querétaro Expo & Tech Forum on July 16, 2026."
+    assert agent01._expired_future_event(text, now) == "2026-07-16"
 
 
 class TestFindCorroboratingSources:

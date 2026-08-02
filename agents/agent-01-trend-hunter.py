@@ -1728,6 +1728,24 @@ def canonical_url_local(url: str) -> str:
         return (url or "").strip()
 
 
+def _expired_future_event(text: str, now: datetime) -> Optional[str]:
+    """Reject pre-event announcements once their scheduled event is past."""
+    low = (text or "").lower()
+    if not any(phrase in low for phrase in ("will exhibit", "will demonstrate", "will show", "taking place", "expo", "tech forum")):
+        return None
+    month_map = {name: index for index, name in enumerate(
+        ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"), 1
+    )}
+    for match in re.finditer(r"\b(" + "|".join(month_map) + r")\s+(\d{1,2})(?:st|nd|rd|th)?[,]?\s+(20\d{2})\b", low):
+        try:
+            event_date = datetime(int(match.group(3)), month_map[match.group(1)], int(match.group(2)), tzinfo=now.tzinfo)
+            if event_date.date() < now.date():
+                return event_date.date().isoformat()
+        except ValueError:
+            continue
+    return None
+
+
 def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: int) -> dict:
     if not signals:
         return {"topics": []}
@@ -1839,7 +1857,16 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         # an article. Topics with insufficient source prose remain visible for
         # research, but Writer is explicitly blocked until evidence is added.
         topic["evidence_word_count"] = evidence_words
-        if not expanded or evidence_words < 250:
+        event_context = " ".join([str(topic.get("topic", "")), str(topic.get("angle", ""))] + [str(src.get("excerpt", "")) for src in expanded])
+        expired_event = _expired_future_event(event_context, now_local())
+        if expired_event:
+            topic["writer_allowed"] = False
+            topic["evidence_status"] = "event_expired"
+            topic["source_notes"] = (
+                f"{topic.get('source_notes', '')} Scheduled event date {expired_event} has passed; "
+                "requires post-event coverage before writing."
+            ).strip()
+        elif not expanded or evidence_words < 250:
             topic["writer_allowed"] = False
             topic["evidence_status"] = "needs_research"
             topic["source_notes"] = (
