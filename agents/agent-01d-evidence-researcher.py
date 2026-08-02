@@ -62,11 +62,13 @@ def _official_domains(topic_text: str) -> list[str]:
     return [domain for name, domain in OFFICIAL_DOMAINS.items() if name in low]
 
 
-def _search_official_pages(topic_text: str, domains: list[str], limit: int = 3) -> list[str]:
+def _search_official_pages(topic_text: str, domains: list[str], limit: int = 3, suffix: str = "") -> list[str]:
     """Find official pages through public search, without LLM-generated URLs."""
     if not domains:
         return []
     title_terms = " ".join(re.findall(r"[A-Za-z0-9][A-Za-z0-9+&.-]*", topic_text)[:12])
+    if suffix:
+        title_terms = f"{title_terms} {suffix}"
     urls: list[str] = []
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
     for domain in domains:
@@ -88,6 +90,11 @@ def _search_official_pages(topic_text: str, domains: list[str], limit: int = 3) 
         except Exception:
             continue
     return urls
+
+
+def _is_post_event_coverage(text: str) -> bool:
+    low = (text or "").lower()
+    return any(marker in low for marker in ("event recap", "event results", "concluded", "highlights from", "showcased at", "demonstrated at"))
 
 
 def _evidence_text(url: str) -> tuple[str, str, list[dict[str, Any]]]:
@@ -174,10 +181,16 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
     # If primary coverage is a trade-media release, automatically search the
     # matching vendor's official domain for a product page, TDS or newsroom
     # entry. This is a research retry, not a manual task for the operator.
+    domains = _official_domains(topic_text)
     research_urls = [
-        *_search_official_pages(topic_text, _official_domains(topic_text)),
+        *_search_official_pages(topic_text, domains),
         *_linkedin_official_urls(topic_text),
     ]
+    if topic.get("evidence_status") == "event_expired":
+        # A stale pre-event announcement can only be revived by an explicit
+        # post-event recap/result, never by rediscovering the same announcement.
+        research_urls.extend(_search_official_pages(topic_text, domains, suffix="recap results highlights"))
+    post_event_found = False
     for official_url in research_urls:
         canonical = source_expander.canonical_url(official_url)
         if not canonical or canonical in seen or len(researched) >= 4:
@@ -186,6 +199,8 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
         official_text, evidence_type, technical_specs = _evidence_text(canonical)
         if len(official_text.split()) < 120:
             continue
+        if _is_post_event_coverage(official_text):
+            post_event_found = True
         researched.append({
             "title": canonical,
             "url": canonical,
@@ -213,7 +228,7 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
 
     # A pre-event announcement remains stale even if it has plenty of prose.
     # It may only return through a new post-event signal/coverage item.
-    if topic.get("evidence_status") == "event_expired":
+    if topic.get("evidence_status") == "event_expired" and not post_event_found:
         route = ""
         status = "awaiting_post_event_evidence"
         allowed = False
