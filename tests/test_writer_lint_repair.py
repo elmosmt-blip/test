@@ -102,6 +102,17 @@ def test_sparse_single_source_is_downgraded_to_source_bounded_news(writer):
     assert "РЕЖИМ ОГРАНИЧЕННЫХ ДОКАЗАТЕЛЬСТВ" in writer.build_writer_user_prompt(prepared)
 
 
+def test_writer_prompt_includes_literal_evidence_ledger(writer):
+    prompt = writer.build_writer_user_prompt({
+        "topic": "IPC-A-630A", "evidence_ledger": [{
+            "source_url": "https://example.com/ipc",
+            "claims": ["IPC-A-630A introduces class-coded acceptance criteria."],
+        }],
+    })
+    assert "РАЗРЕШЁННЫЙ CLAIM LEDGER" in prompt
+    assert "IPC-A-630A introduces class-coded acceptance criteria." in prompt
+
+
 class TestRepairArticle:
     def test_builds_prompt_with_issues_and_calls_ask_json(self, writer, monkeypatch):
         captured = {}

@@ -137,6 +137,23 @@ def build_writer_user_prompt(brief: dict) -> str:
         parts.append(f"\nКОНКРЕТНЫЕ ФАКТЫ (используй точно, не перефразируй цифры):\n{facts}")
     if brief.get("source_notes"):
         parts.append(f"\nЧТО ПОДТВЕРЖДАЮТ ИСТОЧНИКИ: {brief['source_notes']}")
+    ledger = brief.get("evidence_ledger", []) or []
+    if ledger:
+        ledger_blocks = []
+        for entry in ledger:
+            claims = [str(claim) for claim in entry.get("claims", []) if str(claim).strip()]
+            if claims:
+                ledger_blocks.append(
+                    f"SOURCE: {entry.get('source_url', '')}\n" + "\n".join(f"  ✓ {claim}" for claim in claims)
+                )
+        if ledger_blocks:
+            parts.append(
+                "\nРАЗРЕШЁННЫЙ CLAIM LEDGER — КРИТИЧЕСКОЕ ПРАВИЛО:\n"
+                "Каждое фактическое утверждение, цифра, дата, спецификация, comparison или historical claim "
+                "в статье должно быть перефразировкой одного из пунктов ниже. Если claim отсутствует в ledger, "
+                "не пиши его. Не выводи отрицательные claims вида «source does not disclose X», если это не "
+                "явно сказано в source.\n\n" + "\n\n".join(ledger_blocks)
+            )
     editorial = brief.get("editorial_type") or brief.get("format", "")
     if editorial:
         parts.append(f"\nФОРМАТ СТАТЬИ: {editorial}")
@@ -387,7 +404,10 @@ def main():
 
     brief = prepare_brief_for_evidence(brief)
     if brief.get("writer_allowed") is False:
-        print("❌ Writer заблокирован: недостаточно source evidence. Расширьте источники или примите материал через Human Review.")
+        print("❌ Writer заблокирован: недостаточно source evidence. Автоматический Evidence Research должен найти дополнительные источники.")
+        sys.exit(2)
+    if brief.get("evidence_status", "").startswith("ready_") and not brief.get("evidence_ledger"):
+        print("❌ Writer заблокирован: ready topic не содержит evidence ledger.")
         sys.exit(2)
     skip_revision = args.no_revision or os.environ.get("WRITER_SKIP_REVISION", "").lower() in {"1", "true", "yes"}
 
