@@ -1835,6 +1835,20 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         topic["expanded_sources"] = expanded
         topic["source_count"] = len(expanded)
         evidence_words = sum(len(str(src.get("excerpt", "")).split()) for src in expanded)
+        # Do not send an LLM a title plus a short snippet and call the result
+        # an article. Topics with insufficient source prose remain visible for
+        # research, but Writer is explicitly blocked until evidence is added.
+        topic["evidence_word_count"] = evidence_words
+        if not expanded or evidence_words < 250:
+            topic["writer_allowed"] = False
+            topic["evidence_status"] = "needs_research"
+            topic["source_notes"] = (
+                f"{topic.get('source_notes', '')} Evidence insufficient for auto-writing "
+                f"({len(expanded)} source(s), {evidence_words} source words)."
+            ).strip()
+        else:
+            topic["writer_allowed"] = True
+            topic["evidence_status"] = "ready"
         # A fresh announcement with one short source is news, not a buyer
         # guide/review. Make the routing truthful before it reaches the UI and
         # Writer instead of asking a model to stretch sparse evidence.

@@ -616,6 +616,8 @@ async def select_briefs(req: Request):
     topics = payload.get("topics", [])
     if any(index < 0 or index >= len(topics) for index in indices):
         return JSONResponse({"error": "Выбранная тема больше не существует"}, status_code=400)
+    if any(topics[index].get("writer_allowed") is False for index in indices):
+        return JSONResponse({"error": "Одна или несколько тем требуют расширения source evidence"}, status_code=400)
     payload["selected_topic_indices"] = indices
     BRIEFS_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     # The single Writer play button must honour a single selected card, not
@@ -1591,6 +1593,7 @@ async function loadBriefs() {
         <span class="badge badge-gray">${escHtml(t.editorial_type || t.format || '')}</span>
         <span class="badge badge-gray">${escHtml(t.category || '')}</span>
         <span class="badge badge-gray">${t.source_count || t.sources?.length || 0} источн.</span>
+        <span class="badge ${t.writer_allowed === false ? 'badge-high' : 'badge-low'}">${t.writer_allowed === false ? 'needs research' : `${t.evidence_word_count || '?'} evidence words`}</span>
         ${t.target_section ? `<span class="badge badge-gray">${escHtml(t.target_section)}</span>` : ''}
       </div>
       ${t.angle ? `<div class="brief-angle">${escHtml(t.angle)}</div>` : ''}
@@ -1603,8 +1606,8 @@ async function loadBriefs() {
         <button class="delete-topic-btn" onclick="deleteTopic(${i})" title="Удалить тему до запуска Writer">
           ✕ Удалить
         </button>
-        <button class="select-topic-btn ${isCurrentPriority ? 'active' : ''}" onclick="toggleTopic(${i})">
-          ${isCurrentPriority ? '✓ Выбрана' : '＋ Выбрать'}
+        <button class="select-topic-btn ${isCurrentPriority ? 'active' : ''}" onclick="toggleTopic(${i})" ${t.writer_allowed === false ? 'disabled title="Нужно расширить source evidence"' : ''}>
+          ${t.writer_allowed === false ? 'Нужно research' : (isCurrentPriority ? '✓ Выбрана' : '＋ Выбрать')}
         </button>
       </div>
     </div>`;

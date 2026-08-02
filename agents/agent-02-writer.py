@@ -329,9 +329,13 @@ def write_article_with_revision(brief: dict, skip_revision: bool = False) -> dic
     else:
         print(f"  🔍 Линтер: score={report.score}/100, проблем не найдено")
 
-    if report.issues and _env_bool("WRITER_LINT_REPAIR", "1"):
+    # A sparse primary source must never be expanded just to satisfy a word
+    # count or stylistic lint rule. That was the path that reintroduced
+    # invented implementation details after a careful evidence-limited draft.
+    repair_issues = [issue for issue in report.issues if issue.code not in {"too_short", "rule_of_three", "missing_headings"}] if brief.get("evidence_limited") else report.issues
+    if repair_issues and _env_bool("WRITER_LINT_REPAIR", "1"):
         try:
-            repaired = repair_article(revised, report.issues, brief)
+            repaired = repair_article(revised, repair_issues, brief)
         except llm_client.LLMError as e:
             print(f"  ⚠ Repair pass failed ({e}), keeping pre-repair version.")
             return revised
@@ -379,6 +383,9 @@ def main():
                   "keywords": [], "category": "SMT Equipment"}
 
     brief = prepare_brief_for_evidence(brief)
+    if brief.get("writer_allowed") is False:
+        print("❌ Writer заблокирован: недостаточно source evidence. Расширьте источники или примите материал через Human Review.")
+        sys.exit(2)
     skip_revision = args.no_revision or os.environ.get("WRITER_SKIP_REVISION", "").lower() in {"1", "true", "yes"}
 
     print(f"\n✍️ Agent #2 — Writer")
