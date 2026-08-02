@@ -63,6 +63,16 @@ def test_ready_research_brief_without_ledger_is_rejected_without_llm(monkeypatch
     assert result["unsupported_claims"][0]["severity"] == "blocking"
 
 
+def test_deterministic_ledger_audit_rejects_invented_date_and_number():
+    checker = _load_quality_checker()
+    violations = checker._ledger_numeric_violations(
+        "The standard adds 47 photos and takes effect January 1, 2027.",
+        [{"claims": ["The standard was released on July 29, 2026."]}],
+    )
+    assert violations
+    assert all(violation["severity"] == "blocking" for violation in violations)
+
+
 def test_missing_factual_verdict_fails_closed():
     checker = _load_quality_checker()
     verdict = checker.assess_quality_verdict({"score": 100, "approved": True}, threshold=75)

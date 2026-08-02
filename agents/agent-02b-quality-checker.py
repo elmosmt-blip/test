@@ -71,7 +71,41 @@ SUMMARY: {summary}
 {json.dumps(brief, ensure_ascii=False, indent=2)}
 
 Оцени строго. Если нашёл воду, клише или несоответствие брифу — исправь."""
-    return llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=4000, temperature=0.4)
+    result = llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=4000, temperature=0.4)
+    ledger_violations = _ledger_numeric_violations(body, brief.get("evidence_ledger", []) or [])
+    if ledger_violations:
+        result["unsupported_claims"] = [*(result.get("unsupported_claims", []) or []), *ledger_violations]
+        result["factual_verdict"] = "reject"
+        result["approved"] = False
+        result["issues"] = [*(result.get("issues", []) or []), "Deterministic evidence-ledger audit found unsupported numeric/date claims"]
+    return result
+
+
+def _ledger_numeric_violations(body: str, ledger: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Deterministic backstop for invented numbers/dates in researched drafts."""
+    claims = [str(claim) for item in ledger for claim in item.get("claims", [])]
+    if not claims:
+        return []
+    claim_numbers = [(claim, set(re.findall(r"\b\d+(?:[.,]\d+)?\b", claim))) for claim in claims]
+    violations: list[dict[str, str]] = []
+    for sentence in re.split(r"(?<=[.!?])\s+", body or ""):
+        numbers = set(re.findall(r"\b\d+(?:[.,]\d+)?\b", sentence))
+        if not numbers:
+            continue
+        words = set(re.findall(r"[a-z]{3,}", sentence.lower()))
+        supported = False
+        for claim, claim_nums in claim_numbers:
+            claim_words = set(re.findall(r"[a-z]{3,}", claim.lower()))
+            if numbers <= claim_nums and len(words & claim_words) >= 2:
+                supported = True
+                break
+        if not supported:
+            violations.append({
+                "claim": sentence[:400],
+                "reason": "Numeric/date claim does not match any literal evidence-ledger claim",
+                "severity": "blocking",
+            })
+    return violations
 
 
 def assess_quality_verdict(result: dict, threshold: int) -> dict:
