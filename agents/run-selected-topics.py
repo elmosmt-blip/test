@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -45,6 +46,10 @@ def main() -> int:
             [sys.executable, str(agents / "agent-03-seo-doctor.py"), "--meta", str(meta_path)],
             [sys.executable, str(agents / "agent-04-distributor.py"), "--meta", str(meta_path)],
         ]
+        if os.environ.get("NEON_DATABASE_URL") and os.environ.get("ALLOW_DB_WRITES", "").lower() in {"1", "true", "yes", "on"}:
+            # Publisher creates an unpublished draft. Human approval remains
+            # the only action that makes it public.
+            commands.append([sys.executable, str(agents / "agent-06-publisher.py"), "submit", "--meta", str(meta_path)])
         for command in commands:
             result = subprocess.run(command)
             if result.returncode:
@@ -53,7 +58,9 @@ def main() -> int:
                 break
         else:
             print(f"✅ Тема #{index} завершена и готова к ручному review/publish", flush=True)
-    return 1 if failures else 0
+    if failures:
+        print(f"⚠ Завершено с {failures} остановленными темами; остальные drafts доступны для review.", flush=True)
+    return 0
 
 
 if __name__ == "__main__":

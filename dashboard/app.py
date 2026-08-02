@@ -70,6 +70,8 @@ AGENT_CMDS = {
     "1d": [PYTHON_CMD, str(AGENTS_DIR / "agent-01d-evidence-researcher.py"), "--brief", str(BRIEFS_FILE), "--output", str(BRIEFS_FILE)],
     "2": [PYTHON_CMD, str(AGENTS_DIR / "agent-02-writer.py"),
           "--brief", str(BRIEFS_FILE), "--output", str(ARTICLE_FILE)],
+    "2all": [PYTHON_CMD, str(AGENTS_DIR / "run-selected-topics.py"),
+             "--brief", str(BRIEFS_FILE), "--output-dir", str(_TMP / "smtinsider_selected_articles")],
     "2b": [PYTHON_CMD, str(AGENTS_DIR / "agent-02b-quality-checker.py"),
            "--meta", str(META_FILE), "--threshold", os.environ.get("QUALITY_THRESHOLD", "75")],
     "3": [PYTHON_CMD, str(AGENTS_DIR / "agent-03-seo-doctor.py"),
@@ -101,10 +103,11 @@ async def _run_agent(agent_id: str, run_id: str, extra_args: list = None) -> int
     q = _runs[run_id]
     cmd = AGENT_CMDS[agent_id] + (extra_args or [])
     env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+    display_agent_id = "2" if agent_id == "2all" else agent_id
 
-    _send(q, "log", {"agent": agent_id, "line": f"▶ {' '.join(cmd)}"})
-    _agent_status[agent_id] = "running"
-    _send(q, "status", {"agent": agent_id, "state": "running"})
+    _send(q, "log", {"agent": display_agent_id, "line": f"▶ {' '.join(cmd)}"})
+    _agent_status[display_agent_id] = "running"
+    _send(q, "status", {"agent": display_agent_id, "state": "running"})
 
     proc = await asyncio.create_subprocess_exec(
         *cmd,
@@ -120,14 +123,14 @@ async def _run_agent(agent_id: str, run_id: str, extra_args: list = None) -> int
             if not line:
                 break
             text = line.decode("utf-8", errors="replace").rstrip()
-            _send(q, "log", {"agent": agent_id, "line": text})
+            _send(q, "log", {"agent": display_agent_id, "line": text})
 
     await read_stdout()
     await proc.wait()
 
     state = "done" if proc.returncode == 0 else "error"
-    _agent_status[agent_id] = state
-    _send(q, "status", {"agent": agent_id, "state": state, "code": proc.returncode})
+    _agent_status[display_agent_id] = state
+    _send(q, "status", {"agent": display_agent_id, "state": state, "code": proc.returncode})
     return proc.returncode
 
 
@@ -138,34 +141,45 @@ async def _run_pipeline(run_id: str):
     q = _runs[run_id]
     _send(q, "pipeline", {"state": "running"})
 
-    steps = ["1", "1c", "1d", "2", "2b", "3", "4", "5"]
-    if os.environ.get("NEON_DATABASE_URL") and _env_truthy("ALLOW_DB_WRITES"):
-        steps += ["6", "7"]
-    else:
-        reason = "NEON_DATABASE_URL не задан" if not os.environ.get("NEON_DATABASE_URL") else "ALLOW_DB_WRITES=0 — запись в БД заблокирована"
-        _send(q, "log", {"agent": "0",
-              "line": f"⚠ Шаги 6, 7 пропущены: {reason}"})
-
-    for agent_id in steps:
+    # Discovery/research happens first. No topic is written until #1d has
+    # created source-backed evidence ledgers.
+    for agent_id in ["1", "1c", "1d"]:
         code = await _run_agent(agent_id, run_id)
-        if agent_id == "1d" and code == 0:
-            try:
-                remaining = json.loads(BRIEFS_FILE.read_text("utf-8")).get("topics", []) if BRIEFS_FILE.exists() else []
-            except Exception:
-                remaining = []
-            if not remaining:
-                _pipeline_status = "done"
-                _send(q, "log", {"agent": "1d", "line": "ℹ Evidence Research не нашёл тем с достаточными источниками; Writer не запускался."})
-                _send(q, "pipeline", {"state": "done"})
-                _send(q, "done", {})
-                return
         if code != 0:
-            _send(q, "log", {"agent": agent_id,
-                  "line": f"✖ Агент #{agent_id} завершился с ошибкой (код {code}). Пайплайн остановлен."})
+            _send(q, "log", {"agent": agent_id, "line": f"✖ Агент #{agent_id} завершился с ошибкой (код {code}). Пайплайн остановлен."})
             _pipeline_status = "error"
             _send(q, "pipeline", {"state": "error"})
             _send(q, "done", {})
             return
+
+    try:
+        remaining = json.loads(BRIEFS_FILE.read_text("utf-8")).get("topics", []) if BRIEFS_FILE.exists() else []
+    except Exception:
+        remaining = []
+    if not remaining:
+        _pipeline_status = "done"
+        _send(q, "log", {"agent": "1d", "line": "ℹ Evidence Research не нашёл тем с достаточными источниками; drafts не создавались."})
+        _send(q, "pipeline", {"state": "done"})
+        _send(q, "done", {})
+        return
+
+    indices = ",".join(str(index) for index in range(len(remaining)))
+    _send(q, "log", {"agent": "2", "line": f"▶ Автоматически запускаю полный цикл для {len(remaining)} source-backed тем."})
+    code = await _run_agent("2all", run_id, ["--indices", indices])
+    if code != 0:
+        _pipeline_status = "error"
+        _send(q, "pipeline", {"state": "error"})
+        _send(q, "done", {})
+        return
+
+    # Analyst is informational; publication remains a human action even when
+    # #2all has created DB drafts.
+    await _run_agent("5", run_id)
+    if os.environ.get("NEON_DATABASE_URL") and _env_truthy("ALLOW_DB_WRITES"):
+        await _run_agent("7", run_id)
+    else:
+        reason = "NEON_DATABASE_URL не задан" if not os.environ.get("NEON_DATABASE_URL") else "ALLOW_DB_WRITES=0 — запись в БД заблокирована"
+        _send(q, "log", {"agent": "0", "line": f"⚠ Video Scout пропущен: {reason}"})
 
     _pipeline_status = "done"
     _send(q, "pipeline", {"state": "done"})
