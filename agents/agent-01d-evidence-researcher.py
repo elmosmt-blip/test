@@ -12,12 +12,56 @@ import json
 import os
 import re
 import sys
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import requests
+
 sys.path.insert(0, os.path.dirname(__file__))
 import source_expander
+
+OFFICIAL_DOMAINS = {
+    "fuji": "fuji.co.jp", "koh young": "kohyoung.com", "asmpt": "asmpt.com",
+    "yamaha": "yamaha-motor.com", "saki": "sakicorp.com", "tri": "tri.com.tw",
+    "vitrox": "vitrox.com", "mirtec": "mirtec.com", "mycronic": "mycronic.com",
+    "nordson": "nordson.com", "dymax": "dymax.com", "kurtz ersa": "ersa.com",
+    "heller": "hellerindustries.com", "rehm": "rehm-group.com", "ipc": "ipc.org",
+}
+
+
+def _official_domains(topic_text: str) -> list[str]:
+    low = topic_text.lower()
+    return [domain for name, domain in OFFICIAL_DOMAINS.items() if name in low]
+
+
+def _search_official_pages(topic_text: str, domains: list[str], limit: int = 3) -> list[str]:
+    """Find official pages through public search, without LLM-generated URLs."""
+    if not domains:
+        return []
+    title_terms = " ".join(re.findall(r"[A-Za-z0-9][A-Za-z0-9+&.-]*", topic_text)[:12])
+    urls: list[str] = []
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
+    for domain in domains:
+        try:
+            response = requests.get("https://html.duckduckgo.com/html/", params={"q": f"site:{domain} {title_terms}"}, headers=headers, timeout=12)
+            response.raise_for_status()
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.text, "html.parser")
+            for anchor in soup.select("a.result__a"):
+                href = anchor.get("href", "")
+                parsed = urllib.parse.urlparse(href)
+                redirect = urllib.parse.parse_qs(parsed.query).get("uddg", [])
+                url = redirect[0] if redirect else href
+                host = urllib.parse.urlparse(url).netloc.lower().replace("www.", "")
+                if host.endswith(domain) and url not in urls:
+                    urls.append(url)
+                if len(urls) >= limit:
+                    return urls
+        except Exception:
+            continue
+    return urls
 
 
 def _sentences(text: str) -> list[str]:
@@ -86,6 +130,28 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
                 })
                 if len(researched) >= 4:
                     break
+
+    # If primary coverage is a trade-media release, automatically search the
+    # matching vendor's official domain for a product page, TDS or newsroom
+    # entry. This is a research retry, not a manual task for the operator.
+    for official_url in _search_official_pages(topic_text, _official_domains(topic_text)):
+        canonical = source_expander.canonical_url(official_url)
+        if not canonical or canonical in seen or len(researched) >= 4:
+            continue
+        seen.add(canonical)
+        official_text = source_expander.fetch_readable_text(canonical)
+        if len(official_text.split()) < 120:
+            continue
+        researched.append({
+            "title": canonical,
+            "url": canonical,
+            "date": "unknown",
+            "role": "official_research",
+            "excerpt": official_text,
+            "evidence_type": "official_search",
+            "authoritative": True,
+            "claim_candidates": _claim_candidates(official_text),
+        })
 
     evidence_words = sum(len(str(source.get("excerpt", "")).split()) for source in researched)
     authoritative = [source for source in researched if source.get("authoritative") and len(str(source.get("excerpt", "")).split()) >= 120]
