@@ -55,6 +55,14 @@ def test_blocking_unsupported_claim_overrides_high_score():
     assert verdict["status"] == "blocked"
 
 
+def test_ready_research_brief_without_ledger_is_rejected_without_llm(monkeypatch):
+    checker = _load_quality_checker()
+    monkeypatch.setattr(checker.llm_client, "ask_json", lambda **kwargs: (_ for _ in ()).throw(AssertionError("LLM must not run")))
+    result = checker.check_article("Title", "Body", {"evidence_status": "ready_news"})
+    assert result["factual_verdict"] == "reject"
+    assert result["unsupported_claims"][0]["severity"] == "blocking"
+
+
 def test_missing_factual_verdict_fails_closed():
     checker = _load_quality_checker()
     verdict = checker.assess_quality_verdict({"score": 100, "approved": True}, threshold=75)

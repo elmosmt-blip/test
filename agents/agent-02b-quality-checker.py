@@ -42,6 +42,22 @@ else:
 
 
 def check_article(title: str, body: str, brief: dict, summary: str = "") -> dict:
+    # Research-routed briefs are never allowed to bypass their evidence ledger.
+    # This is deterministic and prevents a provider/model formatting issue from
+    # accidentally approving a source-less article.
+    if brief.get("evidence_status", "").startswith("ready_") and not brief.get("evidence_ledger"):
+        return {
+            "score": 0,
+            "approved": False,
+            "factual_verdict": "reject",
+            "issues": ["Research-routed brief has no evidence ledger"],
+            "unsupported_claims": [{
+                "claim": "Entire article",
+                "reason": "No evidence ledger was supplied with a ready research brief",
+                "severity": "blocking",
+            }],
+            "missing_evidence": ["evidence_ledger"],
+        }
     user_prompt = f"""Проверь эту статью для SMTInsider:
 
 ЗАГОЛОВОК: {title}
