@@ -45,28 +45,28 @@ styles = getSampleStyleSheet()
 def ps(name, **kw):
     return ParagraphStyle(name, **kw)
 
-BODY = ps("BodyRU", fontName="DejaVu", fontSize=9.2, leading=14, textColor=INK,
-          spaceAfter=6, allowWidows=0, allowOrphans=0)
-SMALL = ps("Small", parent=BODY, fontSize=7.7, leading=11, textColor=MUTED)
-H1 = ps("H1RU", fontName="DejaVu-Bold", fontSize=18, leading=22, textColor=NAVY,
+BODY = ps("BodyRU", fontName="DejaVu", fontSize=10.2, leading=15.2, textColor=INK,
+          spaceAfter=6.5, allowWidows=0, allowOrphans=0)
+SMALL = ps("Small", parent=BODY, fontSize=8.5, leading=12.2, textColor=MUTED)
+H1 = ps("H1RU", fontName="DejaVu-Bold", fontSize=19.5, leading=24, textColor=NAVY,
         spaceBefore=8, spaceAfter=11, keepWithNext=True)
-H2 = ps("H2RU", fontName="DejaVu-Bold", fontSize=12.5, leading=16, textColor=BLUE,
+H2 = ps("H2RU", fontName="DejaVu-Bold", fontSize=13.5, leading=17, textColor=BLUE,
         spaceBefore=11, spaceAfter=7, keepWithNext=True)
-H3 = ps("H3RU", fontName="DejaVu-Bold", fontSize=10.2, leading=14, textColor=NAVY,
+H3 = ps("H3RU", fontName="DejaVu-Bold", fontSize=11.2, leading=15, textColor=NAVY,
         spaceBefore=8, spaceAfter=5, keepWithNext=True)
 BULLET = ps("BulletRU", parent=BODY, leftIndent=12, firstLineIndent=-8, bulletIndent=2,
             spaceAfter=3)
 CHECK = ps("CheckRU", parent=BODY, leftIndent=14, firstLineIndent=-10, bulletIndent=2,
            spaceAfter=4)
-CODE = ps("CodeRU", fontName="DejaVu-Mono", fontSize=7.4, leading=10.8,
+CODE = ps("CodeRU", fontName="DejaVu-Mono", fontSize=8.2, leading=12.0,
           textColor=WHITE, leftIndent=0, rightIndent=0,
           spaceBefore=0, spaceAfter=0)
 CAPTION = ps("Caption", fontName="DejaVu", fontSize=7.4, leading=10, textColor=MUTED,
              alignment=TA_CENTER, spaceAfter=8)
 CALLOUT = ps("Callout", parent=BODY, fontSize=8.5, leading=13, textColor=NAVY)
-TOC_H = ps("TOCH", fontName="DejaVu-Bold", fontSize=10, leading=14, leftIndent=0,
-           firstLineIndent=0, textColor=NAVY, spaceBefore=4)
-TOC_S = ps("TOCS", fontName="DejaVu", fontSize=8.5, leading=12, leftIndent=15,
+TOC_H = ps("TOCH", fontName="DejaVu-Bold", fontSize=8.7, leading=10.5, leftIndent=0,
+           firstLineIndent=0, textColor=NAVY, spaceBefore=1.5)
+TOC_S = ps("TOCS", fontName="DejaVu", fontSize=7.4, leading=9.0, leftIndent=12,
            firstLineIndent=0, textColor=INK)
 
 
@@ -83,7 +83,7 @@ def bullets(items, check=False):
 
 def code(txt):
     """High-contrast code panel: white monospaced text on a dark background."""
-    content = Preformatted(txt.strip("\n"), CODE, maxLineLength=100)
+    content = Preformatted(txt.strip("\n"), CODE, maxLineLength=88)
     panel = Table([[content]], colWidths=[160*mm], hAlign="LEFT")
     panel.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), NAVY),
@@ -196,7 +196,7 @@ story += [StepBadge("0","Архитектурный обзор","Цель, гр�
  P("Система реализует «второе мнение» для срабатываний Koh Young 3D AOI. Безопасная архитектура строится как каскад: быстрый фильтр численных признаков отсеивает только заведомо безопасные ложные срабатывания, мультимодальная модель рассматривает серую зону, а спорные случаи передаются инженеру."),
  heading("0.1 Чек-лист предварительных требований",2)]
 story += bullets(["Доступ к NVIDIA DGX Spark (GB10) с административными правами sudo.","Аккаунт Hugging Face; приняты условия использования выбранной модели.","Исторический архив дефектов Koh Young AOI за 6–12 месяцев.","Не менее двух инженеров качества SMT для перекрёстной разметки.","Утверждён целевой предел False Negative Rate: FNR ≤ 0,05%.","Определены владелец риска, порядок остановки и ручной резервный процесс."],True)
-story += [heading("0.2 Ключевые принципы безопасности",2), table([["Принцип","Практическая реализация"],["Human-in-the-loop","Низкая уверенность и несогласованные ответы — только Engineer Review."],["Fail-safe","При деградации метрик — возврат к 100% ручному контролю."],["Traceability","Версии модели, промпта, RAG-контекста и решение фиксируются в аудите."],["Temporal validation","Финальная проверка выполняется на более позднем временном холдауте."],["Least automation","Автоматизируются только классы и диапазоны, доказавшие безопасность."]],[45*mm,114*mm]),PageBreak()]
+story += [heading("0.2 Ключевые принципы безопасности",2), table([["Принцип","Практическая реализация"],["Human-in-the-loop","Низкая уверенность и несогласованные ответы — только Engineer Review."],["Fail-safe","При деградации метрик — возврат к 100% ручному контролю."],["Traceability","Версии модели, промпта, RAG-контекста и решение фиксируются в аудите."],["Temporal validation","Финальная проверка выполняется на более позднем временном холдауте."],["Least automation","Автоматизируются только классы и диапазоны, доказавшие безопасность."]],[45*mm,114*mm])]
 
 # 1
 story += [StepBadge("1","Валидация DGX Spark","GB10 · SM121 · CUDA 13.0"),Spacer(1,5*mm),heading("1. Валидация платформы DGX Spark"),
@@ -209,7 +209,7 @@ story += [StepBadge("1","Валидация DGX Spark","GB10 · SM121 · CUDA 13
 story += [StepBadge("2","Двухуровневый каскад","Предфильтр → мультимодальный арбитраж"),Spacer(1,5*mm),heading("2. Принцип работы двухуровневого каскада"),Pipeline(),
  heading("2.1 Tier-1 — фильтр табличных метрик",2), P("XGBoost анализирует объём припоя, высоту, копланарность и другие численные признаки. Кейс закрывается как AUTO_DISMISS только при доказанной вероятности ложного срабатывания выше 99% и при соблюдении ограничений применимости."),
  heading("2.2 Tier-2 — мультимодальный арбитраж",2), P("Кейсы серой зоны поступают в VLM вместе с четырьмя изображениями, 3D-метриками, релевантными критериями IPC и проверенными прецедентами. Выход валидируется по JSON-схеме и проходит калибровку."),
- table([["Маршрут","Условие","Действие"],["AUTO_DISMISS","Tier-1: строго безопасная область","Закрыть с полным audit trail"],["AUTO_VERDICT","Tier-2: высокая calibrated confidence","Применить решение; включить в слепой аудит"],["ENGINEER_REVIEW","Низкая уверенность / конфликт / OOD","Передать инженеру"],["SAFE MODE","Ошибка сервиса или rollback-trigger","100% ручной контроль"]],[34*mm,65*mm,60*mm]),PageBreak()]
+ table([["Маршрут","Условие","Действие"],["AUTO_DISMISS","Tier-1: строго безопасная область","Закрыть с полным audit trail"],["AUTO_VERDICT","Tier-2: высокая calibrated confidence","Применить решение; включить в слепой аудит"],["ENGINEER_REVIEW","Низкая уверенность / конфликт / OOD","Передать инженеру"],["SAFE MODE","Ошибка сервиса или rollback-trigger","100% ручной контроль"]],[34*mm,65*mm,60*mm])]
 
 # 3
 story += [StepBadge("3","Данные и Ground Truth","Экспорт, разметка, согласованность"),Spacer(1,5*mm),heading("3. Сбор, структурирование и разметка данных"),heading("3.1 Пакет инспекционного кейса",2)]
@@ -235,7 +235,7 @@ story += bullets(["Инженер назначает verdict: REAL_DEFECT или
 story += [StepBadge("4","Структура датасета","Временное разделение и баланс"),Spacer(1,5*mm),heading("4. Структура датасета и разделение выборок"),
  code("dataset/\n├── train/2026-01/case_000001/\n│   ├── 2d_color.png\n│   ├── 3d_heightmap.png\n│   ├── slice_a.png\n│   ├── slice_b.png\n│   ├── metadata.json\n│   └── ground_truth.json\n├── val/2026-02/\n└── test_holdout/2026-06/    # не участвует в обучении"),
  table([["Выборка","Минимум","Целевой объём","Назначение"],["Train","2 000","10 000+","Обучение / настройка"],["Validation","500","1 500","Калибровка и пороги"],["Test Holdout","500","1 000","Финальная независимая оценка"]],[38*mm,28*mm,35*mm,58*mm],aligns=["LEFT","RIGHT","RIGHT","LEFT"]),
- P("Для обучения допускается баланс 50/50 REAL_DEFECT и FALSE_POSITIVE. Для оценки производственных KPI дополнительно используйте выборку с естественной распространённостью классов; иначе FNR, precision и нагрузка на инженеров будут искажены.",CALLOUT),PageBreak()]
+ P("Для обучения допускается баланс 50/50 REAL_DEFECT и FALSE_POSITIVE. Для оценки производственных KPI дополнительно используйте выборку с естественной распространённостью классов; иначе FNR, precision и нагрузка на инженеров будут искажены.",CALLOUT)]
 
 # 5-6
 story += [StepBadge("5","Рабочая среда","Каталоги, venv, зависимости"),Spacer(1,5*mm),heading("5. Настройка рабочей среды"),code("mkdir -p ~/aoi_project/{models,dataset,calibration,results,audit,monitoring,logs,prompts,scripts,training,vector_db}\ncd ~/aoi_project\n\npython3 -m venv venv\nsource venv/bin/activate\npip install -U pip\npip install torch transformers vllm openai numpy pandas scikit-learn \\\n  opencv-python pillow qdrant-client sentence-transformers\npip install -U 'huggingface_hub[cli]'"),
@@ -243,7 +243,7 @@ story += [StepBadge("5","Рабочая среда","Каталоги, venv, з�
  StepBadge("6","Модель и vLLM","NVFP4 · Marlin · FP8 KV cache"),Spacer(1,5*mm),heading("6. Загрузка модели и развертывание vLLM"),heading("6.1 Загрузка весов",2),
  code("huggingface-cli login\n\nhuggingface-cli download nvidia/Gemma-4-26B-A4B-NVFP4 \\\n  --local-dir models/gemma4-26b-nvfp4"),
  heading("6.2 Скрипт запуска scripts/start_gemma.sh",2),code("#!/bin/bash\nset -euo pipefail\nexport PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True\n\nvllm serve models/gemma4-26b-nvfp4 \\\n  --served-model-name gemma-4-26b \\\n  --host 0.0.0.0 --port 8000 \\\n  --quantization modelopt \\\n  --kv-cache-dtype fp8 \\\n  --max-model-len 65536 \\\n  --gpu-memory-utilization 0.85 \\\n  --moe-backend marlin \\\n  --reasoning-parser gemma4 \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser pythonic \\\n  --max-num-batched-tokens 8192 \\\n  --limit-mm-per-prompt '{\"image\": 4}'"),
- P("Параметры CLI зависят от конкретной версии vLLM и реализации модели. Перед запуском проверьте их по официальной документации установленной версии и зафиксируйте успешный smoke-test.",CALLOUT),PageBreak(),
+ P("Параметры CLI зависят от конкретной версии vLLM и реализации модели. Перед запуском проверьте их по официальной документации установленной версии и зафиксируйте успешный smoke-test.",CALLOUT),
  heading("6.3 План памяти DGX Spark",2),
  table([["Потребитель","Оценка","Доля от 128 GB"],["Веса NVFP4","≈ 16,5 GB","12,9%"],["KV-cache FP8 / batching","≈ 82,0 GB","64,1%"],["ОС и CUDA Runtime","≈ 10,0 GB","7,8%"],["Свободный резерв","≈ 19,5 GB","15,2%"],["Итого","128,0 GB","100%"]],[75*mm,42*mm,42*mm],aligns=["LEFT","RIGHT","RIGHT"]),
  P("Оценка памяти является проектным бюджетом, а не гарантией. Фактическое потребление измеряется при целевой длине контекста, числе изображений, batch size и параллельной нагрузке.",CALLOUT)]
@@ -264,7 +264,7 @@ Return STRICT JSON only:
 }'''),
  heading("7.2 Локальный RAG-слой",2),
  table([["Индекс","Запрос","Выход","Контроль"],["Precedents DB","Описание + метаданные","3 похожих кейса","Только adjudicated GT"],["IPC / Manuals","defect_code + component_type","Релевантные чанки","Версия, раздел, лицензия"]],[40*mm,42*mm,40*mm,37*mm]),
- P("В Production рекомендуется отделить внутреннее рассуждение модели от краткого проверяемого обоснования. В журнал записываются наблюдаемые признаки, применённый критерий и ссылки на контекст — без скрытых chain-of-thought данных."),PageBreak()]
+ P("В Production рекомендуется отделить внутреннее рассуждение модели от краткого проверяемого обоснования. В журнал записываются наблюдаемые признаки, применённый критерий и ссылки на контекст — без скрытых chain-of-thought данных.")]
 
 # 8
 story += [StepBadge("8","Решения и калибровка","Пороги, self-consistency, isotonic regression"),Spacer(1,5*mm),heading("8. Логика принятия решений и калибровка"),
@@ -291,7 +291,7 @@ story += [StepBadge("9","Shadow и аудит","Наблюдение без во
  table([["Фаза","Срок / охват","Критерий выхода"],["Shadow Execution","2–4 недели; 100% потока","Стабильность, latency, класс-метрики, no critical misses"],["Ограниченный Production","Только валидированные классы","Agreement > 98% и FNR в лимите"],["Слепой аудит","15% AUTO_VERDICT первые 3 месяца","Независимая проверка без показа AI-ответа"]],[43*mm,51*mm,65*mm]),
  heading("9.1 Минимальный набор метрик",2)]
 story += bullets(["FNR и доверительный интервал — в целом и по defect_code / component_type.","Agreement rate, precision, recall, escalation rate и доля OOD.","Latency p50/p95/p99, throughput, ошибки JSON и таймауты.","Data drift по численным признакам, линиям, продуктам и источникам изображений.","Доля решений, изменённых инженером, и причины override."])
-story += [PageBreak(),StepBadge("10","Аудит и rollback","Неизменяемый журнал и безопасный откат"),Spacer(1,5*mm),heading("10. Аудит-трейл и автоматический откат"),
+story += [StepBadge("10","Аудит и rollback","Неизменяемый журнал и безопасный откат"),Spacer(1,5*mm),heading("10. Аудит-трейл и автоматический откат"),
  code('''{
   "timestamp": "2026-08-03T15:04:12Z",
   "case_id": "KY_20260803_001042",
@@ -310,21 +310,19 @@ story += bullets(["FNR > 0,05% по слепому аудиту за сколь�
 story += [P("Действие по умолчанию: немедленный переход в 100% ручной контроль, фиксация инцидента, уведомление владельца процесса, анализ первопричины и повторная квалификация перед возвратом.",CALLOUT)]
 
 # 11
-story += [PageBreak(),StepBadge("11","Локальное дообучение","QLoRA в окне обслуживания"),Spacer(1,5*mm),heading("11. Локальное тонкое обучение"),
+story += [StepBadge("11","Локальное дообучение","QLoRA в окне обслуживания"),Spacer(1,5*mm),heading("11. Локальное тонкое обучение"),
  P("После накопления не менее 1 000 новых сложных adjudicated-кейсов допускается обучение LoRA-адаптера. Обучающий набор отделяется от validation и temporal holdout; базовая модель, данные и параметры получают версии."),
  code("llamafactory-cli train \\\n  --stage sft --do_train \\\n  --model_name_or_path models/gemma4-26b-nvfp4 \\\n  --dataset koh_young_fine_tuning_data \\\n  --template gemma4 \\\n  --finetuning_type lora --lora_target all \\\n  --output_dir output/gemma4_aoi_lora_v2 \\\n  --per_device_train_batch_size 1 \\\n  --gradient_accumulation_steps 8 \\\n  --learning_rate 2e-4 --num_train_epochs 3 \\\n  --quantization_bit 4"),
- P("Проектная оценка памяти QLoRA: 35–40 GB. Она должна быть подтверждена экспериментом. Новая версия не заменяет действующую без полного regression-test, перекалибровки и повторного Shadow Execution."),PageBreak()]
+ P("Проектная оценка памяти QLoRA: 35–40 GB. Она должна быть подтверждена экспериментом. Новая версия не заменяет действующую без полного regression-test, перекалибровки и повторного Shadow Execution.")]
 
 # 12
 story += [StepBadge("12","Production readiness","Финальный допуск"),Spacer(1,5*mm),heading("12. Итоговый контрольный чек-лист"),]
 story += bullets(["CUDA 13.0 и GB10 валидированы в закреплённом NGC-контейнере.","vLLM успешно запущен на порту 8000; backend и все параметры подтверждены на установленной версии.","Производительность одиночного инференса измерена; целевой ориентир 48–52 токена/с подтверждён или скорректирован протоколом.","Поток содержит структурированные 3D-метрики Koh Young и проходит schema validation.","RAG-индекс содержит актуальные разрешённые чанки IPC-A-610 и проверенные прецеденты.","Isotonic Regression выполнена; high_threshold и low_threshold утверждены и версионированы.","Shadow Execution пройдена 2–4 недели без критических сбоев.","Слепой аудит 15% автоматических решений активен.","Неизменяемый audit trail, алерты и Grafana-мониторинг работают 24/7.","Rollback проверен учением; ручной резервный процесс доступен.","Комитет качества подписал протокол допуска с ограничениями по классам и линиям."],True)
 story += [Spacer(1,6*mm),heading("12.1 Матрица решения Go / No-Go",2),
- table([["Область","GO","NO-GO"],["Безопасность","FNR и верхняя граница CI в лимите","Недостаточно дефектов или critical miss"],["Качество данных","Полнота, provenance, κ ≥ 0,70","Утечки, пропуски, несогласованная разметка"],["Надёжность","SLA и rollback проверены","Нет safe mode / таймауты"],["Управление","Версии и владельцы зафиксированы","Нет владельца риска или аудита"]],[42*mm,59*mm,58*mm]),PageBreak()]
+ table([["Область","GO","NO-GO"],["Безопасность","FNR и верхняя граница CI в лимите","Недостаточно дефектов или critical miss"],["Качество данных","Полнота, provenance, κ ≥ 0,70","Утечки, пропуски, несогласованная разметка"],["Надёжность","SLA и rollback проверены","Нет safe mode / таймауты"],["Управление","Версии и владельцы зафиксированы","Нет владельца риска или аудита"]],[42*mm,59*mm,58*mm])]
 
 # Appendix
-story += [heading("Приложение A. Роли и ответственность"),
- table([["Роль","Ответственность"],["Process Owner","Утверждает границы автоматизации и риск-аппетит."],["SMT Quality Engineer","Ground Truth, adjudication, слепой аудит, IPC-интерпретация."],["ML Engineer","Модель, калибровка, тесты, drift и воспроизводимость."],["Platform Engineer","DGX, контейнеры, SLA, резервирование, безопасность."],["MLOps / SRE","Релизы, мониторинг, audit trail, rollback."],["Quality Committee","Финальный Go / No-Go и периодический пересмотр."]],[50*mm,109*mm]),
- heading("Приложение B. Источники"),
+story += [heading("Приложение. Источники"),
  P("Ссылки ниже перенесены из исходного материала. Перед утверждением регламента необходимо проверить доступность, дату публикации, авторитетность и соответствие фактически используемым версиям ПО и оборудования."),]
 refs=[
 ("1","Gemma 4 Day-1 Inference on NVIDIA DGX Spark — Preliminary Benchmarks","https://forums.developer.nvidia.com/t/gemma-4-day-1-inference-on-nvidia-dgx-spark-preliminary-benchmarks/365503"),
@@ -333,9 +331,25 @@ refs=[
 ("4","An Analytical Report on the NVIDIA DGX Spark — TWOWIN TECHNOLOGY","https://twowintech.com/an-analytical-report-on-the-nvidia-dgx-spark/"),
 ("5","Google Gemma 4: Smooth local inference on RTX PCs and DGX Spark","https://migovi.com/en/google-gemma-4-nvidia-rtx-pcs-dgx-spark/"),
 ("6","Fine-tuning LLMs with NVIDIA DGX Spark and Unsloth","https://unsloth.ai/docs/blog/fine-tuning-llms-with-nvidia-dgx-spark-and-unsloth"),]
-for n,title,url in refs:
-    story.append(P(f"<b>{n}. {safe(title)}</b><br/><font color='#627D98' size='7'>{safe(url)}</font>",SMALL))
-story += [Spacer(1,8*mm),HRFlowable(width="100%",thickness=.5,color=LINE),Spacer(1,4*mm),
+from urllib.parse import urlparse
+ref_style = ps("Reference", fontName="DejaVu", fontSize=7.0, leading=9.0,
+               textColor=MUTED, spaceAfter=0)
+ref_cells = [P(f"<b>{n}. <a href='{url}' color='#137CBD'>{safe(title)}</a></b>"
+               f"<br/><font size='6.1'>{safe(urlparse(url).netloc)}</font>", ref_style)
+             for n, title, url in refs]
+ref_grid = Table([[ref_cells[0], ref_cells[1], ref_cells[2]],
+                  [ref_cells[3], ref_cells[4], ref_cells[5]]],
+                 colWidths=[52*mm, 52*mm, 52*mm], hAlign="LEFT")
+ref_grid.setStyle(TableStyle([
+    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ("LEFTPADDING", (0, 0), (-1, -1), 4),
+    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+    ("TOPPADDING", (0, 0), (-1, -1), 4),
+    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ("LINEBELOW", (0, 0), (-1, -2), 0.3, LINE),
+]))
+story.append(ref_grid)
+story += [Spacer(1,6*mm),HRFlowable(width="100%",thickness=.5,color=LINE),Spacer(1,4*mm),
           P("Конец документа · AI Second Opinion для Koh Young 3D AOI · Версия 1.0", ps("end",fontName="DejaVu-Bold",fontSize=8,textColor=NAVY,alignment=TA_CENTER))]
 
 Doc(str(OUT)).multiBuild(story)
