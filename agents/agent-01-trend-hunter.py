@@ -1788,6 +1788,47 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
     if isinstance(data, list):
         data = {"topics": data}
 
+    # The model may return only one conservative topic even when the requested
+    # cap is higher. Fill the candidate queue deterministically from ranked
+    # fresh signals; Evidence Research will later retain only source-backed
+    # candidates, so this never forces weak articles into Writer.
+    topics = list(data.get("topics", []) or [])
+    existing_urls = {
+        str(source.get("url", ""))
+        for topic in topics for source in (topic.get("sources", []) or [])
+        if isinstance(source, dict)
+    }
+    existing_titles = {str(topic.get("topic", "")).lower() for topic in topics}
+    for signal in ranked_signals:
+        if len(topics) >= max_topics:
+            break
+        url = str(signal.get("source", ""))
+        title = str(signal.get("title", "")).strip()
+        if not title or not url or url in existing_urls or title.lower() in existing_titles:
+            continue
+        topics.append({
+            "topic": title,
+            "angle": "Report only the documented announcement and production relevance in the verified source.",
+            "format": "news",
+            "editorial_type": "news",
+            "category": "SMT Equipment",
+            "keywords": [],
+            "urgency": "MEDIUM",
+            "source_count": 1,
+            "source_notes": "Deterministic candidate from a fresh verified signal; Evidence Research required before writing.",
+            "key_facts": [],
+            "sources": [{
+                "title": title,
+                "url": url,
+                "date": signal.get("published_at", "unknown"),
+                "role": "fresh_primary",
+                "excerpt": signal.get("full_text") or signal.get("snippet", ""),
+            }],
+        })
+        existing_urls.add(url)
+        existing_titles.add(title.lower())
+    data["topics"] = topics
+
     for topic in data.get("topics", []) or []:
         # Normalize/repair section choice from LLM or mock output.
         section = section_router.decide_section(

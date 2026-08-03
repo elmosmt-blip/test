@@ -5,6 +5,15 @@ Publication remains a manual Control Room action after factual review.
 """
 from __future__ import annotations
 
+import sys
+for _name in ("stdout", "stderr"):
+    _stream = getattr(sys, _name, None)
+    if _stream and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
 import argparse
 import json
 import os
