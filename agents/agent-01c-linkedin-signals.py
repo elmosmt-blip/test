@@ -46,6 +46,11 @@ OFFICIAL_DOMAIN_HINTS = {
     "dymax": "dymax.com", "aegis": "aiscorp.com", "europlacer": "europlacer.com",
 }
 
+# Public search engines may block automated LinkedIn discovery. Trip once and
+# continue the editorial pipeline instead of waiting per topic/query.
+_DISCOVERY_UNAVAILABLE = False
+_DISCOVERY_WARNING_PRINTED = False
+
 
 def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
@@ -64,11 +69,14 @@ def topic_queries(topic: str) -> list[str]:
 
 def ddg_public_search(query: str, limit: int = 8, linkedin_only: bool = True) -> list[dict[str, str]]:
     """Search public result pages; never request a LinkedIn page itself."""
+    global _DISCOVERY_UNAVAILABLE, _DISCOVERY_WARNING_PRINTED
+    if _DISCOVERY_UNAVAILABLE:
+        return []
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SMTInsiderBot/1.0)"}
     endpoints = ("https://html.duckduckgo.com/html/", "https://lite.duckduckgo.com/lite/")
     for endpoint in endpoints:
         try:
-            response = requests.get(endpoint, params={"q": query}, headers=headers, timeout=12)
+            response = requests.get(endpoint, params={"q": query}, headers=headers, timeout=int(os.environ.get("LINKEDIN_DISCOVERY_TIMEOUT", "6")))
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
             anchors = soup.select("a.result__a, a.result-link")
@@ -95,6 +103,10 @@ def ddg_public_search(query: str, limit: int = 8, linkedin_only: bool = True) ->
             return results
         except requests.RequestException:
             continue
+    _DISCOVERY_UNAVAILABLE = True
+    if not _DISCOVERY_WARNING_PRINTED:
+        print("⚠ LinkedIn public discovery недоступен в этой сети; остальные темы пропущены без ожидания.")
+        _DISCOVERY_WARNING_PRINTED = True
     return []
 
 
@@ -199,7 +211,8 @@ def main() -> int:
         return 2
 
     all_signals: list[dict[str, Any]] = []
-    for item in topics[:20]:
+    max_topics = int(os.environ.get("LINKEDIN_MAX_TOPICS", "5"))
+    for item in topics[:max_topics]:
         topic = str(item.get("topic", ""))
         if not topic:
             continue
