@@ -15,12 +15,14 @@ from reportlab.platypus import (
 )
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from pathlib import Path
 import os
 
 OUT = Path("docs/AI_Second_Opinion_Koh_Young_3D_AOI.pdf")
 OUT.parent.mkdir(parents=True, exist_ok=True)
+LOGO_PATH = Path(__file__).resolve().parents[1] / "docs" / "solaredge-logo-official.png"
 
 # Embedded Unicode fonts keep Cyrillic portable.
 pdfmetrics.registerFont(TTFont("DejaVu", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
@@ -153,28 +155,10 @@ class Doc(BaseDocTemplate):
         self.addPageTemplates([PageTemplate(id="content",frames=frame,onPage=self.header_footer)])
     @staticmethod
     def draw_solaredge_logo(c, x, y, width=38*mm):
-        """Draw the SolarEdge mark with its correct black/red treatment."""
-        h = width / 4.93
-        solar_w = width * 0.505
-        red_x = x + solar_w - 0.5*mm
-        red_w = width - solar_w + 0.5*mm
-        c.saveState()
-        # Official mark: black wordmark and black "edge" cut into a red slanted field.
-        c.setFillColor(colors.black)
-        c.setFont("DejaVu-Bold", h * 0.84)
-        c.drawString(x, y + h * 0.08, "solar")
-        c.setFillColor(HexColor("#F52235"))
-        p = c.beginPath()
-        p.moveTo(red_x + red_w * 0.09, y + h)
-        p.lineTo(red_x + red_w, y + h)
-        p.lineTo(red_x + red_w * 0.91, y)
-        p.lineTo(red_x, y)
-        p.close()
-        c.drawPath(p, fill=1, stroke=0)
-        c.setFillColor(colors.black)
-        c.setFont("DejaVu-Bold", h * 0.82)
-        c.drawString(red_x + red_w * 0.035, y + h * 0.09, "edge")
-        c.restoreState()
+        """Place the official SolarEdge artwork without redrawing or modifying it."""
+        height = width * 321 / 1584
+        c.drawImage(ImageReader(str(LOGO_PATH)), x, y, width=width, height=height,
+                    preserveAspectRatio=True, mask="auto")
 
     def header_footer(self,c,doc):
         # Brand mark is intentionally repeated on every page, including the cover.
