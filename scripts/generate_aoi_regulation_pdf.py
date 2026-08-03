@@ -45,28 +45,28 @@ styles = getSampleStyleSheet()
 def ps(name, **kw):
     return ParagraphStyle(name, **kw)
 
-BODY = ps("BodyRU", fontName="DejaVu", fontSize=10.2, leading=15.2, textColor=INK,
-          spaceAfter=6.5, allowWidows=0, allowOrphans=0)
-SMALL = ps("Small", parent=BODY, fontSize=8.5, leading=12.2, textColor=MUTED)
-H1 = ps("H1RU", fontName="DejaVu-Bold", fontSize=19.5, leading=24, textColor=NAVY,
+BODY = ps("BodyRU", fontName="DejaVu", fontSize=11.2, leading=16.6, textColor=INK,
+          spaceAfter=7, allowWidows=0, allowOrphans=0)
+SMALL = ps("Small", parent=BODY, fontSize=9.3, leading=13.2, textColor=MUTED)
+H1 = ps("H1RU", fontName="DejaVu-Bold", fontSize=21, leading=25.5, textColor=NAVY,
         spaceBefore=8, spaceAfter=11, keepWithNext=True)
-H2 = ps("H2RU", fontName="DejaVu-Bold", fontSize=13.5, leading=17, textColor=BLUE,
+H2 = ps("H2RU", fontName="DejaVu-Bold", fontSize=14.5, leading=18.5, textColor=BLUE,
         spaceBefore=11, spaceAfter=7, keepWithNext=True)
-H3 = ps("H3RU", fontName="DejaVu-Bold", fontSize=11.2, leading=15, textColor=NAVY,
+H3 = ps("H3RU", fontName="DejaVu-Bold", fontSize=12, leading=16, textColor=NAVY,
         spaceBefore=8, spaceAfter=5, keepWithNext=True)
 BULLET = ps("BulletRU", parent=BODY, leftIndent=12, firstLineIndent=-8, bulletIndent=2,
             spaceAfter=3)
 CHECK = ps("CheckRU", parent=BODY, leftIndent=14, firstLineIndent=-10, bulletIndent=2,
            spaceAfter=4)
-CODE = ps("CodeRU", fontName="DejaVu-Mono", fontSize=8.2, leading=12.0,
+CODE = ps("CodeRU", fontName="DejaVu-Mono", fontSize=8.9, leading=13.0,
           textColor=WHITE, leftIndent=0, rightIndent=0,
           spaceBefore=0, spaceAfter=0)
 CAPTION = ps("Caption", fontName="DejaVu", fontSize=7.4, leading=10, textColor=MUTED,
              alignment=TA_CENTER, spaceAfter=8)
-CALLOUT = ps("Callout", parent=BODY, fontSize=8.5, leading=13, textColor=NAVY)
-TOC_H = ps("TOCH", fontName="DejaVu-Bold", fontSize=8.7, leading=10.5, leftIndent=0,
-           firstLineIndent=0, textColor=NAVY, spaceBefore=1.5)
-TOC_S = ps("TOCS", fontName="DejaVu", fontSize=7.4, leading=9.0, leftIndent=12,
+CALLOUT = ps("Callout", parent=BODY, fontSize=10.4, leading=15.4, textColor=NAVY)
+TOC_H = ps("TOCH", fontName="DejaVu-Bold", fontSize=11.2, leading=15, leftIndent=0,
+           firstLineIndent=0, textColor=NAVY, spaceBefore=3)
+TOC_S = ps("TOCS", fontName="DejaVu", fontSize=9.2, leading=12, leftIndent=12,
            firstLineIndent=0, textColor=INK)
 
 
@@ -83,7 +83,7 @@ def bullets(items, check=False):
 
 def code(txt):
     """High-contrast code panel: white monospaced text on a dark background."""
-    content = Preformatted(txt.strip("\n"), CODE, maxLineLength=88)
+    content = Preformatted(txt.strip("\n"), CODE, maxLineLength=78)
     panel = Table([[content]], colWidths=[160*mm], hAlign="LEFT")
     panel.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), NAVY),
@@ -166,7 +166,9 @@ class Doc(BaseDocTemplate):
             level=0 if flowable.style.name=="H1RU" else 1
             text=flowable.getPlainText(); key="h%d-%s"%(level,abs(hash(text)))
             self.canv.bookmarkPage(key); self.canv.addOutlineEntry(text,key,level=level,closed=False)
-            self.notify("TOCEntry",(level,text,self.page,key))
+            # Keep the printed contents concise: only major sections are listed.
+            if level == 0:
+                self.notify("TOCEntry",(level,text,self.page,key))
 
 story=[]
 # Cover
@@ -182,14 +184,25 @@ t=Table(cover_data,colWidths=[34*mm,125*mm]); t.setStyle(TableStyle([("BACKGROUN
 story += [Spacer(1,14*mm), P("Версия 1.0", ps("date",fontName="DejaVu-Bold",fontSize=9,textColor=NAVY)), P("03 августа 2026", SMALL), Spacer(1,5*mm),
           P("Статус: проект регламента для валидации на производственной площадке", ps("status",fontName="DejaVu",fontSize=7.5,textColor=AMBER)), PageBreak()]
 
-# Document control & TOC
+# Contents gets a dedicated, fully populated navigation page.
+story += [heading("Содержание")]
+toc=TableOfContents(); toc.levelStyles=[TOC_H,TOC_S]
+story += [toc, Spacer(1, 7*mm), heading("Критические параметры", 2),
+          table([["Показатель", "Целевое значение"],
+                 ["False Negative Rate", "≤ 0,05%"],
+                 ["Shadow Execution", "2–4 недели"],
+                 ["Слепой аудит", "15% AUTO_VERDICT"],
+                 ["Rollback по latency", "p95 > 12 секунд"]],
+                [72*mm, 87*mm]),
+          PageBreak()]
+
+# Document control flows directly into the first technical section.
 story += [heading("Управление документом"),
  table([["Параметр","Значение"],["Класс документа","Технический регламент внедрения"],["Область применения","SMT-линии с Koh Young 3D AOI"],["Владелец процесса","Руководитель качества SMT / Process Owner"],["Критичность","Высокая: решение влияет на выпуск и ручной контроль"],["Период пересмотра","Ежеквартально и после каждого изменения модели, порогов или IPC-контекста"]],[42*mm,117*mm]),
  Spacer(1,5*mm),
- P("ВАЖНО", ps("alerthead",fontName="DejaVu-Bold",fontSize=8,textColor=RED)),
+ P("ВАЖНО", ps("alerthead",fontName="DejaVu-Bold",fontSize=9.2,textColor=RED)),
  P("Документ задаёт инженерную схему внедрения, но не заменяет квалификацию процесса, требования системы менеджмента качества, договорные обязательства и официальную интерпретацию IPC-A-610. Все версии модели, контейнеров, CLI-параметры, показатели производительности и лицензии должны быть подтверждены на целевой конфигурации до закупки и допуска в Production.", CALLOUT),
- Spacer(1,7*mm), heading("Содержание"),]
-toc=TableOfContents(); toc.levelStyles=[TOC_H,TOC_S]; story += [toc,PageBreak()]
+ Spacer(1,7*mm)]
 
 # 0
 story += [StepBadge("0","Архитектурный обзор","Цель, границы и критерии готовности"),Spacer(1,5*mm),heading("0. Архитектурный обзор и предварительные требования"),
