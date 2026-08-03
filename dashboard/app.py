@@ -761,6 +761,19 @@ async def run_selected_briefs(req: Request):
     return {"run_id": run_id, "count": len(set(indices))}
 
 
+@app.delete("/briefs")
+async def clear_briefs():
+    global _selected_topic_index
+    if not BRIEFS_FILE.exists():
+        return {"ok": True, "remaining": 0}
+    data = json.loads(BRIEFS_FILE.read_text("utf-8"))
+    data["topics"] = []
+    data["selected_topic_indices"] = []
+    BRIEFS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    _selected_topic_index = -1
+    return {"ok": True, "remaining": 0}
+
+
 @app.delete("/briefs/{index}")
 async def delete_brief(index: int):
     """Remove an unsuitable topic before it reaches Writer."""
@@ -1663,6 +1676,8 @@ async function loadBriefs() {
       <span>модель: ${escHtml(model)}</span>
       ${gate.recommended_format ? `<span>·</span><span>формат: ${escHtml(gate.recommended_format)}</span>` : ''}
       <span style="flex:1"></span>
+      <button class="modal-secondary" onclick="runEvidenceResearch()">Исследовать sources</button>
+      <button class="delete-topic-btn" onclick="clearAllTopics()">Очистить все</button>
       <span id="selected-topics-count">Выберите статьи для Writer</span>
       <button class="select-topic-btn" id="run-selected-topics" onclick="runSelectedTopics()" disabled>Продолжить цикл →</button>
     </div>`;
@@ -1753,6 +1768,23 @@ async function runSelectedTopics() {
   if (!result || result.error) { toast(result?.error || 'Не удалось запустить цикл', 'err'); return; }
   toast(`Запущен полный редакционный цикл для ${result.count} статей`, 'info');
   subscribeRun(result.run_id, 'publish');
+}
+
+async function runEvidenceResearch() {
+  showTab('log');
+  const result = await fetch('/run/1d', {method:'POST'}).then(r => r.json()).catch(() => null);
+  if (!result || result.error) { toast(result?.error || 'Не удалось запустить Evidence Research', 'err'); return; }
+  toast('Evidence Research ищет official sources и обновит Plan', 'info');
+  subscribeRun(result.run_id, 'briefs');
+}
+
+async function clearAllTopics() {
+  if (!confirm('Очистить все темы текущего editorial plan?')) return;
+  const result = await fetch('/briefs', {method:'DELETE'}).then(r => r.json()).catch(() => null);
+  if (!result || result.error) { toast(result?.error || 'Не удалось очистить темы', 'err'); return; }
+  selectedTopicIndices = new Set(); selectedTopicIndex = null;
+  toast('Editorial plan очищен', 'info');
+  loadBriefs(); loadOverview();
 }
 
 // ── Article ────────────────────────────────────────────────────────
