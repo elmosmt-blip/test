@@ -58,9 +58,9 @@ BULLET = ps("BulletRU", parent=BODY, leftIndent=12, firstLineIndent=-8, bulletIn
             spaceAfter=3)
 CHECK = ps("CheckRU", parent=BODY, leftIndent=14, firstLineIndent=-10, bulletIndent=2,
            spaceAfter=4)
-CODE = ps("CodeRU", fontName="DejaVu-Mono", fontSize=6.7, leading=9.5,
-          textColor=HexColor("#D9E2EC"), backColor=NAVY, leftIndent=7, rightIndent=7,
-          borderPadding=8, spaceBefore=4, spaceAfter=8)
+CODE = ps("CodeRU", fontName="DejaVu-Mono", fontSize=7.4, leading=10.8,
+          textColor=WHITE, leftIndent=0, rightIndent=0,
+          spaceBefore=0, spaceAfter=0)
 CAPTION = ps("Caption", fontName="DejaVu", fontSize=7.4, leading=10, textColor=MUTED,
              alignment=TA_CENTER, spaceAfter=8)
 CALLOUT = ps("Callout", parent=BODY, fontSize=8.5, leading=13, textColor=NAVY)
@@ -82,7 +82,20 @@ def bullets(items, check=False):
     return [Paragraph(f"{mark}  {x}", st) for x in items]
 
 def code(txt):
-    return Preformatted(txt.strip("\n"), CODE, maxLineLength=105)
+    """High-contrast code panel: white monospaced text on a dark background."""
+    content = Preformatted(txt.strip("\n"), CODE, maxLineLength=100)
+    panel = Table([[content]], colWidths=[160*mm], hAlign="LEFT")
+    panel.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), NAVY),
+        ("BOX", (0, 0), (-1, -1), 0.6, HexColor("#284B6F")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    panel.spaceBefore = 5
+    panel.spaceAfter = 9
+    return panel
 
 def heading(txt, level=1):
     return Paragraph(txt, [H1, H2, H3][level-1])
