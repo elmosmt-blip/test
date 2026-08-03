@@ -26,6 +26,7 @@ for _s in ("stdout", "stderr"):
                 pass
 
 import os
+import re
 import json
 import argparse
 from datetime import datetime, timezone
