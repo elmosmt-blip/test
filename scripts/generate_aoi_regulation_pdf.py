@@ -151,12 +151,30 @@ class Doc(BaseDocTemplate):
                          title="AI Second Opinion для Koh Young 3D AOI", author="Технический регламент внедрения")
         frame=Frame(self.leftMargin,self.bottomMargin,self.width,self.height,id="body")
         self.addPageTemplates([PageTemplate(id="content",frames=frame,onPage=self.header_footer)])
+    @staticmethod
+    def draw_solaredge_logo(c, x, y, width=34*mm):
+        """Draw a crisp vector SolarEdge logo at any PDF scale."""
+        h = width / 4.0
+        solar_w = width * 0.51
+        c.saveState()
+        c.setFillColor(colors.black)
+        c.setFont("DejaVu-Bold", h * 0.82)
+        c.drawString(x, y + h * 0.08, "solar")
+        c.setFillColor(HexColor("#ED1C24"))
+        c.roundRect(x + solar_w - 0.8*mm, y, width - solar_w + 0.8*mm, h,
+                    0.7*mm, fill=1, stroke=0)
+        c.setFillColor(WHITE)
+        c.setFont("DejaVu-Bold", h * 0.80)
+        c.drawString(x + solar_w, y + h * 0.09, "edge")
+        c.restoreState()
+
     def header_footer(self,c,doc):
+        # Brand mark is intentionally repeated on every page, including the cover.
+        self.draw_solaredge_logo(c, A4[0]-17*mm-34*mm, A4[1]-10.5*mm)
         if doc.page==1: return
         c.saveState(); c.setStrokeColor(LINE); c.line(17*mm,A4[1]-12*mm,A4[0]-17*mm,A4[1]-12*mm)
         c.setFont("DejaVu",6.8); c.setFillColor(MUTED)
         c.drawString(17*mm,A4[1]-9*mm,"AI SECOND OPINION · KOH YOUNG 3D AOI")
-        c.drawRightString(A4[0]-17*mm,A4[1]-9*mm,"ПРОМЫШЛЕННЫЙ РЕГЛАМЕНТ")
         c.line(17*mm,11*mm,A4[0]-17*mm,11*mm)
         c.drawString(17*mm,7*mm,"Версия 1.0 · 03.08.2026")
         c.drawRightString(A4[0]-17*mm,7*mm,f"{doc.page:02d}")
