@@ -1683,11 +1683,15 @@ def find_corroborating_sources(
     found: list[dict[str, Any]] = []
     seen_in_this_call: set[str] = set(already_have_urls)
 
+    finders = [lambda qq: search_google_news_rss(qq, max_results=5, lookback_days=lookback_days)]
+    # DDG is optional and frequently unreachable in operator networks. Source
+    # research later uses official domains, so do not spend 24+ seconds per
+    # candidate on a second search engine unless explicitly enabled.
+    if _env_bool("NEWS_DDG_TARGETED_ENABLED", "0") and not _last_ddg_request_failed:
+        finders.append(lambda qq: search_duckduckgo(qq, max_results=5, lookback_days=lookback_days))
+
     for q in queries[:2]:
-        for finder in (
-            lambda qq: search_google_news_rss(qq, max_results=5, lookback_days=lookback_days),
-            lambda qq: search_duckduckgo(qq, max_results=5, lookback_days=lookback_days),
-        ):
+        for finder in finders:
             try:
                 results = finder(q)
             except Exception:
@@ -1829,7 +1833,7 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         existing_titles.add(title.lower())
     data["topics"] = topics
 
-    for topic in data.get("topics", []) or []:
+    for topic_index, topic in enumerate(data.get("topics", []) or []):
         # Normalize/repair section choice from LLM or mock output.
         section = section_router.decide_section(
             title=topic.get("topic", ""),
@@ -1857,7 +1861,8 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         # rather than something that only happens when the generic
         # pre-collection pool happened to have overlap.
         min_sources = int(os.environ.get("NEWS_MIN_SOURCES_PER_TOPIC", "2"))
-        if len(expanded) < min_sources and _env_bool("NEWS_TOPIC_SUPPLEMENTARY_SEARCH", "1"):
+        supplementary_limit = int(os.environ.get("NEWS_SUPPLEMENTARY_MAX_TOPICS", "5"))
+        if len(expanded) < min_sources and topic_index < supplementary_limit and _env_bool("NEWS_TOPIC_SUPPLEMENTARY_SEARCH", "1"):
             already_urls = {s.get("url", "") for s in expanded}
             print(f"  🔎 «{topic.get('topic','')[:60]}» имеет {len(expanded)} источник(ов) — ищу подтверждающие...")
             corroborating = find_corroborating_sources(
