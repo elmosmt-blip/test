@@ -236,13 +236,16 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
         route = "review"
         status = "ready_review"
         allowed = True
+    elif authoritative and evidence_words >= 700 and claim_count >= 4:
+        # A single long, source-authored engineering article can support an
+        # insight. It is not a comparative review, but it deserves more than
+        # a 250-word press-release summary.
+        route = "insight"
+        status = "ready_insight"
+        allowed = True
     elif authoritative and evidence_words >= 250 and claim_count >= 3:
         route = "news"
         status = "ready_news"
-        allowed = True
-    elif authoritative and evidence_words >= 700 and claim_count >= 4:
-        route = "insight"
-        status = "ready_insight"
         allowed = True
     else:
         route = ""

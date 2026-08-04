@@ -49,6 +49,17 @@ def test_expired_event_stays_blocked_even_with_source_text(monkeypatch):
     assert result["evidence_status"] == "awaiting_post_event_evidence"
 
 
+def test_routes_long_single_source_to_insight(monkeypatch):
+    researcher = load_module()
+    text = "Europlacer describes process integrity, production integrity and first board economics in high-mix manufacturing. " * 90
+    monkeypatch.setattr(researcher.source_expander, "fetch_readable_text", lambda url: text)
+    monkeypatch.setattr(researcher.source_expander, "extract_candidate_links", lambda *args, **kwargs: [])
+    monkeypatch.setattr(researcher, "_search_official_pages", lambda *args, **kwargs: [])
+    result = researcher.research_topic({"topic": "Europlacer First Board Right", "sources": [{"url": "https://europlacer.com/first-board-right", "role": "fresh_primary"}]})
+    assert result["writer_allowed"] is True
+    assert result["format"] == "insight"
+
+
 def test_discards_insufficient_evidence(monkeypatch):
     researcher = load_module()
     monkeypatch.setattr(researcher.source_expander, "fetch_readable_text", lambda url: "Too short")
