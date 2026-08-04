@@ -193,7 +193,8 @@ class TestFindCorroboratingSources:
 
 
 class TestBuildBriefsMultiSourceIntegration:
-    def test_single_source_topic_gets_supplemented(self, agent01):
+    def test_single_source_topic_gets_supplemented(self, agent01, monkeypatch):
+        monkeypatch.setenv("NEWS_TOPIC_SUPPLEMENTARY_SEARCH", "1")
         def fake_gnews(q, max_results=5, lookback_days=30):
             return [{
                 "title": "TRI TR7600 SV Independent Review Finds Lower Throughput",
