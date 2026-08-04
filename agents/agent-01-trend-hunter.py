@@ -1862,7 +1862,7 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         # pre-collection pool happened to have overlap.
         min_sources = int(os.environ.get("NEWS_MIN_SOURCES_PER_TOPIC", "2"))
         supplementary_limit = int(os.environ.get("NEWS_SUPPLEMENTARY_MAX_TOPICS", "5"))
-        if len(expanded) < min_sources and topic_index < supplementary_limit and _env_bool("NEWS_TOPIC_SUPPLEMENTARY_SEARCH", "1"):
+        if len(expanded) < min_sources and topic_index < supplementary_limit and _env_bool("NEWS_TOPIC_SUPPLEMENTARY_SEARCH", "0"):
             already_urls = {s.get("url", "") for s in expanded}
             print(f"  🔎 «{topic.get('topic','')[:60]}» имеет {len(expanded)} источник(ов) — ищу подтверждающие...")
             corroborating = find_corroborating_sources(
