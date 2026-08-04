@@ -265,7 +265,8 @@ The fastest way to reduce AOI false calls is not to make AOI less sensitive. It 
 
 
 def chat(messages, temperature: float = 0.7, max_tokens: int = 2000,
-         model: str = None, json_mode: bool = False) -> str:
+         model: str = None, json_mode: bool = False, timeout: int | None = None,
+         retries: int | None = None) -> str:
     """
     Низкоуровневый вызов /v1/chat/completions.
     messages: [{"role": "system"|"user"|"assistant", "content": "..."}]
@@ -290,10 +291,12 @@ def chat(messages, temperature: float = 0.7, max_tokens: int = 2000,
     if LLM_API_KEY:
         headers["Authorization"] = f"Bearer {LLM_API_KEY}"
 
+    request_timeout = timeout if timeout is not None else LLM_TIMEOUT
+    max_retries = retries if retries is not None else LLM_MAX_RETRIES
     last_err = None
-    for attempt in range(1, LLM_MAX_RETRIES + 1):
+    for attempt in range(1, max_retries + 1):
         try:
-            resp = requests.post(url, headers=headers, json=payload, timeout=LLM_TIMEOUT)
+            resp = requests.post(url, headers=headers, json=payload, timeout=request_timeout)
             if resp.status_code >= 400:
                 raise LLMError(f"{resp.status_code} {resp.text[:300]}")
             data = resp.json()
@@ -312,14 +315,14 @@ def chat(messages, temperature: float = 0.7, max_tokens: int = 2000,
             return content
         except (requests.RequestException, LLMError, KeyError, IndexError) as e:
             last_err = e
-            if attempt < LLM_MAX_RETRIES:
+            if attempt < max_retries:
                 wait = 2 ** attempt
-                print(f"  ⚠ LLM запрос неудачен (попытка {attempt}/{LLM_MAX_RETRIES}): {e}. "
+                print(f"  ⚠ LLM запрос неудачен (попытка {attempt}/{max_retries}): {e}. "
                       f"Повтор через {wait}с…", file=sys.stderr)
                 time.sleep(wait)
             else:
                 raise LLMError(
-                    f"Не удалось получить ответ от {url} после {LLM_MAX_RETRIES} попыток: {e}\n"
+                    f"Не удалось получить ответ от {url} после {max_retries} попыток: {e}\n"
                     f"Проверь: запущен ли сервер модели, верен ли LLM_API_BASE='{LLM_API_BASE}' "
                     f"и LLM_MODEL='{LLM_MODEL}'."
                 ) from last_err
