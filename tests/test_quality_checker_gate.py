@@ -71,6 +71,8 @@ def test_deterministic_ledger_audit_rejects_invented_date_and_number():
     )
     assert violations
     assert all(violation["severity"] == "blocking" for violation in violations)
+    cleaned = checker._remove_violating_sentences("Confirmed release. The standard adds 47 photos.", violations)
+    assert "47 photos" not in cleaned
 
 
 def test_missing_factual_verdict_fails_closed():

@@ -79,10 +79,12 @@ SUMMARY: {summary}
     result = llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=max_tokens, temperature=0.2, timeout=45, retries=1)
     ledger_violations = _ledger_numeric_violations(body, brief.get("evidence_ledger", []) or [])
     if ledger_violations:
+        cleaned_body = _remove_violating_sentences(body, ledger_violations)
         result["unsupported_claims"] = [*(result.get("unsupported_claims", []) or []), *ledger_violations]
-        result["factual_verdict"] = "reject"
+        result["factual_verdict"] = "revise" if cleaned_body and cleaned_body != body else "reject"
         result["approved"] = False
-        result["issues"] = [*(result.get("issues", []) or []), "Deterministic evidence-ledger audit found unsupported numeric/date claims"]
+        result["body"] = cleaned_body
+        result["issues"] = [*(result.get("issues", []) or []), "Deterministic evidence-ledger audit removed unsupported numeric/date claims"]
     return result
 
 
@@ -111,6 +113,18 @@ def _ledger_numeric_violations(body: str, ledger: list[dict[str, Any]]) -> list[
                 "severity": "blocking",
             })
     return violations
+
+
+def _remove_violating_sentences(body: str, violations: list[dict[str, str]]) -> str:
+    """Delete only deterministic unsupported numeric/date sentences."""
+    bad = {re.sub(r"\s+", " ", item.get("claim", "")).strip() for item in violations}
+    kept = []
+    for sentence in re.split(r"(?<=[.!?])\s+", body or ""):
+        normalized = re.sub(r"\s+", " ", sentence).strip()
+        if normalized and normalized in bad:
+            continue
+        kept.append(sentence)
+    return " ".join(kept).strip()
 
 
 def assess_quality_verdict(result: dict, threshold: int) -> dict:
@@ -162,9 +176,13 @@ def main():
         sys.exit(1)
 
     with open(article_file, encoding="utf-8") as f:
-        body = f.read()
+        body = f.read().strip()
 
     title = meta.get("title", "")
+    # Writer persists title + body in article.txt. Quality must audit the body
+    # once, not treat the duplicated title line as an unsupported claim.
+    if title and body.startswith(title):
+        body = body[len(title):].lstrip("\r\n ")
     summary = meta.get("summary", "")
     brief = meta.get("source_topic_brief", {})
 
