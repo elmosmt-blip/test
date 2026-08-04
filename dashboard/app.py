@@ -24,6 +24,7 @@ import uuid
 import time
 import re
 import os
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, AsyncGenerator
@@ -32,6 +33,17 @@ from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 ROOT = Path(__file__).parent.parent
+
+
+def _build_revision() -> str:
+    """Expose the running source revision so operators can verify deployment."""
+    try:
+        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+    except Exception:
+        return "unknown"
+
+
+BUILD_REVISION = _build_revision()
 
 # Dashboard сам подхватывает .env из корня проекта. Так запуск `./start-dashboard.sh`
 # и прямой `python -m uvicorn dashboard.app:app` ведут себя одинаково.
@@ -366,6 +378,7 @@ async def get_status():
         "llm_mock": _env_truthy("LLM_MOCK") or _env_truthy("MOCK_LLM"),
         "db_connected": bool(os.environ.get("NEON_DATABASE_URL")),
         "allow_db_writes": _env_truthy("ALLOW_DB_WRITES"),
+        "build_revision": BUILD_REVISION,
     }
 
 
@@ -1132,6 +1145,7 @@ header{padding:0 24px;background:rgba(12,23,40,.9);backdrop-filter:blur(14px)}
     <div class="header-meta">
       <span class="pill"><span class="dot" id="llm-dot"></span><span id="llm-label">…</span></span>
       <span class="pill"><span class="dot" id="db-dot"></span><span id="db-label">…</span></span>
+      <span class="pill" title="Revision running in this dashboard">build <span id="build-revision">…</span></span>
       <span class="pill" id="selected-topic-pill" style="display:none">
         <span style="color:var(--green)">▶</span>
         <span id="selected-topic-name" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
@@ -1329,6 +1343,7 @@ async function loadStatus() {
   dbLabel.textContent = r.db_connected
     ? (r.allow_db_writes ? 'DB:rw' : 'DB:ro')
     : 'no DB';
+  document.getElementById('build-revision').textContent = r.build_revision || 'unknown';
 
   renderAgents();
 }
