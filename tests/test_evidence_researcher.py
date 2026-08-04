@@ -27,6 +27,8 @@ def test_routes_single_authoritative_source_to_news(monkeypatch):
     assert result["writer_allowed"] is True
     assert result["format"] == "news"
     assert result["evidence_status"] == "ready_news"
+    assert result["key_facts"]
+    assert "torque" not in result["angle"].lower()
 
 
 def test_uses_only_corroborated_linkedin_official_url(tmp_path, monkeypatch):

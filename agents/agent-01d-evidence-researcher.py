@@ -225,6 +225,13 @@ def research_topic(topic: dict[str, Any]) -> dict[str, Any]:
         {"source_url": source.get("url", ""), "claims": source.get("claim_candidates", [])}
         for source in authoritative
     ]
+    # Replace LLM-generated angles/key facts from Agent #1 with literal source
+    # evidence. Otherwise a speculative selection angle can leak unsupported
+    # torque, timeline or comparison claims into Writer even after research.
+    literal_claims = [claim for item in topic["evidence_ledger"] for claim in item["claims"]]
+    topic["key_facts"] = literal_claims[:12]
+    topic["angle"] = "Write a source-bounded article using only the evidence ledger; do not add undocumented technical details."
+    topic["source_notes"] = f"Evidence Research retrieved {len(authoritative)} authoritative source(s) and {evidence_words} source words."
 
     # A pre-event announcement remains stale even if it has plenty of prose.
     # It may only return through a new post-event signal/coverage item.
