@@ -272,10 +272,15 @@ def build_writer_user_prompt(brief: dict) -> str:
     return "\n".join(parts)
 
 
+def _writer_token_budget(brief: dict) -> int:
+    article_type = brief.get("editorial_type") or brief.get("format") or "news"
+    return {"news": 1200, "insight": 2200, "review": 3000}.get(article_type, 1800)
+
+
 def write_article(brief: dict) -> dict:
     user_prompt = build_writer_user_prompt(brief)
     temperature = 0.2 if brief.get("evidence_ledger") else 0.7
-    return llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=3800, temperature=temperature)
+    return llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=_writer_token_budget(brief), temperature=temperature)
 
 
 
@@ -340,6 +345,10 @@ def write_article_with_revision(brief: dict, skip_revision: bool = False) -> dic
     publishing outright.
     """
     draft = write_article(brief)
+    source_bounded_news = bool(brief.get("evidence_ledger")) and (brief.get("editorial_type") or brief.get("format")) == "news"
+    if source_bounded_news and not skip_revision:
+        print("  ℹ Source-bounded news: self-revision пропущен; factual audit выполнит Quality Checker.")
+        skip_revision = True
     if skip_revision:
         if draft.get("body"):
             editorial_type = brief.get("editorial_type") or brief.get("format", "news")
@@ -456,6 +465,9 @@ def main():
     print(f"\n✍️ Agent #2 — Writer")
     print(f"   Тема: {brief.get('topic')}")
     print(f"   Модель: {llm_client.LLM_MODEL}")
+    dossier = build_evidence_dossier(brief)
+    if dossier["claims"]:
+        print(f"   Evidence dossier: {len(dossier['claims'])} claims · {dossier['article_type']} · {dossier['target_length']}")
     if brief.get("evidence_limited"):
         print("   Evidence: один ограниченный источник → короткая news-статья без неподтверждённых деталей")
     print(f"   Режим: {'один проход (без self-review)' if skip_revision else 'три прохода (черновик → self-review → lint+repair)'}")

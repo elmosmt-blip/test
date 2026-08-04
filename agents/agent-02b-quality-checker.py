@@ -73,7 +73,9 @@ SUMMARY: {summary}
 {json.dumps(brief, ensure_ascii=False, indent=2)}
 
 Оцени строго. Если нашёл воду, клише или несоответствие брифу — исправь."""
-    result = llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=4000, temperature=0.4)
+    article_type = brief.get("editorial_type") or brief.get("format") or "news"
+    max_tokens = {"news": 1400, "insight": 2400, "review": 3000}.get(article_type, 1800)
+    result = llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=max_tokens, temperature=0.2)
     ledger_violations = _ledger_numeric_violations(body, brief.get("evidence_ledger", []) or [])
     if ledger_violations:
         result["unsupported_claims"] = [*(result.get("unsupported_claims", []) or []), *ledger_violations]
