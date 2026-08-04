@@ -102,15 +102,19 @@ def test_sparse_single_source_is_downgraded_to_source_bounded_news(writer):
     assert "РЕЖИМ ОГРАНИЧЕННЫХ ДОКАЗАТЕЛЬСТВ" in writer.build_writer_user_prompt(prepared)
 
 
-def test_writer_prompt_includes_literal_evidence_ledger(writer):
-    prompt = writer.build_writer_user_prompt({
-        "topic": "IPC-A-630A", "evidence_ledger": [{
+def test_writer_prompt_includes_literal_evidence_ledger_and_story_plan(writer):
+    brief = {
+        "topic": "IPC-A-630A", "editorial_type": "news", "evidence_ledger": [{
             "source_url": "https://example.com/ipc",
-            "claims": ["IPC-A-630A introduces class-coded acceptance criteria."],
+            "claims": ["IPC-A-630A introduces class-coded acceptance criteria.", "The release covers electronic box assemblies."],
         }],
-    })
+    }
+    prompt = writer.build_writer_user_prompt(brief)
+    dossier = writer.build_evidence_dossier(brief)
     assert "РАЗРЕШЁННЫЙ CLAIM LEDGER" in prompt
-    assert "IPC-A-630A introduces class-coded acceptance criteria." in prompt
+    assert "STORY PLAN" in prompt
+    assert "C1" in prompt
+    assert dossier["target_length"] == "180-320 words"
 
 
 class TestRepairArticle:

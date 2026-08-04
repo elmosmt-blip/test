@@ -126,6 +126,33 @@ def prepare_brief_for_evidence(brief: dict) -> dict:
     return prepared
 
 
+def build_evidence_dossier(brief: dict) -> dict:
+    """Create a deterministic story plan from literal researched claims.
+
+    The LLM receives a plan and claim IDs, not a vague invitation to turn a
+    topic into an article. This keeps depth proportional to source depth.
+    """
+    ledger = brief.get("evidence_ledger", []) or []
+    claims = []
+    for source_index, entry in enumerate(ledger, 1):
+        for claim in entry.get("claims", []) or []:
+            claim = str(claim).strip()
+            if claim:
+                claims.append({"id": f"C{len(claims) + 1}", "text": claim, "source_url": entry.get("source_url", ""), "source": source_index})
+    article_type = brief.get("editorial_type") or brief.get("format") or "news"
+    if article_type == "review":
+        target = "900-1300 words"
+        section_size = 3
+    elif article_type == "insight":
+        target = "600-900 words"
+        section_size = 3
+    else:
+        target = "180-320 words" if len(claims) <= 5 else "300-500 words"
+        section_size = 2
+    groups = [claims[i:i + section_size] for i in range(0, len(claims), section_size)]
+    return {"article_type": article_type, "target_length": target, "claims": claims, "sections": groups}
+
+
 def build_writer_user_prompt(brief: dict) -> str:
     # Build a structured user prompt that highlights the most important signals
     parts = []
@@ -154,6 +181,20 @@ def build_writer_user_prompt(brief: dict) -> str:
                 "не пиши его. Не выводи отрицательные claims вида «source does not disclose X», если это не "
                 "явно сказано в source.\n\n" + "\n\n".join(ledger_blocks)
             )
+    dossier = build_evidence_dossier(brief)
+    if dossier["claims"]:
+        plan_sections = []
+        for number, group in enumerate(dossier["sections"], 1):
+            plan_sections.append(f"Section {number}: " + ", ".join(item["id"] for item in group))
+        claims_text = "\n".join(f"{item['id']} [{item['source_url']}]: {item['text']}" for item in dossier["claims"])
+        parts.append(
+            "\nSTORY PLAN — ОБЯЗАТЕЛЬНО:\n"
+            f"Article type: {dossier['article_type']}\nTarget length: {dossier['target_length']}\n"
+            f"Plan: {' | '.join(plan_sections)}\n\n"
+            "Используй claims только из списка ниже. Каждый содержательный абзац должен опираться "
+            "на указанный claim ID. Не добавляй новый факт для связности, длины или практического вывода.\n"
+            f"{claims_text}"
+        )
     editorial = brief.get("editorial_type") or brief.get("format", "")
     if editorial:
         parts.append(f"\nФОРМАТ СТАТЬИ: {editorial}")
@@ -233,7 +274,8 @@ def build_writer_user_prompt(brief: dict) -> str:
 
 def write_article(brief: dict) -> dict:
     user_prompt = build_writer_user_prompt(brief)
-    return llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=3800, temperature=0.7)
+    temperature = 0.2 if brief.get("evidence_ledger") else 0.7
+    return llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=3800, temperature=temperature)
 
 
 
@@ -455,6 +497,7 @@ def main():
         "section_path": section.section_path,
         "section_routing": section.to_dict(),
         "source_topic_brief": brief,
+        "evidence_dossier": build_evidence_dossier(brief),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "model": llm_client.LLM_MODEL,
         "article_file": args.output,
