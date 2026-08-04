@@ -185,6 +185,20 @@ class TestPDFScout:
         assert topics[0]["sources"][0]["page_range"] == [6, 7]
         assert "--- PAGE 6 ---" in topics[0]["sources"][0]["excerpt"]
 
+    def test_segments_from_fliphtml_heading_geometry_when_llm_json_fails(self, pdf_scout, monkeypatch):
+        page_text = "Fuji director spotlight leading the future of SMT with production evidence " * 30
+        doc = PDFDocument(
+            title="SMT Today Issue 80", document_type=PDFDocumentType.MAGAZINE, company="",
+            text=f"--- PAGE 6 ---\n{page_text}\n--- PAGE 7 ---\n{page_text}",
+            source_url="https://online.fliphtml5.com/kwnhb/fakj/",
+            metadata={"FlipHTML5PageHeadings": {"6": "director spotlight leading the future of SMT"}},
+        )
+        monkeypatch.setattr(pdf_scout.llm_client, "LLM_MOCK", False)
+        monkeypatch.setattr(pdf_scout.llm_client, "ask_json", lambda **kwargs: (_ for _ in ()).throw(RuntimeError("non-json model response")))
+        topics = pdf_scout._segment_magazine_with_llm(doc, doc.source_url, doc.title, "SMT Equipment", "magazine", "news", 3, datetime.now(timezone.utc))
+        assert len(topics) == 1
+        assert topics[0]["sources"][0]["page_range"] == [6, 7]
+
     def test_rejects_pdf_syntax_as_editorial_evidence(self, pdf_scout):
         doc = PDFDocument(
             title="Unknown PDF",

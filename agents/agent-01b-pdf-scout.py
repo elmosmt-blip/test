@@ -179,10 +179,21 @@ def _segment_magazine_with_llm(
         # never infer a segment from arbitrary prose.
         raw_fallback = str(e)
         page_lines = re.findall(r"(?:^|\n)\s*[-•]?\s*Page\s+(\d+)\s*:\s*([^\n]+)", raw_fallback, re.I)
-        if not page_lines:
-            print(f"⚠ Nemotron не смог сегментировать журнал: {e}")
-            return []
-        starts = [(int(page), title.strip()) for page, title in page_lines if int(page) in pages]
+        if page_lines:
+            starts = [(int(page), title.strip()) for page, title in page_lines if int(page) in pages]
+            reason = "Page range recovered from the model's explicit magazine outline"
+            print("⚠ Nemotron вернул outline вместо JSON; использую только явно указанные им page ranges.")
+        else:
+            headings = doc.metadata.get("FlipHTML5PageHeadings", {})
+            starts = [(int(page), str(title)) for page, title in headings.items() if int(page) in pages and int(page) > 5]
+            starts.sort(key=lambda pair: pair[0])
+            # Avoid contents/footer headings and retain only article-like starts.
+            starts = [pair for pair in starts if not re.search(r"\b(contents|contacts|next edition|industry news)\b", pair[1], re.I)]
+            reason = "Page range recovered from FlipHTML5 heading geometry"
+            if not starts:
+                print(f"⚠ Nemotron не смог сегментировать журнал: {e}")
+                return []
+            print("⚠ Nemotron не вернул JSON; использую детерминированные заголовки страниц FlipHTML5.")
         starts = sorted(dict.fromkeys(starts))[:max_topics]
         result = {"articles": [
             {
@@ -191,11 +202,10 @@ def _segment_magazine_with_llm(
                 "start_page": page,
                 "end_page": (starts[i + 1][0] - 1 if i + 1 < len(starts) else max(pages)),
                 "recommended_format": "news",
-                "reason": "Page range recovered from the model's explicit magazine outline",
+                "reason": reason,
             }
             for i, (page, title) in enumerate(starts)
         ]}
-        print("⚠ Nemotron вернул outline вместо JSON; использую только явно указанные им page ranges.")
 
     topics: list[dict[str, Any]] = []
     allowed_formats = {"news", "review", "insight"}
@@ -750,10 +760,33 @@ def recover_fliphtml5_text_layer(source_url: str, doc: PDFDocument) -> tuple[Opt
             if not match:
                 continue
             page_data = json.loads(match.group(1))
-            words = [str(item.get("w", "")).replace("|", " ").strip() for item in page_data.get("positions", [])]
+            positions = page_data.get("positions", [])
+            words = [str(item.get("w", "")).replace("|", " ").strip() for item in positions]
             page_text = " ".join(word for word in words if word)
             if page_text:
                 pages.append(f"\n\n--- PAGE {page_number} ---\n{page_text}")
+            # Keep large left-column text as a deterministic fallback heading.
+            # FlipHTML5 exposes bounding boxes, so this does not require OCR or
+            # an LLM to discover where a new article begins.
+            heading_parts: list[tuple[float, str]] = []
+            for item in positions:
+                word = str(item.get("w", "")).replace("|", " ").strip()
+                box = item.get("p", [])
+                if len(box) < 8 or len(word) < 4:
+                    continue
+                try:
+                    height = abs(float(box[1]) - float(box[5]))
+                    left = min(float(box[0]), float(box[6]))
+                    top = min(float(box[1]), float(box[3]))
+                except (TypeError, ValueError):
+                    continue
+                if height >= 0.018 and left < 0.46:
+                    heading_parts.append((top, word))
+            if heading_parts:
+                heading_parts.sort(key=lambda pair: pair[0])
+                heading = " ".join(part for _, part in heading_parts[:8])
+                if len(heading.split()) >= 2:
+                    doc.metadata.setdefault("FlipHTML5PageHeadings", {})[str(page_number)] = heading
             if page_number % 10 == 0:
                 print(f"   FlipHTML5 text layer: {page_number} страниц", flush=True)
     except (requests.RequestException, json.JSONDecodeError) as e:
