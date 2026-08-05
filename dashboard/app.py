@@ -631,6 +631,30 @@ async def get_draft(article_id: int):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.patch("/drafts/{article_id}/editorial-type")
+async def update_draft_editorial_type(article_id: int, req: Request):
+    """Allow an editor to route a draft before publication."""
+    if not _env_truthy("ALLOW_DB_WRITES"):
+        return JSONResponse({"error": "ALLOW_DB_WRITES=0"}, status_code=403)
+    payload = await req.json()
+    editorial_type = str(payload.get("editorial_type", "")).strip().lower()
+    allowed = {"news", "review", "insight", "vendor"}
+    if editorial_type not in allowed:
+        return JSONResponse({"error": "Допустимы: news, review, insight, vendor"}, status_code=400)
+    try:
+        import psycopg2
+        conn = psycopg2.connect(os.environ["NEON_DATABASE_URL"])
+        with conn.cursor() as cur:
+            cur.execute("UPDATE news SET editorial_type=%s WHERE id=%s AND is_published=false", (editorial_type, article_id))
+            updated = cur.rowcount
+        conn.commit(); conn.close()
+        if not updated:
+            return JSONResponse({"error": "Черновик не найден или уже опубликован"}, status_code=404)
+        return {"ok": True, "editorial_type": editorial_type}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.post("/drafts/{article_id}/approve")
 async def approve_draft(article_id: int):
     db_url = os.environ.get("NEON_DATABASE_URL")
@@ -1072,7 +1096,7 @@ header{
 }
 .draft-card:hover{border-color:var(--border2)}
 .draft-title{font-size:12.5px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:7px}
-.draft-meta{display:flex;gap:6px;font-size:10px;font-family:var(--mono);color:var(--text-dim);margin-bottom:9px;flex-wrap:wrap}
+.draft-meta{display:flex;gap:6px;font-size:10px;font-family:var(--mono);color:var(--text-dim);margin-bottom:9px;flex-wrap:wrap}.draft-route{display:inline-flex;align-items:center;gap:4px}.draft-route select{max-width:120px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-mid);font:10px var(--mono);padding:2px}
 .draft-actions{display:flex;gap:6px}
 .btn-approve{
   flex:1;padding:5px 0;background:var(--green-dim);border:1px solid rgba(0,229,160,.3);
@@ -2006,7 +2030,9 @@ async function loadDrafts() {
       <div class="draft-title">${escHtml(d.title||'Без заголовка')}</div>
       <div class="draft-meta">
         <span>#${d.id}</span>
-        ${typeBadge}
+        <label class="draft-route">Раздел <select onchange="updateDraftType(${d.id}, this.value)">
+          ${['news','review','insight','vendor'].map(type => `<option value="${type}" ${d.editorial_type === type ? 'selected' : ''}>${type === 'news' ? 'Industry News' : type === 'review' ? 'Reviews' : type === 'insight' ? 'Insights' : 'Vendors'}</option>`).join('')}
+        </select></label>
         ${d.category_name ? `<span>${escHtml(d.category_name)}</span>` : ''}
         ${dt ? `<span>${dt}</span>` : ''}
       </div>
@@ -2054,6 +2080,14 @@ async function openDraftReader(id) {
 function closeDraftReader(event) {
   if (event && event.target !== document.getElementById('draft-reader-modal')) return;
   document.getElementById('draft-reader-modal').classList.remove('open');
+}
+
+async function updateDraftType(id, editorialType) {
+  const r = await fetch(`/drafts/${id}/editorial-type`, {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({editorial_type: editorialType})
+  }).then(r=>r.json()).catch(()=>null);
+  if (r?.ok) toast(`Раздел изменён: ${editorialType}`, 'info');
+  else { toast(r?.error || 'Не удалось изменить раздел', 'err'); loadDrafts(); }
 }
 
 async function approveDraft(id) {
