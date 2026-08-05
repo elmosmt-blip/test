@@ -38,7 +38,7 @@ def make_meta(body: str, summary: str = "") -> str:
         cut = cut[:last_space]
     return cut.rstrip(",.;: ") + "…"
 
-def make_jsonld(title: str, desc: str, slug: str, category: str) -> str:
+def make_jsonld(title: str, desc: str, slug: str, category: str, section_path: str = "/news/") -> str:
     now = datetime.now().strftime("%Y-%m-%d")
     ld = {
         "@context": "https://schema.org",
@@ -51,7 +51,7 @@ def make_jsonld(title: str, desc: str, slug: str, category: str) -> str:
             "name": "SMTInsider",
             "logo": {"@type": "ImageObject", "url": "https://www.smtinsider.com/logo.png"},
         },
-        "mainEntityOfPage": {"@type": "WebPage", "@id": f"https://www.smtinsider.com/news/{slug}"},
+        "mainEntityOfPage": {"@type": "WebPage", "@id": f"https://www.smtinsider.com{section_path}{slug}"},
         "datePublished": now,
         "dateModified": now,
         "about": {"@type": "Thing", "name": category},
@@ -77,13 +77,19 @@ def find_internal_links(body: str) -> list:
             found.append((keyword, url))
     return found
 
-def optimize(title: str, body: str, category: str = "SMT Equipment", summary: str = ""):
+def optimize(title: str, body: str, category: str = "SMT Equipment", summary: str = "",
+              editorial_type: str = "news"):
     print(f"\n🔧 Agent #3 — SEO Doctor")
     print(f"   {title}\n")
 
     slug = make_slug(title)
     meta_desc = make_meta(body, summary)
-    ld = make_jsonld(title, meta_desc, slug, category)
+
+    # Compute correct section path for JSON-LD mainEntityOfPage.
+    section_paths = {"news": "/news/", "insight": "/insights/", "review": "/reviews/", "vendor": "/vendors/"}
+    section_path = section_paths.get(editorial_type, "/news/")
+
+    ld = make_jsonld(title, meta_desc, slug, category, section_path)
     links = find_internal_links(body)
 
     print(f"📎 Slug (предварительный, финальный назначит Publisher): {slug}")
@@ -121,7 +127,8 @@ if __name__ == "__main__":
         with open(meta["article_file"], encoding="utf-8") as f:
             body = f.read()
         seo = optimize(meta["title"], body, meta.get("category", "SMT Equipment"),
-                        summary=meta.get("summary", ""))
+                        summary=meta.get("summary", ""),
+                        editorial_type=meta.get("editorial_type", "news"))
         # Persist the SEO package into meta.json instead of only printing it
         # to the console — otherwise agent-06-publisher.py has no way to see
         # it, and this whole step's output was previously thrown away.

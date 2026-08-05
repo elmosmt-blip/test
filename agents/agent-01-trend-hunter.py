@@ -126,6 +126,14 @@ _FALLBACK_RSS_FEEDS = [
     ("KYZEN Vendor", "https://kyzen.com/news/feed/"),
     ("Mycronic Vendor", "https://www.mycronic.com/en/rss/press-releases/"),
     ("Nordson Vendor", "https://www.nordson.com/en/rss/press-releases"),
+    # Press-release wire services — catch corporate announcements before
+    # industry media republishes them.
+    ("PR Newswire: Electronics", "https://www.prnewswire.com/rss/electronics-news/electronics-news-list.rss"),
+    ("PR Newswire: Manufacturing", "https://www.prnewswire.com/rss/manufacturing-news/manufacturing-news-list.rss"),
+    ("PR Newswire: Technology", "https://www.prnewswire.com/rss/technology-news/technology-news-list.rss"),
+    ("PR Newswire: Semiconductors", "https://www.prnewswire.com/rss/semiconductor-news/semiconductor-news-list.rss"),
+    ("GlobeNewswire: Technology", "https://www.globenewswire.com/RssFeed/subjectcode/11-Technology/feedTitle/GlobeNewswire%20-%20Technology"),
+    ("BusinessWire: Manufacturing", "https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeGVtYWA=="),
 ]
 
 # Google News RSS acts as a resilient, date-stamped search fallback. It is far
@@ -163,13 +171,13 @@ _FALLBACK_VENDOR_SOURCES = [
     ("Mirtec", "https://www.mirtec.com/news.php", "inspection"),
     ("CyberOptics", "https://www.cyberoptics.com/news/", "inspection"),
     # Placement / SMT equipment
-    ("Yamaha SMT", "https://global.yamaha-motor.com/business/smt/news/", "placement"),
-    ("Juki SMT", "https://www.juki.co.jp/smt/en/news/", "placement"),
-    ("ASMPT", "https://www.asmpt.com/en/news-center/press-releases/", "placement"),
+    ("Yamaha SMT", "https://www.yamaha-motor-robotics.eu/en/b2b/robotics-business-unit/surface-mount-technology/smt-news-and-events/smt-news/", "placement"),
+    ("Juki SMT", "https://jukiamericas.com/pages/jukinews", "placement"),
+    ("ASMPT", "https://smt.asmpt.com/en/news-center/press/", "placement"),
     ("Fuji Europe", "https://www.fuji-euro.de/en/", "placement"),
     ("Essemtec", "https://essemtec.com/en/news/", "placement"),
     ("Europlacer", "https://europlacer.com/news-hub/", "placement"),
-    ("Mycronic", "https://www.mycronic.com/news-events/news/", "placement"),
+    ("Mycronic", "https://www.mycronic.com/news-events/our-press-releases/", "placement"),
     ("Panasonic Factory Solutions", "https://na.panasonic.com/us/factory-solutions/news", "placement"),
     # Reflow / soldering / cleaning / materials
     ("Heller", "https://hellerindustries.com/news/", "reflow"),
@@ -195,8 +203,8 @@ _FALLBACK_VENDOR_SOURCES = [
     # Second batch (2026-07-11) — additional verified vendors across
     # inspection, reflow, soldering, materials, cleaning, test, stencil
     ("MEK (Marantz Electronics)", "https://marantz-electronics.com/press-releases/", "inspection"),
-    ("BTU International", "https://www.btu.com/press-news/", "reflow"),
-    ("Kurtz Ersa", "https://kurtzersa.com/news/all", "soldering"),
+    ("BTU International", "https://www.btu.com/about-us/btu-news/", "reflow"),
+    ("Kurtz Ersa", "https://www.ersa.com/en/news/", "soldering"),
     ("MacDermid Alpha", "https://www.macdermidalpha.com/news", "materials"),
     ("ZESTRON", "https://www.zestron.com/en/news/press-releases.html", "cleaning"),
     ("Seica", "https://www.seica-na.com/news/", "test"),
@@ -557,21 +565,19 @@ def search_google_news_rss(query: str, max_results: int = 8, lookback_days: int 
     return results
 
 
-# DuckDuckGo's HTML endpoint is optional: RSS and direct industry sources are
-# collected independently.  Keep the failure state so gather_signals() can
-# stop retrying an unavailable endpoint for every query in a scan.
-_last_ddg_request_failed = False
+# DDG is now tried for every query independently; a failure on one query
+# does not block the rest. See search_duckduckgo() below.
 
 
 def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30) -> list[dict[str, Any]]:
     """Search DuckDuckGo HTML with a date filter (df=m for 30 days).
 
-    DDG may be unavailable or throttle automated requests. A failed request is
-    deliberately reported to the caller, which opens a circuit breaker for the
-    rest of the scan rather than spending minutes on identical timeouts.
+    Previously a global circuit breaker (_last_ddg_request_failed) would
+    stop all DDG queries for the rest of the scan after one failure. That
+    was too aggressive — a single frontend outage (HTML vs Lite) can block
+    all queries. Now each query independently tries both endpoints, and a
+    failure on one query does not affect the next.
     """
-    global _last_ddg_request_failed
-    _last_ddg_request_failed = False
     # GET works in more corporate/proxy environments than the legacy POST
     # endpoint. The lite endpoint is a second independent DDG frontend.
     params = {"q": query}
@@ -596,7 +602,6 @@ def search_duckduckgo(query: str, max_results: int = 5, lookback_days: int = 30)
             errors.append(f"{urllib.parse.urlparse(url).netloc}: {e}")
 
     if resp is None:
-        _last_ddg_request_failed = True
         print(f"  ⚠ DDG недоступен для «{query}»: {'; '.join(errors)}")
         return []
 
@@ -1363,9 +1368,6 @@ def gather_signals(
             print(f"  🔍 DDG: {q}")
             found = search_duckduckgo(q, max_results_per_query, lookback_days)
             ddg_found.extend(found)
-            if _last_ddg_request_failed:
-                print("     → DDG отключён до конца этого запуска; продолжаю с Google News RSS, RSS-лентами и сайтами вендоров.")
-                break
             time.sleep(0.4)
     elif do_search:
         print("  ℹ DuckDuckGo отключён (NEWS_DDG_ENABLED=0); использую Google News RSS, RSS-ленты и сайты вендоров.")
@@ -1687,7 +1689,7 @@ def find_corroborating_sources(
     # DDG is optional and frequently unreachable in operator networks. Source
     # research later uses official domains, so do not spend 24+ seconds per
     # candidate on a second search engine unless explicitly enabled.
-    if _env_bool("NEWS_DDG_TARGETED_ENABLED", "0") and not _last_ddg_request_failed:
+    if _env_bool("NEWS_DDG_TARGETED_ENABLED", "0"):
         finders.append(lambda qq: search_duckduckgo(qq, max_results=5, lookback_days=lookback_days))
 
     for q in queries[:2]:
@@ -1779,24 +1781,59 @@ def build_briefs(signals: list[dict[str, Any]], max_topics: int, lookback_days: 
         score_str = f" [score:{score}]" if score != "" else ""
         return f"- {published}{score_str} | {title} | {body} | {url}"
 
-    signals_text = "\n".join(_signal_line(s) for s in prompt_signals)
-    user_prompt = (
-        f"Свежие сигналы за последние {lookback_days} дней ({len(signals)} шт., "
-        f"показаны {len(prompt_signals)} лучших по релевантности и разнообразию источников):\n\n"
-        f"{signals_text}\n\n"
-        f"Выбери максимум {max_topics} лучших тем для SMTInsider. Используй только эти сигналы.\n"
-        f"ВАЖНО: поле 'angle' должно объяснять конкретно — что инженер узнает из статьи, "
-        f"какие цифры/факты будут использованы. Поле 'key_facts' — список конкретных фактов/цифр из источника."
-    )
-    data = llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=2800)
-    if isinstance(data, list):
-        data = {"topics": data}
+    # Split into batches of BATCH_SIZE to avoid overwhelming the LLM context
+    # window and to let the model focus on fewer, higher-quality signals per call.
+    BATCH_SIZE = int(os.environ.get("NEWS_LLM_BATCH_SIZE", "15"))
+    all_topics: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
+
+    for batch_idx, i in enumerate(range(0, len(prompt_signals), BATCH_SIZE)):
+        batch = prompt_signals[i:i + BATCH_SIZE]
+        signals_text = "\n".join(_signal_line(s) for s in batch)
+
+        user_prompt = (
+            f"Свежие сигналы за последние {lookback_days} дней (batch {batch_idx + 1}: "
+            f"сигналы {i + 1}–{min(i + BATCH_SIZE, len(prompt_signals))} из {len(prompt_signals)}):\n\n"
+            f"{signals_text}\n\n"
+            f"Выбери до {max_topics} лучших тем для SMTInsider. Используй только эти сигналы.\n"
+            f"ВАЖНО: поле 'angle' должно объяснять конкретно — что инженер узнает из статьи, "
+            f"какие цифры/факты будут использованы. Поле 'key_facts' — список конкретных фактов/цифр из источника."
+        )
+
+        print(f"  📊 Батч {batch_idx + 1}: {len(batch)} сигналов → LLM...")
+        data = llm_client.ask_json(SYSTEM_PROMPT, user_prompt, max_tokens=2800)
+        if isinstance(data, list):
+            data = {"topics": data}
+
+        batch_topics = list(data.get("topics", []) or [])
+        # Merge topics from this batch, deduplicating by URL and title.
+        for topic in batch_topics:
+            topic_urls = [
+                str(src.get("url", ""))
+                for src in (topic.get("sources", []) or [])
+                if isinstance(src, dict)
+            ]
+            topic_title = str(topic.get("topic", "")).strip().lower()
+
+            if any(u in seen_urls for u in topic_urls):
+                continue
+            if topic_title and topic_title in seen_titles:
+                continue
+
+            for u in topic_urls:
+                seen_urls.add(u)
+            if topic_title:
+                seen_titles.add(topic_title)
+            all_topics.append(topic)
+
+        print(f"  ✓ Батч {batch_idx + 1}: выбрано {len(batch_topics)} тем, принято {len(all_topics)} уникальных")
 
     # The model may return only one conservative topic even when the requested
     # cap is higher. Fill the candidate queue deterministically from ranked
     # fresh signals; Evidence Research will later retain only source-backed
     # candidates, so this never forces weak articles into Writer.
-    topics = list(data.get("topics", []) or [])
+    topics = all_topics
     existing_urls = {
         str(source.get("url", ""))
         for topic in topics for source in (topic.get("sources", []) or [])

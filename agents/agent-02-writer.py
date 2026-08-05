@@ -141,13 +141,13 @@ def build_evidence_dossier(brief: dict) -> dict:
                 claims.append({"id": f"C{len(claims) + 1}", "text": claim, "source_url": entry.get("source_url", ""), "source": source_index})
     article_type = brief.get("editorial_type") or brief.get("format") or "news"
     if article_type == "review":
-        target = "900-1300 words"
+        target = "1000-1500 words"
         section_size = 3
     elif article_type == "insight":
-        target = "600-900 words"
+        target = "800-1200 words"
         section_size = 3
     else:
-        target = "180-320 words" if len(claims) <= 5 else "300-500 words"
+        target = "250-400 words" if len(claims) <= 5 else "400-700 words"
         section_size = 2
     groups = [claims[i:i + section_size] for i in range(0, len(claims), section_size)]
     return {"article_type": article_type, "target_length": target, "claims": claims, "sections": groups}
@@ -491,7 +491,9 @@ def main():
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(f"{title}\n\n{body}\n")
 
-    category = article.get("category", brief.get("category", "SMT Equipment"))
+    category = section_router.normalize_category(
+        article.get("category", brief.get("category", "SMT Equipment"))
+    )
     tags = article.get("tags", brief.get("keywords", []))
     section = section_router.decide_section(
         title=title,

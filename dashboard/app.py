@@ -34,6 +34,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 ROOT = Path(__file__).parent.parent
 
+# Make agents/ importable from dashboard/
+sys.path.insert(0, str(ROOT / "agents"))
+from site_config import VALID_SECTIONS, VALID_CATEGORIES, SECTION_PATH, normalize_category, normalize_section
+
 
 def _build_revision() -> str:
     """Expose the running source revision so operators can verify deployment."""
@@ -638,9 +642,8 @@ async def update_draft_editorial_type(article_id: int, req: Request):
         return JSONResponse({"error": "ALLOW_DB_WRITES=0"}, status_code=403)
     payload = await req.json()
     editorial_type = str(payload.get("editorial_type", "")).strip().lower()
-    allowed = {"news", "review", "insight", "vendor"}
-    if editorial_type not in allowed:
-        return JSONResponse({"error": "Допустимы: news, review, insight, vendor"}, status_code=400)
+    if editorial_type not in VALID_SECTIONS:
+        return JSONResponse({"error": f"Допустимы: {', '.join(sorted(VALID_SECTIONS))}"}, status_code=400)
     try:
         import psycopg2
         conn = psycopg2.connect(os.environ["NEON_DATABASE_URL"])
@@ -666,20 +669,145 @@ async def approve_draft(article_id: int):
         import psycopg2
         conn = psycopg2.connect(db_url)
         with conn.cursor() as cur:
+            # Validate category before publishing — the site only shows articles
+            # whose category_name matches one of the filter values.
+            cur.execute("SELECT category_name, editorial_type FROM news WHERE id=%s AND is_published=false", (article_id,))
+            draft_row = cur.fetchone()
+            if not draft_row:
+                return JSONResponse({"error": "Черновик не найден или уже опубликован"}, status_code=404)
+            cat, etype = draft_row
+            cat = normalize_category(cat)
+            etype = normalize_section(etype) or "news"
             # editorial_type определяет раздел сайта (news/insight/review/vendor),
-            # поэтому при approve его нельзя стирать.
+            # поэтому при approve его нельзя стирать. Попутно исправляем category_name
+            # если он невалидный — чтобы статья точно отображалась в фильтрах.
             cur.execute(
-                "UPDATE news SET is_published=true WHERE id=%s AND is_published=false "
-                "RETURNING id, slug, editorial_type",
-                (article_id,)
+                "UPDATE news SET is_published=true, category_name=%s, editorial_type=%s WHERE id=%s AND is_published=false "
+                "RETURNING id, slug, editorial_type, category_name",
+                (cat, etype, article_id)
             )
             row = cur.fetchone()
         conn.commit()
         conn.close()
         if not row:
             return JSONResponse({"error": "Черновик не найден или уже опубликован"}, status_code=404)
-        section = {"news": "/news/", "review": "/reviews/", "insight": "/insights/", "vendor": "/vendors/"}.get(row[2] or "news", "/news/")
-        return {"ok": True, "id": row[0], "slug": row[1], "editorial_type": row[2], "public_path": f"{section}{row[1]}"}
+        section = SECTION_PATH.get(row[2] or "news", "/news/")
+        return {"ok": True, "id": row[0], "slug": row[1], "editorial_type": row[2], "category_name": row[3], "public_path": f"{section}{row[1]}"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/drafts/{article_id}/rewrite")
+async def rewrite_draft(article_id: int):
+    """Re-run Writer + Quality Checker on an existing draft. Keeps original meta."""
+    if not _env_truthy("ALLOW_DB_WRITES"):
+        return JSONResponse({"error": "ALLOW_DB_WRITES=0"}, status_code=403)
+
+    db_url = os.environ.get("NEON_DATABASE_URL")
+    if not db_url:
+        return JSONResponse({"error": "NEON_DATABASE_URL не задан"}, status_code=400)
+
+    try:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, title, content, summary, editorial_type, category_name, "
+                "source_url, source, author_name, frontmatter_json "
+                "FROM news WHERE id=%s AND is_published=false", (article_id,)
+            )
+            draft = cur.fetchone()
+        conn.close()
+
+        if not draft:
+            return JSONResponse({"error": "Черновик не найден или уже опубликован"}, status_code=404)
+
+        # Build a temporary meta.json that Writer can consume.
+        meta = {
+            "title": draft[1],
+            "summary": draft[3] or "",
+            "editorial_type": draft[4],
+            "category": draft[5],
+            "source_url": draft[6],
+            "source": draft[7],
+            "author_name": draft[8],
+            "source_topic_brief": (json.loads(draft[9]) if draft[9] else {}).get("source_topic_brief", {}),
+            "tags": [],
+        }
+
+        # Write draft body to temp file.
+        article_path = _TMP / f"smtinsider_rewrite_{article_id}.txt"
+        article_path.write_text((draft[2] or ""), encoding="utf-8")
+        meta["article_file"] = str(article_path)
+
+        meta_path = article_path.with_suffix(".meta.json")
+        meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        run_id = str(uuid.uuid4())
+        _runs[run_id] = asyncio.Queue(maxsize=2000)
+
+        commands = [
+            ("2", [PYTHON_CMD, str(AGENTS_DIR / "agent-02-writer.py"),
+                   "--brief", "-", "--pick", "0", "--output", str(article_path)],
+             {"stdin_data": json.dumps(meta["source_topic_brief"])}),
+            ("2b", [PYTHON_CMD, str(AGENTS_DIR / "agent-02b-quality-checker.py"),
+                    "--meta", str(meta_path)]),
+            ("3", [PYTHON_CMD, str(AGENTS_DIR / "agent-03-seo-doctor.py"),
+                   "--meta", str(meta_path)]),
+        ]
+
+        async def task():
+            q = _runs[run_id]
+            for agent_id, command, extra in commands:
+                _agent_status[agent_id] = "running"
+                _send(q, "status", {"agent": agent_id, "state": "running"})
+                try:
+                    proc = await asyncio.create_subprocess_exec(
+                        *command,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.STDOUT,
+                        cwd=str(ROOT),
+                    )
+                    if extra.get("stdin_data"):
+                        await proc.communicate(input=extra["stdin_data"].encode())
+                    else:
+                        await proc.communicate()
+                    _agent_status[agent_id] = "done" if proc.returncode == 0 else "error"
+                    _send(q, "status", {"agent": agent_id, "state": "done", "code": proc.returncode})
+                except Exception as e:
+                    _agent_status[agent_id] = "error"
+                    _send(q, "error", {"agent": agent_id, "error": str(e)})
+                    break
+
+            # Overwrite draft in DB with rewritten content.
+            if meta_path.exists():
+                try:
+                    new_meta = json.loads(meta_path.read_text("utf-8"))
+                    new_body = article_path.read_text("utf-8") if article_path.exists() else ""
+                    if new_meta.get("title") and new_body:
+                        conn2 = psycopg2.connect(db_url)
+                        with conn2.cursor() as cur:
+                            cur.execute(
+                                "UPDATE news SET title=%s, content=%s, summary=%s, "
+                                "frontmatter_json=%s WHERE id=%s",
+                                (new_meta.get("title"), new_body, new_meta.get("summary", ""),
+                                 json.dumps({"source_topic_brief": meta["source_topic_brief"],
+                                             "quality_check": new_meta.get("quality_check", {}),
+                                             "tags": new_meta.get("tags", [])},
+                                            ensure_ascii=False),
+                                 article_id)
+                            )
+                        conn2.commit()
+                        conn2.close()
+                        _send(q, "done", {"id": article_id, "title": new_meta.get("title")})
+                except Exception as e:
+                    _send(q, "error", {"error": str(e)})
+
+            _pipeline_status = "idle"
+
+        asyncio.ensure_future(task())
+        return {"ok": True, "run_id": run_id, "article_id": article_id}
+
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 

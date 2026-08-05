@@ -139,6 +139,6 @@ Process engineers, quality engineers, NPI engineers, manufacturing/plant manager
   "title": "конкретный технический заголовок",
   "body": "полный текст статьи, plain text, подзаголовки начинаются с ## , абзацы разделены \n\n",
   "summary": "1-2 предложения, суть статьи для инженера, до 200 символов, без общих фраз",
-  "category": "SMT Equipment | Quality Control | Process Engineering | Soldering | Inspection | NPI",
+  "category": "SMT Equipment | Inspection | Materials | Smart Factory | Advanced Packaging | EMS | Supply Chain | Industry Events",
   "tags": ["тег1", "тег2", "тег3", "тег4", "тег5"]
 }

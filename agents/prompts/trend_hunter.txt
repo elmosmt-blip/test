@@ -38,7 +38,7 @@
       "editorial_type": "news | insight | review | vendor",
       "target_section": "/news/ | /insights/ | /reviews/ | /vendors/",
       "keywords": ["ключ1", "ключ2", "ключ3"],
-      "category": "SMT Equipment | Quality Control | Process Engineering | Soldering | Inspection | NPI",
+      "category": "SMT Equipment | Inspection | Materials | Smart Factory | Advanced Packaging | EMS | Supply Chain | Industry Events",
       "urgency": "HIGH | MEDIUM | LOW",
       "source_count": <int>,
       "source_notes": "конкретно: какие цифры/факты из источников будут использованы в статье",

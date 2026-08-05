@@ -55,6 +55,8 @@ def main() -> int:
             [sys.executable, str(agents / "agent-03-seo-doctor.py"), "--meta", str(meta_path)],
             [sys.executable, str(agents / "agent-04-distributor.py"), "--meta", str(meta_path)],
         ]
+        # Quality Checker is advisory, not blocking. Even if it flags issues,
+        # the pipeline continues — the editor decides in the dashboard.
         if os.environ.get("NEON_DATABASE_URL") and os.environ.get("ALLOW_DB_WRITES", "").lower() in {"1", "true", "yes", "on"}:
             # Publisher creates an unpublished draft. Human approval remains
             # the only action that makes it public.

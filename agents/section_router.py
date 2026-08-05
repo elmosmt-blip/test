@@ -32,13 +32,12 @@ import re
 from dataclasses import dataclass, asdict
 from typing import Any, Optional
 
-VALID_SECTIONS = {"news", "insight", "review", "vendor"}
-SECTION_PATH = {
-    "news": "/news/",
-    "insight": "/insights/",
-    "review": "/reviews/",
-    "vendor": "/vendors/",
-}
+from site_config import (
+    VALID_SECTIONS, SECTION_PATH, VALID_CATEGORIES, CATEGORY_ALIASES,
+    normalize_section as _normalize_section,
+    normalize_category as _normalize_category,
+    DEFAULT_CATEGORY,
+)
 
 
 @dataclass
@@ -57,23 +56,11 @@ def _norm(value: Optional[str]) -> str:
 
 
 def normalize_section(value: Optional[str]) -> Optional[str]:
-    v = _norm(value)
-    aliases = {
-        "article": "insight",
-        "insights": "insight",
-        "review": "review",
-        "reviews": "review",
-        "buyer guide": "review",
-        "buyer-guide": "review",
-        "guide": "insight",
-        "news": "news",
-        "vendor": "vendor",
-        "vendors": "vendor",
-        "supplier": "vendor",
-    }
-    if v in VALID_SECTIONS:
-        return v
-    return aliases.get(v)
+    return _normalize_section(value)
+
+
+def normalize_category(value: Optional[str]) -> str:
+    return _normalize_category(value)
 
 
 def _has_any(text: str, patterns: list[str]) -> bool:
@@ -145,9 +132,9 @@ def decide_section(
 ) -> SectionDecision:
     """Choose publication section.
 
-    `explicit` is respected when strong (review/insight/vendor). If explicit is
-    `news`, a strong review/insight signal may override it — fresh product
-    announcements often become Reviews or Insights after editorial treatment.
+    `explicit` is always respected: if an editor explicitly chooses a section
+    (news/insight/review/vendor), the router will honour that choice without
+    overriding it based on content signals.
     """
     tags = tags or []
     brief = source_topic_brief or {}
@@ -190,42 +177,26 @@ def decide_section(
         reasons.append("vendor profile/supplier signal")
         return SectionDecision("vendor", SECTION_PATH["vendor"], 0.9, reasons)
 
-    # Strong review intent or buyer-guide structure.
+    # Explicit sections are always respected — the editor chose deliberately.
     if explicit_section == "review":
         reasons.append("explicit review/editorial_type")
         return SectionDecision("review", SECTION_PATH["review"], 0.92, reasons)
 
-    if has_buyer_structure and has_equipment:
-        reasons.append("buyer-guide structure + equipment topic")
-        return SectionDecision("review", SECTION_PATH["review"], 0.88, reasons)
+    if explicit_section == "news":
+        reasons.append("explicit news/editorial_type")
+        return SectionDecision("news", SECTION_PATH["news"], 0.90, reasons)
 
-    if has_equipment and has_product_like and review_score >= 18:
-        reasons.append("specific equipment/product platform with review indicators")
-        if review_hits:
-            reasons.append("review hits: " + ", ".join(review_hits[:3]))
-        return SectionDecision("review", SECTION_PATH["review"], 0.84, reasons)
-
-    # Strong insight intent.
     if explicit_section == "insight":
-        # But if the final article or fresh signal is clearly about a specific
-        # equipment platform/system, route it to Reviews/Buyer Guides. This is
-        # exactly the case for product launches like "New ... X-ray Inspection System".
-        if has_equipment and has_product_like and (review_score >= 14 or review_score > insight_score + 6):
-            reasons.append("review override: specific equipment/system signal")
-            return SectionDecision("review", SECTION_PATH["review"], 0.84, reasons)
         reasons.append("explicit insight/editorial_type")
-        return SectionDecision("insight", SECTION_PATH["insight"], 0.9, reasons)
+        return SectionDecision("insight", SECTION_PATH["insight"], 0.90, reasons)
+
+    # Auto-detection below — only when no explicit section was set.
 
     if insight_score >= max(news_score, review_score) + 5 and insight_score >= 18:
         reasons.append("technical/process explainer signal")
         if insight_hits:
             reasons.append("insight hits: " + ", ".join(insight_hits[:3]))
         return SectionDecision("insight", SECTION_PATH["insight"], 0.82, reasons)
-
-    # Fresh event/company news stays News unless it was rewritten as a review.
-    if explicit_section == "news" and not (has_equipment and has_product_like and review_score >= 24):
-        reasons.append("explicit news/editorial_type")
-        return SectionDecision("news", SECTION_PATH["news"], 0.86, reasons)
 
     if news_score > review_score and news_score >= 16:
         reasons.append("company/event/news signal")

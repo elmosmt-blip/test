@@ -289,10 +289,12 @@ def main():
         print(f"   → python3 agents/agent-06-publisher.py submit --meta {args.meta}")
         return
 
-    print("\n❌ BLOCKED: статья не переходит в SEO/Publisher до factual pass.")
+    print(f"\n⚠️  WARNING: factual score {verdict['score']}/{args.threshold}+")
+    print("   Статья будет сохранена как черновик. Редактор решит публиковать или переписать.")
     if verdict["missing_evidence"]:
         print("   Недостающие доказательства: " + "; ".join(map(str, verdict["missing_evidence"])))
-    sys.exit(2)
+    # Exit 0 — quality check is advisory, not blocking. The editor decides.
+    return
 
 
 if __name__ == "__main__":
