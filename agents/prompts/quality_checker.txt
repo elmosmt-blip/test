@@ -14,6 +14,7 @@
    - Читатель с опытом 10+ лет узнает что-то полезное, а не то, что и так знает
 
 3. КАЧЕСТВО ПИСЬМА (0-25 баллов)
+   - Статья должна быть независимым редакционным пересказом, а не копией source excerpt. Допустимы official names, models, standards, exact figures и короткая атрибутированная цитата; длинные дословные фразы из source нужно переписать.
    - Нет маркетинговых клише и AI-штампов: "cutting-edge", "seamless", "revolutionize",
      "game-changer", "robust solution", "state-of-the-art" без конкретики, "leverage",
      "it is worth noting", "at the end of the day", "in today's landscape", "unlock the potential"

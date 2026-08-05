@@ -192,7 +192,10 @@ def build_writer_user_prompt(brief: dict) -> str:
             f"Article type: {dossier['article_type']}\nTarget length: {dossier['target_length']}\n"
             f"Plan: {' | '.join(plan_sections)}\n\n"
             "Используй claims только из списка ниже. Каждый содержательный абзац должен опираться "
-            "на указанный claim ID. Не добавляй новый факт для связности, длины или практического вывода.\n"
+            "на указанный claim ID. Не добавляй новый факт для связности, длины или практического вывода. "
+            "Перепиши claims независимым редакционным языком: не копируй source sentence целиком "
+            "и не повторяй последовательность из 8+ слов из excerpt. Исключения: официальные названия, "
+            "модели, стандарты, точные цифры и короткие прямые цитаты до 20 слов с атрибуцией.\n"
             f"{claims_text}"
         )
     editorial = brief.get("editorial_type") or brief.get("format", "")

@@ -63,6 +63,13 @@ def test_ready_research_brief_without_ledger_is_rejected_without_llm(monkeypatch
     assert result["unsupported_claims"][0]["severity"] == "blocking"
 
 
+def test_source_copy_detector_flags_long_verbatim_phrase():
+    checker = _load_quality_checker()
+    source = "Europlacer positions Process Integrity as a framework that secures data materials and operations before production begins."
+    matches = checker._source_copy_matches(source, {"sources": [{"excerpt": source}]})
+    assert matches
+
+
 def test_deterministic_ledger_audit_rejects_invented_date_and_number():
     checker = _load_quality_checker()
     violations = checker._ledger_numeric_violations(

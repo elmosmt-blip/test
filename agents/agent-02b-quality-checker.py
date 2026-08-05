@@ -85,6 +85,12 @@ SUMMARY: {summary}
         result["approved"] = False
         result["body"] = cleaned_body
         result["issues"] = [*(result.get("issues", []) or []), "Deterministic evidence-ledger audit removed unsupported numeric/date claims"]
+    copied = _source_copy_matches(body, brief)
+    if copied:
+        result["factual_verdict"] = "revise"
+        result["approved"] = False
+        result["copy_matches"] = copied
+        result["issues"] = [*(result.get("issues", []) or []), f"Source-copy audit found {len(copied)} long verbatim phrase(s); rewrite required"]
     return result
 
 
@@ -113,6 +119,24 @@ def _ledger_numeric_violations(body: str, ledger: list[dict[str, Any]]) -> list[
                 "severity": "blocking",
             })
     return violations
+
+
+def _source_copy_matches(body: str, brief: dict, ngram_size: int = 10) -> list[str]:
+    """Find long exact word sequences copied from a supplied source excerpt."""
+    article_words = re.findall(r"[a-z0-9]+", (body or "").lower())
+    if len(article_words) < ngram_size:
+        return []
+    article_ngrams = {" ".join(article_words[i:i + ngram_size]) for i in range(len(article_words) - ngram_size + 1)}
+    matches: list[str] = []
+    for source in brief.get("sources", []) or []:
+        words = re.findall(r"[a-z0-9]+", str(source.get("excerpt", "")).lower())
+        for i in range(max(0, len(words) - ngram_size + 1)):
+            phrase = " ".join(words[i:i + ngram_size])
+            if phrase in article_ngrams and phrase not in matches:
+                matches.append(phrase)
+                if len(matches) >= 3:
+                    return matches
+    return matches
 
 
 def _remove_violating_sentences(body: str, violations: list[dict[str, str]]) -> str:
