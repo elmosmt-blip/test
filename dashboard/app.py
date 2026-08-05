@@ -645,12 +645,17 @@ async def approve_draft(article_id: int):
             # editorial_type определяет раздел сайта (news/insight/review/vendor),
             # поэтому при approve его нельзя стирать.
             cur.execute(
-                "UPDATE news SET is_published=true WHERE id=%s",
+                "UPDATE news SET is_published=true WHERE id=%s AND is_published=false "
+                "RETURNING id, slug, editorial_type",
                 (article_id,)
             )
+            row = cur.fetchone()
         conn.commit()
         conn.close()
-        return {"ok": True, "id": article_id}
+        if not row:
+            return JSONResponse({"error": "Черновик не найден или уже опубликован"}, status_code=404)
+        section = {"news": "/news/", "review": "/reviews/", "insight": "/insights/", "vendor": "/vendors/"}.get(row[2] or "news", "/news/")
+        return {"ok": True, "id": row[0], "slug": row[1], "editorial_type": row[2], "public_path": f"{section}{row[1]}"}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -2053,8 +2058,14 @@ function closeDraftReader(event) {
 
 async function approveDraft(id) {
   const r = await fetch(`/drafts/${id}/approve`, {method:'POST'}).then(r=>r.json());
-  if (r.ok) { toast(`Опубликовано #${id}`, 'ok'); loadDrafts(); }
-  else toast(r.error||'Ошибка', 'err');
+  if (r.ok) {
+    const path = r.public_path || '';
+    toast(`Опубликовано #${id}${path ? ` → ${path}` : ''}`, 'ok');
+    loadDrafts();
+    if (path && confirm(`Черновик опубликован. Открыть ${path} на сайте?`)) {
+      window.open(`https://www.smtinsider.com${path}`, '_blank', 'noopener');
+    }
+  } else toast(r.error||'Ошибка', 'err');
 }
 
 async function deleteDraft(id) {
